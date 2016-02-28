@@ -89,8 +89,11 @@ namespace KinectImageProcessing {
 		DateTime RunTimer;
 		double FrameProcessDuration;
 
-		int[] FilterWeights;
-		int[] FilterOffsets;
+		int[] EdgeFilterWeights;
+		int[] EdgeFilterOffsets;
+
+		int[] DespeckleFilterWeights;
+		int[] DespeckleFilterOffsets;
 
 		int SourceStride;
 		int SourceWidth;
@@ -106,9 +109,8 @@ namespace KinectImageProcessing {
 		byte[] ByteArray1;
 		byte[] ByteArray2;
 
-		int PixelValueCount;
 		int PixelValueMax;
-		int PixelValueThreshold;
+		int PixelEdgeThreshold;
 
 		public MainWindowViewModel() {
 			FrameTimer = DateTime.Now.AddMilliseconds(_FPSCalcDelay);
@@ -160,8 +162,8 @@ namespace KinectImageProcessing {
 
 			await Task.Run(() => {
 				IntArray1 = CompressToMonochrome(ByteArray1);
-				IntArray2 = FilterEdges(IntArray1);
-				ByteArray2 = ExpandFromMonochrome(IntArray2);
+				IntArray1 = FilterEdges(IntArray1);
+				ByteArray2 = ExpandFromMonochrome(IntArray1, ByteArray1);
 
 				parentThread.Invoke(() => {
 					FilteredImage.WritePixels(
@@ -178,23 +180,22 @@ namespace KinectImageProcessing {
 			});
 		}
 
-		byte[] ExpandFromMonochrome(int[] inputValues) {
+		byte[] ExpandFromMonochrome(int[] inputValues, byte[] inputBytes) {
 			var outputValues = new byte[ByteCount];
 
 			var pixelOffset = 0;
 
 			for (var byteOffset = 0; byteOffset < ByteCount; byteOffset += 4) {
-				byte byteValue;
-
-				if (inputValues[pixelOffset] > PixelValueThreshold)
-					byteValue = 255;
-				else
-					byteValue = 0;
-
-				outputValues[byteOffset] = byteValue;
-				outputValues[byteOffset + 1] = byteValue;
-				outputValues[byteOffset + 2] = byteValue;
-				outputValues[byteOffset + 3] = 255;
+				if (inputValues[pixelOffset] > PixelEdgeThreshold) {
+					outputValues[byteOffset] = 0;
+					outputValues[byteOffset + 1] = 0;
+					outputValues[byteOffset + 2] = 0;
+				}
+				else {
+					outputValues[byteOffset] = inputBytes[byteOffset];
+					outputValues[byteOffset + 1] = inputBytes[byteOffset + 1];
+					outputValues[byteOffset + 2] = inputBytes[byteOffset + 2];
+				}
 
 				pixelOffset++;
 			}
@@ -220,19 +221,45 @@ namespace KinectImageProcessing {
 
 		int[] FilterEdges(int[] monochromePixelValues) {
 			var filteredPixelValues = new int[PixelCount];
-			var filterLength = FilterWeights.Length;
+			var filterLength = EdgeFilterWeights.Length;
 
 			for (var pixel = 0; pixel < PixelCount; pixel++) {
 				var aggregate = 0;
 
 				for (var filterOffset = 0; filterOffset < filterLength; filterOffset++) {
-					var offset = FilterOffsets[filterOffset] + pixel;
+					var offset = EdgeFilterOffsets[filterOffset] + pixel;
 
 					if (offset > 0 && offset < PixelCount)
-						aggregate += monochromePixelValues[offset] * FilterWeights[filterOffset];
+						aggregate += monochromePixelValues[offset] * EdgeFilterWeights[filterOffset];
 				}
 
-				filteredPixelValues[pixel] = aggregate;
+				if (aggregate >= PixelEdgeThreshold)
+					filteredPixelValues[pixel] = PixelValueMax;
+				else
+					filteredPixelValues[pixel] = 0;
+			}
+
+			return filteredPixelValues;
+		}
+
+		int[] Despeckle(int[] inputPixelValues) {
+			var filteredPixelValues = new int[PixelCount];
+			var filterLength = DespeckleFilterWeights.Length;
+
+			for (var pixel = 0; pixel < PixelCount; pixel++) {
+				var aggregate = 0;
+
+				for (var filterOffset = 0; filterOffset < filterLength; filterOffset++) {
+					var offset = DespeckleFilterOffsets[filterOffset] + pixel;
+
+					if (offset > 0 && offset < PixelCount)
+						aggregate += inputPixelValues[offset] * DespeckleFilterWeights[filterOffset];
+				}
+
+				if (aggregate >= 255 * 255 * 9)
+					filteredPixelValues[pixel] = PixelValueMax;
+				else
+					filteredPixelValues[pixel] = 0;
 			}
 
 			return filteredPixelValues;
@@ -245,13 +272,13 @@ namespace KinectImageProcessing {
 		}
 		
 		void BuildFilters() {
-			//var filter = new int[,] {
-			//	{ -1, -1, -1 },
-			//	{ -1,  8, -1 },
-			//	{ -1, -1, -1 },
-			//};
+			var despeckleFilter = new int[,] {
+				{ -1, -1, -1 },
+				{ -1,  8, -1 },
+				{ -1, -1, -1 },
+			};
 
-			var filter = new int[,] {
+			var edgeFilter = new int[,] {
 				{  0, -1,  0, -1,  0 },
 				{ -1, -1,  0, -1, -1 },
 				{  0,  0, 12,  0,  0 },
@@ -259,28 +286,42 @@ namespace KinectImageProcessing {
 				{  0, -1,  0, -1,  0 }
 			};
 
-			var filterLength = filter.GetLength(0);
+			PixelValueMax = 3 * 255 * 255;
+			PixelEdgeThreshold = PixelValueMax / 4;
+
+			var filterLength = edgeFilter.GetLength(0);
 			var filterOffset = Convert.ToInt32(Math.Floor((double)filterLength / 2));
 			var filterEnd = filterLength - filterOffset;
 
-			FilterWeights = new int[filterLength * filterLength];
-			FilterOffsets = new int[filterLength * filterLength];
+			EdgeFilterWeights = new int[filterLength * filterLength];
+			EdgeFilterOffsets = new int[filterLength * filterLength];
 
 			var filterOffsetCount = 0;
 
 			for (int filterY = -filterOffset; filterY < filterEnd; filterY++) {
 				for (int filterX = -filterOffset; filterX < filterEnd; filterX++) {
-					FilterWeights[filterOffsetCount] = filter[filterY + filterOffset, filterX + filterOffset];
-					FilterOffsets[filterOffsetCount] = (SourceWidth * filterY) + filterX;
+					EdgeFilterWeights[filterOffsetCount] = edgeFilter[filterY + filterOffset, filterX + filterOffset];
+					EdgeFilterOffsets[filterOffsetCount] = (SourceWidth * filterY) + filterX;
 					filterOffsetCount++;
 				}
 			}
 
-			// RG, RB, GB
+			filterLength = despeckleFilter.GetLength(0);
+			filterOffset = Convert.ToInt32(Math.Floor((double)filterLength / 2));
+			filterEnd = filterLength - filterOffset;
 
-			PixelValueCount = 3;
-			PixelValueMax = PixelValueCount * 255;
-			PixelValueThreshold = (PixelValueMax * 255) / 4;
+			DespeckleFilterWeights = new int[filterLength * filterLength];
+			DespeckleFilterOffsets = new int[filterLength * filterLength];
+
+			filterOffsetCount = 0;
+
+			for (int filterY = -filterOffset; filterY < filterEnd; filterY++) {
+				for (int filterX = -filterOffset; filterX < filterEnd; filterX++) {
+					DespeckleFilterWeights[filterOffsetCount] = despeckleFilter[filterY + filterOffset, filterX + filterOffset];
+					DespeckleFilterOffsets[filterOffsetCount] = (SourceWidth * filterY) + filterX;
+					filterOffsetCount++;
+				}
+			}
 		}
 
 		[NotifyPropertyChangedAction]
