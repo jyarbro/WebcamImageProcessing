@@ -9,9 +9,7 @@ using System.Windows.Threading;
 using Microsoft.Kinect;
 using KinectImageProcessing.Helpers;
 using System.Windows;
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.Threading;
 
 namespace KinectImageProcessing {
 	public class MainWindowViewModel : INotifyPropertyChanged {
@@ -81,31 +79,36 @@ namespace KinectImageProcessing {
 			}
 		}
 		double _FrameCounter = 0;
-		int _FPSCalcDelay = 50;
 
 		public KinectSensor Sensor { get; set; }
 		public WriteableBitmap FilteredImage { get; set; }
 
-		DateTime FrameTimer { get; set; }
-		DateTime RunTimer { get; set; }
-		double FrameProcessDuration { get; set; }
+		int _FPSCalcDelay = 50;
 
-		int[] FilterWeights { get; set; }
-		int[] FilterOffsets { get; set; }
+		DateTime FrameTimer;
+		DateTime RunTimer;
+		double FrameProcessDuration;
 
-		int SourceStride { get; set; }
-		int SourceWidth { get; set; }
-		int SourceHeight { get; set; }
+		int[] FilterWeights;
+		int[] FilterOffsets;
 
-		int PixelCount { get; set; }
-		int ByteCount { get; set; }
+		int SourceStride;
+		int SourceWidth;
+		int SourceHeight;
 
-		Int32Rect ImageRect { get; set; }
+		int PixelCount;
+		int ByteCount;
 
-		int[] IntArray1 { get; set; }
-		int[] IntArray2 { get; set; }
-		byte[] ByteArray1 { get; set; }
-		byte[] ByteArray2 { get; set; }
+		Int32Rect ImageRect;
+
+		int[] IntArray1;
+		int[] IntArray2;
+		byte[] ByteArray1;
+		byte[] ByteArray2;
+
+		int PixelValueCount;
+		int PixelValueMax;
+		int PixelValueThreshold;
 
 		public MainWindowViewModel() {
 			FrameTimer = DateTime.Now.AddMilliseconds(_FPSCalcDelay);
@@ -130,7 +133,7 @@ namespace KinectImageProcessing {
 			PixelCount = SourceWidth * SourceHeight;
 			ByteCount = SourceStride * SourceHeight;
 
-			RebuildFilterFrame();
+			BuildFilters();
 
 			IntArray1 = new int[PixelCount];
 			IntArray2 = new int[PixelCount];
@@ -145,44 +148,33 @@ namespace KinectImageProcessing {
 			catch (IOException) {
 				Sensor = null;
 			}
-
-			if (Sensor == null)
-				throw new Exception("No Kinect found or ready");
 		}
 
-		void SensorColorFrameReady(object sender, ColorImageFrameReadyEventArgs e) {
+		async void SensorColorFrameReady(object sender, ColorImageFrameReadyEventArgs e) {
+			var timer = System.Diagnostics.Stopwatch.StartNew();
 			var parentThread = Dispatcher.CurrentDispatcher;
 
 			using (ColorImageFrame colorFrame = e.OpenColorImageFrame()) {
 				if (colorFrame != null) colorFrame.CopyPixelDataTo(ByteArray1);
 			}
 
-			Task.Run(() => {
-				var timer = System.Diagnostics.Stopwatch.StartNew();
-
+			await Task.Run(() => {
 				IntArray1 = CompressToMonochrome(ByteArray1);
 				IntArray2 = FilterEdges(IntArray1);
 				ByteArray2 = ExpandFromMonochrome(IntArray2);
 
-				#region Flush to screen
-
-				try {
-					parentThread.Invoke(() => {
-						FilteredImage.WritePixels(
-							ImageRect,
-							ByteArray2,
-							SourceStride,
-							0);
-					});
-				}
-				catch { }
+				parentThread.Invoke(() => {
+					FilteredImage.WritePixels(
+						ImageRect,
+						ByteArray2,
+						SourceStride,
+						0);
+				});
 
 				FrameCounter++;
 
 				timer.Stop();
 				FrameProcessDuration += timer.ElapsedMilliseconds;
-
-				#endregion
 			});
 		}
 
@@ -192,11 +184,18 @@ namespace KinectImageProcessing {
 			var pixelOffset = 0;
 
 			for (var byteOffset = 0; byteOffset < ByteCount; byteOffset += 4) {
-				var pixelValue = (byte)(255 - (inputValues[pixelOffset] / 3));
-				outputValues[byteOffset] = pixelValue;
-				outputValues[byteOffset + 1] = pixelValue;
-				outputValues[byteOffset + 2] = pixelValue;
+				byte byteValue;
+
+				if (inputValues[pixelOffset] > PixelValueThreshold)
+					byteValue = 255;
+				else
+					byteValue = 0;
+
+				outputValues[byteOffset] = byteValue;
+				outputValues[byteOffset + 1] = byteValue;
+				outputValues[byteOffset + 2] = byteValue;
 				outputValues[byteOffset + 3] = 255;
+
 				pixelOffset++;
 			}
 
@@ -209,7 +208,10 @@ namespace KinectImageProcessing {
 			var pixelOffset = 0;
 
 			for (var byteOffset = 0; byteOffset < ByteCount; byteOffset += 4) {
-				outputValues[pixelOffset] = inputValues[byteOffset] + inputValues[byteOffset + 1] + inputValues[byteOffset + 2];
+				outputValues[pixelOffset] =
+					(inputValues[byteOffset] * inputValues[byteOffset]) +
+					(inputValues[byteOffset + 1] * inputValues[byteOffset + 1]) +
+					(inputValues[byteOffset + 2] * inputValues[byteOffset + 2]);
 				pixelOffset++;
 			}
 
@@ -230,11 +232,6 @@ namespace KinectImageProcessing {
 						aggregate += monochromePixelValues[offset] * FilterWeights[filterOffset];
 				}
 
-				if (aggregate >= 128)
-					aggregate = 765;
-				else if (aggregate < 128)
-					aggregate = 0;
-
 				filteredPixelValues[pixel] = aggregate;
 			}
 
@@ -247,7 +244,13 @@ namespace KinectImageProcessing {
 			RunTimer = default(DateTime);
 		}
 		
-		void RebuildFilterFrame() {
+		void BuildFilters() {
+			//var filter = new int[,] {
+			//	{ -1, -1, -1 },
+			//	{ -1,  8, -1 },
+			//	{ -1, -1, -1 },
+			//};
+
 			var filter = new int[,] {
 				{  0, -1,  0, -1,  0 },
 				{ -1, -1,  0, -1, -1 },
@@ -272,6 +275,12 @@ namespace KinectImageProcessing {
 					filterOffsetCount++;
 				}
 			}
+
+			// RG, RB, GB
+
+			PixelValueCount = 3;
+			PixelValueMax = PixelValueCount * 255;
+			PixelValueThreshold = (PixelValueMax * 255) / 4;
 		}
 
 		[NotifyPropertyChangedAction]
