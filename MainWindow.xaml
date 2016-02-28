@@ -1,0 +1,71 @@
+﻿<Window x:Class="KinectImageProcessing.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:KinectImageProcessing"
+		xmlns:helpers="clr-namespace:KinectImageProcessing.Helpers"
+		d:DataContext="{d:DesignInstance Type=local:MainWindowViewModel, IsDesignTimeCreatable=True}"
+        mc:Ignorable="d"
+		SizeToContent="WidthAndHeight"
+		Loaded="WindowLoaded"
+		Closing="WindowClosing"
+        Title="MainWindow">
+
+	<DockPanel>
+		<StatusBar DockPanel.Dock="Bottom">
+			<StatusBar.ItemsPanel>
+				<ItemsPanelTemplate>
+					<Grid>
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="*" />
+						</Grid.ColumnDefinitions>
+					</Grid>
+				</ItemsPanelTemplate>
+			</StatusBar.ItemsPanel>
+
+			<StatusBarItem Grid.Column="0">
+				<TextBlock Text="{Binding StatusText}" />
+			</StatusBarItem>
+		</StatusBar>
+
+		<Menu DockPanel.Dock="Top">
+			<MenuItem Header="_File">
+				<MenuItem Header="_Save" />
+			</MenuItem>
+		</Menu>
+
+		<Grid Margin="10">
+			<Grid.RowDefinitions>
+				<RowDefinition Height="*" />
+			</Grid.RowDefinitions>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*" />
+			</Grid.ColumnDefinitions>
+
+			<StackPanel
+				Grid.Row="0" 
+				Grid.Column="0">
+
+				<Image					
+					Source="{Binding FilteredImage}"
+					Margin="10"
+					Width="640"
+					Height="480"
+					Name="FilteredImage" />
+
+				<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+					<Label>Frames per second:</Label>
+					<TextBlock Text="{Binding FramesPerSecond}" VerticalAlignment="Center" />
+				</StackPanel>
+
+				<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+					<Label>Frame lag:</Label>
+					<TextBlock Text="{Binding FrameLag}" VerticalAlignment="Center" />
+					<Label>ms</Label>
+				</StackPanel>
+
+			</StackPanel>
+		</Grid>
+	</DockPanel>
+</Window>
