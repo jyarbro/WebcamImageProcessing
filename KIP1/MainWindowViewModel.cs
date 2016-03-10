@@ -7,7 +7,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Microsoft.Kinect;
-using KinectImageProcessing.Helpers;
 using System.Windows;
 using System.Threading.Tasks;
 
@@ -161,9 +160,9 @@ namespace KinectImageProcessing {
 			}
 
 			await Task.Run(() => {
-				IntArray1 = CompressToMonochrome(ByteArray1);
+				IntArray1 = AggregatePixelValues(ByteArray1);
 				IntArray1 = FilterEdges(IntArray1);
-				ByteArray2 = ExpandFromMonochrome(IntArray1, ByteArray1);
+				ByteArray2 = ExpandPixelValues(IntArray1, ByteArray1);
 
 				parentThread.Invoke(() => {
 					FilteredImage.WritePixels(
@@ -180,7 +179,7 @@ namespace KinectImageProcessing {
 			});
 		}
 
-		byte[] ExpandFromMonochrome(int[] inputValues, byte[] inputBytes) {
+		byte[] ExpandPixelValues(int[] inputValues, byte[] inputBytes) {
 			var outputValues = new byte[ByteCount];
 
 			var pixelOffset = 0;
@@ -203,7 +202,7 @@ namespace KinectImageProcessing {
 			return outputValues;
 		}
 
-		int[] CompressToMonochrome(byte[] inputValues) {
+		int[] AggregatePixelValues(byte[] inputValues) {
 			var outputValues = new int[PixelCount];
 
 			var pixelOffset = 0;
@@ -281,7 +280,7 @@ namespace KinectImageProcessing {
 			var edgeFilter = new int[,] {
 				{  0, -1,  0, -1,  0 },
 				{ -1, -1,  0, -1, -1 },
-				{  0,  0, 12,  0,  0 },
+				{  0,  0,  12,  0,  0 },
 				{ -1, -1,  0, -1, -1 },
 				{  0, -1,  0, -1,  0 }
 			};
@@ -300,9 +299,11 @@ namespace KinectImageProcessing {
 
 			for (int filterY = -filterOffset; filterY < filterEnd; filterY++) {
 				for (int filterX = -filterOffset; filterX < filterEnd; filterX++) {
-					EdgeFilterWeights[filterOffsetCount] = edgeFilter[filterY + filterOffset, filterX + filterOffset];
-					EdgeFilterOffsets[filterOffsetCount] = (SourceWidth * filterY) + filterX;
-					filterOffsetCount++;
+					if (edgeFilter[filterY + filterOffset, filterX + filterOffset] > 0) {
+						EdgeFilterWeights[filterOffsetCount] = edgeFilter[filterY + filterOffset, filterX + filterOffset];
+						EdgeFilterOffsets[filterOffsetCount] = (SourceWidth * filterY) + filterX;
+						filterOffsetCount++;
+					}
 				}
 			}
 

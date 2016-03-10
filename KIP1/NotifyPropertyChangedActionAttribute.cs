@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace KinectImageProcessing.Helpers {
+namespace KinectImageProcessing {
 	[AttributeUsage(AttributeTargets.Method)]
 	public class NotifyPropertyChangedActionAttribute : Attribute {
 		public NotifyPropertyChangedActionAttribute() { }

@@ -1,0 +1,35 @@
+﻿<UserControl x:Class="KIP2.Views.VisualSensorControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:KIP2.Views"
+             xmlns:localViewModels="clr-namespace:KIP2.ViewModels"
+			 mc:Ignorable="d"
+			 d:DataContext="{d:DesignInstance localViewModels:VisualSensorViewModel, IsDesignTimeCreatable=True}">
+
+	<UserControl.DataContext>
+		<localViewModels:VisualSensorViewModel />
+	</UserControl.DataContext>
+
+	<StackPanel>
+		<Image					
+			Source="{Binding OutputImage}"
+			Margin="10"
+			Width="640"
+			Height="480"
+			Name="OutputImage" />
+
+		<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+			<Label>Frames per second:</Label>
+			<TextBlock Text="{Binding FramesPerSecond}" VerticalAlignment="Center" />
+		</StackPanel>
+
+		<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+			<Label>Frame lag:</Label>
+			<TextBlock Text="{Binding FrameLag}" VerticalAlignment="Center" />
+			<Label>ms</Label>
+		</StackPanel>
+
+	</StackPanel>
+</UserControl>
