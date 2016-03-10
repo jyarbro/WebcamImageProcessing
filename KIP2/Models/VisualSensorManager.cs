@@ -71,8 +71,8 @@ namespace KIP2.Models {
 			SensorData = new byte[640 * 480 * 4];
 			ImageProcessor = new BrightnessFocusProcessor();
 
-			Sensor.ColorFrameReady += GetSensorImage;
-			//Sensor.ColorFrameReady += GetSensorImageAsync;
+			//Sensor.ColorFrameReady += GetSensorImage;
+			Sensor.ColorFrameReady += GetSensorImageAsync;
 
 			try {
 				Sensor.Start();

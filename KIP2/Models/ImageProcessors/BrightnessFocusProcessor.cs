@@ -57,10 +57,8 @@ namespace KIP2.Models.ImageProcessors {
 
 					foreach (var sampleOffset in _sampleOffsets) {
 						if (pixel + sampleOffset > 0 && pixel + sampleOffset < _byteCount) {
-							//brightness += _inputArray[pixel + sampleOffset] | _inputArray[pixel + sampleOffset + 1] | _inputArray[pixel + sampleOffset + 2];
-							brightness += _inputArray[pixel + sampleOffset];
-							brightness += _inputArray[pixel + sampleOffset + 1];
-							brightness += _inputArray[pixel + sampleOffset + 2];
+							brightness += _inputArray[pixel + sampleOffset] | _inputArray[pixel + sampleOffset + 1] | _inputArray[pixel + sampleOffset + 2];
+							//brightness += _inputArray[pixel + sampleOffset] + _inputArray[pixel + sampleOffset + 1] + _inputArray[pixel + sampleOffset + 2];
 						}
 					}
 
