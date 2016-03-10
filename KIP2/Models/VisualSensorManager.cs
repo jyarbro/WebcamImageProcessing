@@ -101,7 +101,10 @@ namespace KIP2.Models {
 
 		void GetSensorImage(object sender, ColorImageFrameReadyEventArgs e) {
 			using (ColorImageFrame colorFrame = e.OpenColorImageFrame()) {
-				if (colorFrame != null) colorFrame.CopyPixelDataTo(SensorData);
+				try {
+					colorFrame.CopyPixelDataTo(SensorData);
+				}
+				catch {}
 			}
 
 			var processedImage = ImageProcessor.ProcessImage(SensorData);
@@ -110,11 +113,14 @@ namespace KIP2.Models {
 				return;
 
 			Application.Current.Dispatcher.Invoke(() => {
-				FilteredImage.WritePixels(
-					ImageRect,
-					processedImage,
-					SourceStride,
-					0);
+				try {
+					FilteredImage.WritePixels(
+						ImageRect,
+						processedImage,
+						SourceStride,
+						0);
+				}
+				catch {}
 			});
 
 			FrameCount++;
