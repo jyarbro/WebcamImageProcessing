@@ -20,7 +20,7 @@ namespace KIP2.Models.ImageProcessors {
 			_focusByteCount = _focusAreaSize * _focusAreaSize * 4;
 
 			_sampleAreaSize = 5;
-			_sampleAreaGap = 15;
+			_sampleAreaGap = 11;
 			_sampleByteCount = _sampleAreaSize * _sampleAreaSize * 4;
 
 			_focusArea = new byte[_focusByteCount];
@@ -46,22 +46,31 @@ namespace KIP2.Models.ImageProcessors {
 			var brightestPixelValue = 0;
 			var brightestPixelDistance = _imageMidX + _imageMidY;
 
+			var maxDistanceFromCenter = 0;
+
 			for (int y = 0; y < _imageMaxY; y += _sampleAreaGap) {
+				var yOffset = y * _imageMaxX;
+
 				for (int x = 0; x < _imageMaxX; x += _sampleAreaGap) {
-					var pixel = ((y * _imageMaxX) + x) * 4;
+					var pixel = (yOffset + x) * 4;
 					var brightness = 0;
 
 					foreach (var sampleOffset in _sampleOffsets) {
-						if (pixel + sampleOffset > 0 && pixel + sampleOffset < _pixelCount)
+						if (pixel + sampleOffset > 0 && pixel + sampleOffset < _byteCount) {
 							//brightness += _inputArray[pixel + sampleOffset] | _inputArray[pixel + sampleOffset + 1] | _inputArray[pixel + sampleOffset + 2];
-							brightness += (_inputArray[pixel + sampleOffset] + _inputArray[pixel + sampleOffset + 1] + _inputArray[pixel + sampleOffset + 2]) / 3;
+							brightness += _inputArray[pixel + sampleOffset];
+							brightness += _inputArray[pixel + sampleOffset + 1];
+							brightness += _inputArray[pixel + sampleOffset + 2];
+						}
 					}
 
 					if (brightness >= brightestPixelValue) {
 						// speed cheat - not true hypoteneuse!
 						var distanceFromCenter = Math.Abs(x - _imageMidX) + Math.Abs(y - _imageMidY);
 
-						if (distanceFromCenter < brightestPixelDistance) {
+						maxDistanceFromCenter = distanceFromCenter;
+
+						if (distanceFromCenter <= brightestPixelDistance) {
 							brightestPixelDistance = distanceFromCenter;
 							brightestPixelValue = brightness;
 							_focusAreaCenter = pixel;
@@ -90,11 +99,11 @@ namespace KIP2.Models.ImageProcessors {
 		void BuildOutput() {
 			var byteCount = 0;
 
-			//for (var i = 0; i < _byteCount; i += 4) {
-			//	_outputArray[i] = 0;
-			//	_outputArray[i + 1] = 0;
-			//	_outputArray[i + 2] = 0;
-			//}
+			for (var i = 0; i < _byteCount; i += 4) {
+				_outputArray[i] = 0;
+				_outputArray[i + 1] = 0;
+				_outputArray[i + 2] = 0;
+			}
 
 			foreach (var offset in _focusOffsets) {
 				var effectiveOffset = offset + _focusAreaCenter;
@@ -107,16 +116,28 @@ namespace KIP2.Models.ImageProcessors {
 
 				byteCount += 4;
 			}
+
+			//Buffer.BlockCopy(_inputArray, 0, _outputArray, 0, _inputArray.Length);
 		}
 
 		void AddSamplingPoints() {
 			for (int y = 0; y < _imageMaxY; y += _sampleAreaGap) {
+				var yOffset = y * _imageMaxX;
+
 				for (int x = 0; x < _imageMaxX; x += _sampleAreaGap) {
-					var pixel = ((y * _imageMaxX) + x) * 4;
+					var pixel = (yOffset + x) * 4;
 
 					_outputArray[pixel + 0] = 255;
 					_outputArray[pixel + 1] = 0;
 					_outputArray[pixel + 2] = 0;
+				}
+			}
+
+			foreach (var sampleOffset in _sampleOffsets) {
+				if (_focusAreaCenter + sampleOffset > 0 && _focusAreaCenter + sampleOffset < _byteCount) {
+					_outputArray[_focusAreaCenter + sampleOffset] = 0;
+					_outputArray[_focusAreaCenter + sampleOffset + 1] = 0;
+					_outputArray[_focusAreaCenter + sampleOffset + 2] = 255;
 				}
 			}
 		}
