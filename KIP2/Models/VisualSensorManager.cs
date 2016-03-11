@@ -28,7 +28,7 @@ namespace KIP2.Models {
 
 					if (UpdateFrameRate != null) UpdateFrameRate(this, new FrameRateEventArgs {
 						FramesPerSecond = Math.Round(_FrameCount / totalSeconds),
-						FrameLag = Math.Round(FrameDuration / _FrameCount)
+						FrameLag = Math.Round(FrameDuration / _FrameCount, 3)
 					});
 				}
 
@@ -69,7 +69,7 @@ namespace KIP2.Models {
 
 			SourceStride = 640 * 4;
 			SensorData = new byte[640 * 480 * 4];
-			ImageProcessor = new BrightnessFocusProcessor();
+			ImageProcessor = new EdgeProcessor();
 
 			//Sensor.ColorFrameReady += GetSensorImage;
 			Sensor.ColorFrameReady += GetSensorImageAsync;
@@ -112,16 +112,10 @@ namespace KIP2.Models {
 			if (Application.Current == null || Application.Current.Dispatcher.HasShutdownStarted)
 				return;
 
-			Application.Current.Dispatcher.Invoke(() => {
-				try {
-					FilteredImage.WritePixels(
-						ImageRect,
-						processedImage,
-						SourceStride,
-						0);
-				}
-				catch {}
-			});
+			try {
+				Application.Current.Dispatcher.Invoke(() => { FilteredImage.WritePixels(ImageRect, processedImage, SourceStride, 0); });
+			}
+			catch { }
 
 			FrameCount++;
 		}

@@ -56,8 +56,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Models\ImageProcessors\EdgeProcessor.cs" />
     <Compile Include="Models\ImageProcessors\ImageProcessor.cs" />
-    <Compile Include="Models\ImageProcessors\BrokenProcessor.cs" />
     <Compile Include="Models\ImageProcessors\BrightnessFocusProcessor.cs" />
     <Compile Include="Models\FrameRateEventArgs.cs" />
     <Compile Include="Models\VisualSensorManager.cs" />

@@ -9,7 +9,6 @@ namespace KIP2.Models.ImageProcessors {
 
 		protected int _pixelCount;
 		protected int _byteCount;
-		protected int _pixelValueMax;
 
 		protected byte[] _inputArray;
 		protected byte[] _outputArray;
@@ -17,7 +16,6 @@ namespace KIP2.Models.ImageProcessors {
 		public ImageProcessor() {
 			_pixelCount = _imageMaxX * _imageMaxY;
 			_byteCount = _pixelCount * 4;
-			_pixelValueMax = 3 * 255 * 255;
 
 			_inputArray = new byte[_byteCount];
 			_outputArray = new byte[_byteCount];
@@ -25,9 +23,11 @@ namespace KIP2.Models.ImageProcessors {
 
 		public abstract byte[] ProcessImage(byte[] inputArray);
 
-		protected void CalculateOffsets(int size, int[] offsets) {
+		protected int[] GetOffsetsForSquare(int size) {
 			if (size % 2 == 0)
 				throw new Exception("Odd sizes only!");
+
+			var offsets = new int[size * size];
 
 			var areaMax = Convert.ToInt32(Math.Floor((double)size / 2));
 			var areaMin = areaMax * -1;
@@ -40,6 +40,8 @@ namespace KIP2.Models.ImageProcessors {
 					offset++;
 				}
 			}
+
+			return offsets;
 		}
 	}
 }

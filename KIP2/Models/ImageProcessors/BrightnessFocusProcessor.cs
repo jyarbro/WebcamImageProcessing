@@ -19,16 +19,16 @@ namespace KIP2.Models.ImageProcessors {
 			_focusAreaSize = 99;
 			_focusByteCount = _focusAreaSize * _focusAreaSize * 4;
 
-			_sampleAreaSize = 5;
-			_sampleAreaGap = 11;
+			_sampleAreaSize = 11;
+			_sampleAreaGap = 10;
 			_sampleByteCount = _sampleAreaSize * _sampleAreaSize * 4;
 
 			_focusArea = new byte[_focusByteCount];
 			_focusOffsets = new int[_focusAreaSize * _focusAreaSize];
 			_sampleOffsets = new int[_sampleAreaSize * _sampleAreaSize];
 
-			CalculateOffsets(_focusAreaSize, _focusOffsets);
-			CalculateOffsets(_sampleAreaSize, _sampleOffsets);
+			_focusOffsets = GetOffsetsForSquare(_focusAreaSize);
+			_sampleOffsets = GetOffsetsForSquare(_sampleAreaSize);
 		}
 
 		public override byte[] ProcessImage(byte[] inputArray) {
@@ -57,8 +57,7 @@ namespace KIP2.Models.ImageProcessors {
 
 					foreach (var sampleOffset in _sampleOffsets) {
 						if (pixel + sampleOffset > 0 && pixel + sampleOffset < _byteCount) {
-							brightness += _inputArray[pixel + sampleOffset] | _inputArray[pixel + sampleOffset + 1] | _inputArray[pixel + sampleOffset + 2];
-							//brightness += _inputArray[pixel + sampleOffset] + _inputArray[pixel + sampleOffset + 1] + _inputArray[pixel + sampleOffset + 2];
+							brightness += _inputArray[pixel + sampleOffset] + _inputArray[pixel + sampleOffset + 1] + _inputArray[pixel + sampleOffset + 2];
 						}
 					}
 
@@ -95,27 +94,27 @@ namespace KIP2.Models.ImageProcessors {
 		}
 
 		void BuildOutput() {
-			var byteCount = 0;
+			//var byteCount = 0;
 
-			for (var i = 0; i < _byteCount; i += 4) {
-				_outputArray[i] = 0;
-				_outputArray[i + 1] = 0;
-				_outputArray[i + 2] = 0;
-			}
+			//for (var i = 0; i < _byteCount; i += 4) {
+			//	_outputArray[i] = 0;
+			//	_outputArray[i + 1] = 0;
+			//	_outputArray[i + 2] = 0;
+			//}
 
-			foreach (var offset in _focusOffsets) {
-				var effectiveOffset = offset + _focusAreaCenter;
+			//foreach (var offset in _focusOffsets) {
+			//	var effectiveOffset = offset + _focusAreaCenter;
 
-				if (effectiveOffset > 0 && effectiveOffset < _byteCount) {
-					_outputArray[effectiveOffset] = _focusArea[byteCount];
-					_outputArray[effectiveOffset + 1] = _focusArea[byteCount + 1];
-					_outputArray[effectiveOffset + 2] = _focusArea[byteCount + 2];
-				}
+			//	if (effectiveOffset > 0 && effectiveOffset < _byteCount) {
+			//		_outputArray[effectiveOffset] = _focusArea[byteCount];
+			//		_outputArray[effectiveOffset + 1] = _focusArea[byteCount + 1];
+			//		_outputArray[effectiveOffset + 2] = _focusArea[byteCount + 2];
+			//	}
 
-				byteCount += 4;
-			}
+			//	byteCount += 4;
+			//}
 
-			//Buffer.BlockCopy(_inputArray, 0, _outputArray, 0, _inputArray.Length);
+			Buffer.BlockCopy(_inputArray, 0, _outputArray, 0, _inputArray.Length);
 		}
 
 		void AddSamplingPoints() {

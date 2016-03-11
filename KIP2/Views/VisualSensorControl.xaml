@@ -5,8 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:KIP2.Views"
              xmlns:localViewModels="clr-namespace:KIP2.ViewModels"
-			 mc:Ignorable="d"
-			 d:DataContext="{d:DesignInstance localViewModels:VisualSensorViewModel, IsDesignTimeCreatable=True}">
+			 mc:Ignorable="d">
 
 	<UserControl.DataContext>
 		<localViewModels:VisualSensorViewModel />
@@ -20,12 +19,12 @@
 			Height="480"
 			Name="OutputImage" />
 
-		<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+		<StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
 			<Label>Frames per second:</Label>
 			<TextBlock Text="{Binding FramesPerSecond}" VerticalAlignment="Center" />
 		</StackPanel>
 
-		<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+		<StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
 			<Label>Frame lag:</Label>
 			<TextBlock Text="{Binding FrameLag}" VerticalAlignment="Center" />
 			<Label>ms</Label>
