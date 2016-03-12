@@ -7,14 +7,14 @@ namespace KIP2.Models.ImageProcessors {
 		protected int[] _edgeFilterWeights;
 		protected int[] _edgeFilterOffsets;
 
-		int[] _tempIntArray1;
-		int[] _tempIntArray2;
+		int[] _tempArray;
 
 		public EdgeProcessor() : base() {
-			_tempIntArray1 = new int[_pixelCount];
-			_tempIntArray2 = new int[_pixelCount];
+			_tempArray = new int[_pixelCount];
 
 			_edgeFilterOffsets = GetOffsetsForSquare(3);
+
+			// try changing this to left sample, control, right sample, and control offset
 
 			_edgeFilterWeights = new int[] {
 				-1, -1, -1,
@@ -22,68 +22,36 @@ namespace KIP2.Models.ImageProcessors {
 				-1, -1, -1,
 			};
 
-			_pixelEdgeThreshold = (255 * 255 * 3) / 4;
+			_pixelEdgeThreshold = 255 * _edgeFilterWeights.Length;
 		}
 
 		public override byte[] ProcessImage(byte[] inputArray) {
-			Buffer.BlockCopy(inputArray, 0, _inputArray, 0, _byteCount);
-
-			AggregatePixelValues();
-			FilterEdges();
-			ExpandPixelValues();
-
-			return _outputArray;
-		}
-
-		void AggregatePixelValues() {
-			var pixelOffset = 0;
+			Buffer.BlockCopy(inputArray, 0, _outputArray, 0, inputArray.Length);
 
 			for (var byteOffset = 0; byteOffset < _byteCount; byteOffset += 4) {
-				_tempIntArray1[pixelOffset] =
-					(_inputArray[byteOffset] * _inputArray[byteOffset]) +
-					(_inputArray[byteOffset + 1] * _inputArray[byteOffset + 1]) +
-					(_inputArray[byteOffset + 2] * _inputArray[byteOffset + 2]);
-				pixelOffset++;
-			}
-		}
-
-		void FilterEdges() {
-			var filterLength = _edgeFilterWeights.Length;
-
-			for (var pixel = 0; pixel < _pixelCount; pixel++) {
 				var aggregate = 0;
 
-				for (var filterOffset = 0; filterOffset < filterLength; filterOffset++) {
-					var offset = _edgeFilterOffsets[filterOffset] + pixel;
+				for (var filterOffset = 0; filterOffset < _edgeFilterOffsets.Length; filterOffset++) {
+					var offset = byteOffset + (_edgeFilterOffsets[filterOffset] * 4);
 
-					if (offset > 0 && offset < _pixelCount)
-						aggregate += _tempIntArray1[offset] * _edgeFilterWeights[filterOffset];
+					if (offset > 0 && offset < _byteCount) {
+						var brightness =
+							((inputArray[offset] * inputArray[offset]) +
+							(inputArray[offset + 1] * inputArray[offset + 1]) +
+							(inputArray[offset + 2] * inputArray[offset + 2])) / 3;
+
+						aggregate += brightness * _edgeFilterWeights[filterOffset];
+					}
 				}
 
-				if (aggregate >= _pixelEdgeThreshold)
-					_tempIntArray2[pixel] = 1;
-				else
-					_tempIntArray2[pixel] = 0;
+				if (aggregate >= _pixelEdgeThreshold) {
+					_outputArray[byteOffset] = 0;
+					_outputArray[byteOffset + 1] = 0;
+					_outputArray[byteOffset + 2] = 0;
+				}
 			}
-		}
 
-		void ExpandPixelValues() {
-			var byteCount = 0;
-
-			for (var pixelCount = 0; pixelCount < _pixelCount; pixelCount++) {
-				if (_tempIntArray2[pixelCount] == 1) {
-					_outputArray[byteCount] = 0;
-					_outputArray[byteCount + 1] = 0;
-					_outputArray[byteCount + 2] = 0;
-				}
-				else {
-					_outputArray[byteCount] = _inputArray[byteCount];
-					_outputArray[byteCount + 1] = _inputArray[byteCount + 1];
-					_outputArray[byteCount + 2] = _inputArray[byteCount + 2];
-				}
-
-				byteCount += 4;
-			}
+			return _outputArray;
 		}
 	}
 }
