@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace KIP2.Models.ImageProcessors {
 	public class EdgeProcessor : ImageProcessor {
@@ -12,46 +14,77 @@ namespace KIP2.Models.ImageProcessors {
 		public EdgeProcessor() : base() {
 			_tempArray = new int[_pixelCount];
 
-			_edgeFilterOffsets = GetOffsetsForSquare(3);
+			CalculateFilterValues();
 
-			// try changing this to left sample, control, right sample, and control offset
-
-			_edgeFilterWeights = new int[] {
-				-1, -1, -1,
-				-1,  8, -1,
-				-1, -1, -1,
-			};
-
-			_pixelEdgeThreshold = 255 * _edgeFilterWeights.Length;
+			_pixelEdgeThreshold = 60 * 3;
 		}
 
 		public override byte[] ProcessImage(byte[] inputArray) {
-			Buffer.BlockCopy(inputArray, 0, _outputArray, 0, inputArray.Length);
+			Buffer.BlockCopy(inputArray, 0, _outputArray, 0, _byteCount);
 
-			for (var byteOffset = 0; byteOffset < _byteCount; byteOffset += 4) {
-				var aggregate = 0;
+			for (var i = 0; i < _byteCount; i += 4) {
+				var sample = 0;
 
-				for (var filterOffset = 0; filterOffset < _edgeFilterOffsets.Length; filterOffset++) {
-					var offset = byteOffset + (_edgeFilterOffsets[filterOffset] * 4);
+				for (var j = 0; j < _edgeFilterOffsets.Length; j++) {
+					if (_edgeFilterWeights[j] == 0)
+						continue;
 
-					if (offset > 0 && offset < _byteCount) {
-						var brightness =
-							((inputArray[offset] * inputArray[offset]) +
-							(inputArray[offset + 1] * inputArray[offset + 1]) +
-							(inputArray[offset + 2] * inputArray[offset + 2])) / 3;
+					var offset = i + (_edgeFilterOffsets[j] * 4);
 
-						aggregate += brightness * _edgeFilterWeights[filterOffset];
-					}
+					if (offset > 0 && offset < _byteCount)
+						sample += _edgeFilterWeights[j] * (inputArray[offset] + inputArray[offset + 1] + inputArray[offset + 2]);
 				}
 
-				if (aggregate >= _pixelEdgeThreshold) {
-					_outputArray[byteOffset] = 0;
-					_outputArray[byteOffset + 1] = 0;
-					_outputArray[byteOffset + 2] = 0;
+				if (sample >= _pixelEdgeThreshold) {
+					_outputArray[i] = 0;
+					_outputArray[i + 1] = 0;
+					_outputArray[i + 2] = 0;
+				}
+				else {
+					_outputArray[i] = 255;
+					_outputArray[i + 1] = 255;
+					_outputArray[i + 2] = 255;
 				}
 			}
 
 			return _outputArray;
+		}
+
+		void CalculateFilterValues() {
+			// try changing this to left sample, control, right sample, and control offset
+
+			//_edgeFilterWeights = new int[] {
+			//	-1, -1, -1,
+			//	-1,  8, -1,
+			//	-1, -1, -1,
+			//};
+
+			var edgeFilterWeights = new List<int> {
+				 0, -1,  0, -1,  0,
+				-1,  0,  0,  0, -1,
+				 0,  0,  8,  0,  0,
+				-1,  0,  0,  0, -1,
+				 0, -1,  0, -1,  0,
+			};
+
+			var edgeFilterOffsets = GetOffsetsForSquare(edgeFilterWeights.Count);
+
+			var filteredPixelCount = edgeFilterWeights.Where(f => f != 0).Count();
+
+			_edgeFilterOffsets = new int[filteredPixelCount];
+			_edgeFilterWeights = new int[filteredPixelCount];
+
+			var j = 0;
+
+			for (var i = 0; i < edgeFilterWeights.Count; i++) {
+				if (edgeFilterWeights[i] == 0)
+					continue;
+
+				_edgeFilterWeights[j] = edgeFilterWeights[i];
+				_edgeFilterOffsets[j] = edgeFilterOffsets[i];
+
+				j++;
+			}
 		}
 	}
 }

@@ -27,9 +27,8 @@ namespace KIP2.Models.ImageProcessors {
 			if (size % 2 == 0)
 				throw new Exception("Odd sizes only!");
 
-			var offsets = new int[size * size];
-
-			var areaMax = Convert.ToInt32(Math.Floor((double)size / 2));
+			var offsets = new int[size];
+			var areaMax = Convert.ToInt32(Math.Floor(Math.Sqrt(size) / 2));
 			var areaMin = areaMax * -1;
 
 			var offset = 0;

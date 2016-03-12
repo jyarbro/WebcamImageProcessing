@@ -16,16 +16,16 @@ namespace KIP2.Models.ImageProcessors {
 		int[] _sampleOffsets;
 
 		public BrightnessFocusProcessor() : base() {
-			_focusAreaSize = 99;
-			_focusByteCount = _focusAreaSize * _focusAreaSize * 4;
+			_focusAreaSize = 99 * 99;
+			_focusByteCount = _focusAreaSize * 4;
 
-			_sampleAreaSize = 11;
+			_sampleAreaSize = 11 * 11;
 			_sampleAreaGap = 10;
-			_sampleByteCount = _sampleAreaSize * _sampleAreaSize * 4;
+			_sampleByteCount = _sampleAreaSize * 4;
 
 			_focusArea = new byte[_focusByteCount];
-			_focusOffsets = new int[_focusAreaSize * _focusAreaSize];
-			_sampleOffsets = new int[_sampleAreaSize * _sampleAreaSize];
+			_focusOffsets = new int[_focusAreaSize];
+			_sampleOffsets = new int[_sampleAreaSize];
 
 			_focusOffsets = GetOffsetsForSquare(_focusAreaSize);
 			_sampleOffsets = GetOffsetsForSquare(_sampleAreaSize);
