@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
-using System.Windows.Threading;
 using KIP2.Models.ImageProcessors;
 using Microsoft.Kinect;
 
@@ -69,7 +68,6 @@ namespace KIP2.Models {
 
 			SourceStride = 640 * 4;
 			SensorData = new byte[640 * 480 * 4];
-			ImageProcessor = new EdgeProcessor();
 
 			//Sensor.ColorFrameReady += GetSensorImage;
 			Sensor.ColorFrameReady += GetSensorImageAsync;

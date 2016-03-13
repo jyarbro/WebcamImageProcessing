@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using KIP2.Annotations;
+using KIP2.Helpers;
 
 namespace KIP2.Models {
 	public class Observable : INotifyPropertyChanged {
