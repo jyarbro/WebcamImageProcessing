@@ -59,7 +59,7 @@
     </ApplicationDefinition>
     <Compile Include="Helpers\RelayCommand.cs" />
     <Compile Include="Models\ImageProcessors\EdgeProcessor.cs" />
-    <Compile Include="Models\ImageProcessors\ImageProcessor.cs" />
+    <Compile Include="Models\ImageProcessors\ImageProcessorBase.cs" />
     <Compile Include="Models\ImageProcessors\BrightnessFocusProcessor.cs" />
     <Compile Include="Models\FrameRateEventArgs.cs" />
     <Compile Include="Models\VisualSensorManager.cs" />

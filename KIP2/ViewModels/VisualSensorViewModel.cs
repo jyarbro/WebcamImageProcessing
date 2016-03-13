@@ -49,7 +49,7 @@ namespace KIP2.ViewModels {
 				
 				if (VisualSensorManager != null) {
 					var processorType = Type.GetType("KIP2.Models.ImageProcessors." + _SelectedProcessorName + ", KIP2");
-					var processorInstance = (ImageProcessor)Activator.CreateInstance(processorType);
+					var processorInstance = (ImageProcessorBase)Activator.CreateInstance(processorType);
 
 					VisualSensorManager.ImageProcessor = processorInstance;
 				}
@@ -64,7 +64,7 @@ namespace KIP2.ViewModels {
 				FilteredImage = OutputImage
 			};
 
-			ProcessorNames = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.BaseType.Equals(typeof(ImageProcessor))).Select(t => t.Name).ToList();
+			ProcessorNames = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.BaseType.Equals(typeof(ImageProcessorBase))).Select(t => t.Name).ToList();
 
 			SelectedProcessorName = ProcessorNames.First();
 			SelectedProcessorIndex = ProcessorNames.IndexOf(SelectedProcessorName);

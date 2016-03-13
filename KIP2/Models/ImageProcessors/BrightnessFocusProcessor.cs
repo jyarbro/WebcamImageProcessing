@@ -1,7 +1,7 @@
 ﻿using System;
 
 namespace KIP2.Models.ImageProcessors {
-	public class BrightnessFocusProcessor : ImageProcessor {
+	public class BrightnessFocusProcessor : ImageProcessorBase {
 		int _focusAreaSize;
 		int _focusByteCount;
 		int _focusAreaCenter;

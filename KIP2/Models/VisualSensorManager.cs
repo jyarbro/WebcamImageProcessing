@@ -42,7 +42,7 @@ namespace KIP2.Models {
 		DateTime FrameTimer;
 		DateTime RunTimer;
 
-		public ImageProcessor ImageProcessor;
+		public ImageProcessorBase ImageProcessor;
 
 		public KinectSensor Sensor;
 		public Int32Rect ImageRect;

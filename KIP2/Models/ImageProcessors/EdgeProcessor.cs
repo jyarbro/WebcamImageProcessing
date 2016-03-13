@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace KIP2.Models.ImageProcessors {
-	public class EdgeProcessor : ImageProcessor {
+	public class EdgeProcessor : ImageProcessorBase {
 		protected int _pixelEdgeThreshold;
 
 		protected int[] _edgeFilterWeights;

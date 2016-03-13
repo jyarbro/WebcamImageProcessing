@@ -1,7 +1,7 @@
 ﻿using System;
 
 namespace KIP2.Models.ImageProcessors {
-	public abstract class ImageProcessor {
+	public abstract class ImageProcessorBase {
 		protected int _imageMaxX = 640;
 		protected int _imageMaxY = 480;
 		protected int _imageMidX = 320;
@@ -13,7 +13,7 @@ namespace KIP2.Models.ImageProcessors {
 		protected byte[] _inputArray;
 		protected byte[] _outputArray;
 
-		public ImageProcessor() {
+		public ImageProcessorBase() {
 			_pixelCount = _imageMaxX * _imageMaxY;
 			_byteCount = _pixelCount * 4;
 
