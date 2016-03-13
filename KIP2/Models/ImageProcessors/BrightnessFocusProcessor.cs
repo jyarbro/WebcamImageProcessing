@@ -37,7 +37,7 @@ namespace KIP2.Models.ImageProcessors {
 			DetectBrightness();
 			LoadFocusArea();
 			BuildOutput();
-			AddSamplingPoints();
+			OverlaySamplingInfo();
 
 			return _outputArray;
 		}
@@ -117,7 +117,8 @@ namespace KIP2.Models.ImageProcessors {
 			Buffer.BlockCopy(_inputArray, 0, _outputArray, 0, _inputArray.Length);
 		}
 
-		void AddSamplingPoints() {
+		void OverlaySamplingInfo() {
+			// Add blue pixels for sampling grid
 			for (int y = 0; y < _imageMaxY; y += _sampleAreaGap) {
 				var yOffset = y * _imageMaxX;
 
@@ -130,6 +131,7 @@ namespace KIP2.Models.ImageProcessors {
 				}
 			}
 
+			// Add red spot to highlight focal point
 			foreach (var sampleOffset in _sampleOffsets) {
 				if (_focusAreaCenter + sampleOffset > 0 && _focusAreaCenter + sampleOffset < _byteCount) {
 					_outputArray[_focusAreaCenter + sampleOffset] = 0;
