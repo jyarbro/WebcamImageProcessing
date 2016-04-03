@@ -4,12 +4,19 @@ using System.Linq;
 using System.Reflection;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using KIP2.Helpers;
 using KIP2.Models;
 using KIP2.Models.DepthProcessors;
 using KIP2.Models.ImageProcessors;
 
-namespace KIP2.ViewModels {
-	public class VisualSensorViewModel : ViewModelBase {
+namespace KIP2.Views {
+	public class MainWindowViewModel : Observable {
+		public string StatusText {
+			get { return _StatusText ?? (_StatusText = string.Empty); }
+			set { SetProperty(ref _StatusText, value); }
+		}
+		string _StatusText;
+
 		public double FramesPerSecond {
 			get { return _FramesPerSecond; }
 			set { SetProperty(ref _FramesPerSecond, value); }
@@ -81,7 +88,7 @@ namespace KIP2.ViewModels {
 		}
 		string _SelectedDepthProcessorName;
 
-		public VisualSensorViewModel() {
+		public MainWindowViewModel() {
 			OutputImage = new WriteableBitmap(640, 480, 96.0, 96.0, PixelFormats.Bgr32, null);
 
 			StreamManager = new StreamManager {

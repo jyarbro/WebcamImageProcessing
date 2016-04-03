@@ -64,12 +64,8 @@
     <Compile Include="Models\ImageProcessors\EdgeProcessor.cs" />
     <Compile Include="Models\ImageProcessors\ImageProcessorBase.cs" />
     <Compile Include="Models\ImageProcessors\BrightnessFocusProcessor.cs" />
-    <Compile Include="Models\FrameRateEventArgs.cs" />
-    <Compile Include="ViewModels\ViewModelBase.cs" />
-    <Compile Include="Views\VisualSensorControl.xaml.cs">
-      <DependentUpon>VisualSensorControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="ViewModels\VisualSensorViewModel.cs" />
+    <Compile Include="Helpers\FrameRateEventArgs.cs" />
+    <Compile Include="Views\MainWindowViewModel.cs" />
     <Page Include="Views\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -82,15 +78,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="Views\VisualSensorControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ViewModels\MainWindowViewModel.cs" />
     <Compile Include="Helpers\NotifyPropertyChangedActionAttribute.cs" />
-    <Compile Include="Models\Observable.cs" />
+    <Compile Include="Helpers\Observable.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>

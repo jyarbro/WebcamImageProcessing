@@ -4,21 +4,13 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:KIP2.Views"
-        xmlns:localViewModels="clr-namespace:KIP2.ViewModels"
         mc:Ignorable="d"
-		d:DataContext="{d:DesignInstance localViewModels:MainWindowViewModel, IsDesignTimeCreatable=True}"
 		SizeToContent="WidthAndHeight"
         Title="Kinect Image Processor">
 
 	<Window.DataContext>
-		<localViewModels:MainWindowViewModel />
+		<local:MainWindowViewModel />
 	</Window.DataContext>
-
-	<Window.Resources>
-		<DataTemplate DataType="{x:Type localViewModels:VisualSensorViewModel}">
-			<local:VisualSensorControl />
-		</DataTemplate>
-	</Window.Resources>
 
 	<DockPanel>
 		<StatusBar DockPanel.Dock="Bottom">
@@ -37,6 +29,41 @@
 			</StatusBarItem>
 		</StatusBar>
 
-		<ContentControl Margin="10" Content="{Binding ContentViewModel}" />
+		<StackPanel>
+			<Image
+			Source="{Binding OutputImage}"
+			Margin="10"
+			Width="640"
+			Height="480"
+			Name="OutputImage" />
+
+			<StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+				<Label>Image Processor:</Label>
+				<ComboBox
+				ItemsSource="{Binding ImageProcessorNames}"  
+				SelectedIndex="{Binding SelectedImageProcessorIndex}"
+				SelectedItem="{Binding SelectedImageProcessorName}" />
+			</StackPanel>
+
+			<StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+				<Label>Depth Processor:</Label>
+				<ComboBox
+				ItemsSource="{Binding DepthProcessorNames}"  
+				SelectedIndex="{Binding SelectedDepthProcessorIndex}"
+				SelectedItem="{Binding SelectedDepthProcessorName}" />
+			</StackPanel>
+
+			<StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+				<Label>Frames per second:</Label>
+				<TextBlock Text="{Binding FramesPerSecond}" VerticalAlignment="Center" />
+			</StackPanel>
+
+			<StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+				<Label>Frame lag:</Label>
+				<TextBlock Text="{Binding FrameLag}" VerticalAlignment="Center" />
+				<Label>ms</Label>
+			</StackPanel>
+
+		</StackPanel>
 	</DockPanel>
 </Window>

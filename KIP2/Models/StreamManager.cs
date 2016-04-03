@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
+using KIP2.Helpers;
 using KIP2.Models.DepthProcessors;
 using KIP2.Models.ImageProcessors;
 using Microsoft.Kinect;
@@ -17,7 +18,7 @@ namespace KIP2.Models {
 		double FrameCount {
 			get { return _FrameCount; }
 			set {
-				if (value == _FrameCount)
+				if (_FrameCount == value)
 					return;
 
 				_FrameCount = value;
