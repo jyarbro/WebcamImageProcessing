@@ -21,11 +21,19 @@
 			Name="OutputImage" />
 
 		<StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-			<Label>Processor:</Label>
+			<Label>Image Processor:</Label>
 			<ComboBox
-				ItemsSource="{Binding ProcessorNames}"  
-				SelectedIndex="{Binding SelectedProcessorIndex}"
-				SelectedItem="{Binding SelectedProcessorName}" />
+				ItemsSource="{Binding ImageProcessorNames}"  
+				SelectedIndex="{Binding SelectedImageProcessorIndex}"
+				SelectedItem="{Binding SelectedImageProcessorName}" />
+		</StackPanel>
+
+		<StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+			<Label>Depth Processor:</Label>
+			<ComboBox
+				ItemsSource="{Binding DepthProcessorNames}"  
+				SelectedIndex="{Binding SelectedDepthProcessorIndex}"
+				SelectedItem="{Binding SelectedDepthProcessorName}" />
 		</StackPanel>
 
 		<StackPanel Orientation="Horizontal" HorizontalAlignment="Left">

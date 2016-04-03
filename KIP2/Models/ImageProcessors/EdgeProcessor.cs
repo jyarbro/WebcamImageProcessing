@@ -9,13 +9,8 @@ namespace KIP2.Models.ImageProcessors {
 		protected int[] _edgeFilterWeights;
 		protected int[] _edgeFilterOffsets;
 
-		int[] _tempArray;
-
 		public EdgeProcessor() : base() {
-			_tempArray = new int[_pixelCount];
-
 			CalculateFilterValues();
-
 			_pixelEdgeThreshold = 60 * 3;
 		}
 
@@ -53,19 +48,19 @@ namespace KIP2.Models.ImageProcessors {
 		void CalculateFilterValues() {
 			// try changing this to left sample, control, right sample, and control offset
 
-			//_edgeFilterWeights = new int[] {
-			//	-1, -1, -1,
-			//	-1,  8, -1,
-			//	-1, -1, -1,
-			//};
-
 			var edgeFilterWeights = new List<int> {
-				 0, -1,  0, -1,  0,
-				-1,  0,  0,  0, -1,
-				 0,  0,  8,  0,  0,
-				-1,  0,  0,  0, -1,
-				 0, -1,  0, -1,  0,
+				-1, -1, -1,
+				-1,  8, -1,
+				-1, -1, -1,
 			};
+
+			//var edgeFilterWeights = new List<int> {
+			//	 0, -1,  0, -1,  0,
+			//	-1,  0,  0,  0, -1,
+			//	 0,  0,  8,  0,  0,
+			//	-1,  0,  0,  0, -1,
+			//	 0, -1,  0, -1,  0,
+			//};
 
 			var edgeFilterOffsets = GetOffsetsForSquare(edgeFilterWeights.Count);
 
