@@ -62,7 +62,7 @@ namespace KIP2.Models.ImageProcessors {
 			//	 0, -1,  0, -1,  0,
 			//};
 
-			var edgeFilterOffsets = SquareOffsets(edgeFilterWeights.Count);
+			var edgeFilterOffsets = SquareOffsets(edgeFilterWeights.Count, _imageMaxX);
 
 			var filteredPixelCount = edgeFilterWeights.Where(f => f != 0).Count();
 

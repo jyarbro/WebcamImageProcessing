@@ -11,7 +11,7 @@ namespace KIP2.Models.ImageProcessors {
 
 		public DepthFocusProcessor() : base() {
 			_sampleAreaGap = 5;
-			_sampleOffsets = SquareOffsets(11 * 11, false);
+			_sampleOffsets = SquareOffsets(11 * 11, _imageMaxX, false);
 		}
 
 		public override byte[] ProcessImage(byte[] inputArray, short[] depthArray = null) {

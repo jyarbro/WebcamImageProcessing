@@ -27,8 +27,8 @@ namespace KIP2.Models.ImageProcessors {
 			_focusOffsets = new int[_focusAreaSize];
 			_sampleOffsets = new int[_sampleAreaSize];
 
-			_focusOffsets = SquareOffsets(_focusAreaSize);
-			_sampleOffsets = SquareOffsets(_sampleAreaSize);
+			_focusOffsets = SquareOffsets(_focusAreaSize, _imageMaxX);
+			_sampleOffsets = SquareOffsets(_sampleAreaSize, _imageMaxX);
 		}
 
 		public override byte[] ProcessImage(byte[] inputArray, short[] depthArray = null) {
