@@ -6,7 +6,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using KIP2.Helpers;
 using KIP2.Models;
-using KIP2.Models.DepthProcessors;
 using KIP2.Models.ImageProcessors;
 
 namespace KIP2.Views {
@@ -38,19 +37,12 @@ namespace KIP2.Views {
 		public StreamManager StreamManager { get; set; }
 
 		public List<string> ImageProcessorNames { get; set; }
-		public List<string> DepthProcessorNames { get; set; }
 
 		public int SelectedImageProcessorIndex {
 			get { return _SelectedImageProcessorIndex; }
 			set { SetProperty(ref _SelectedImageProcessorIndex, value); }
 		}
 		int _SelectedImageProcessorIndex;
-
-		public int SelectedDepthProcessorIndex {
-			get { return _SelectedDepthProcessorIndex; }
-			set { SetProperty(ref _SelectedDepthProcessorIndex, value); }
-		}
-		int _SelectedDepthProcessorIndex;
 
 		public string SelectedImageProcessorName {
 			get { return _SelectedImageProcessorName; }
@@ -70,24 +62,6 @@ namespace KIP2.Views {
 		}
 		string _SelectedImageProcessorName;
 
-		public string SelectedDepthProcessorName {
-			get { return _SelectedDepthProcessorName; }
-			set {
-				if (value == _SelectedDepthProcessorName)
-					return;
-
-				_SelectedDepthProcessorName = value;
-
-				if (StreamManager != null) {
-					var processorType = Type.GetType("KIP2.Models.DepthProcessors." + _SelectedDepthProcessorName + ", KIP2");
-					var processorInstance = (DepthProcessorBase)Activator.CreateInstance(processorType);
-
-					StreamManager.DepthProcessor = processorInstance;
-				}
-			}
-		}
-		string _SelectedDepthProcessorName;
-
 		public MainWindowViewModel() {
 			OutputImage = new WriteableBitmap(640, 480, 96.0, 96.0, PixelFormats.Bgr32, null);
 
@@ -96,13 +70,9 @@ namespace KIP2.Views {
 			};
 
 			ImageProcessorNames = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.BaseType.Equals(typeof(ImageProcessorBase))).Select(t => t.Name).ToList();
-			DepthProcessorNames = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.BaseType.Equals(typeof(DepthProcessorBase))).Select(t => t.Name).ToList();
 
 			SelectedImageProcessorName = ImageProcessorNames.First();
 			SelectedImageProcessorIndex = ImageProcessorNames.IndexOf(SelectedImageProcessorName);
-
-			SelectedDepthProcessorName = DepthProcessorNames.First();
-			SelectedDepthProcessorIndex = DepthProcessorNames.IndexOf(SelectedDepthProcessorName);
 
 			StreamManager.UpdateFrameRate += UpdateFrameRate;
 		}

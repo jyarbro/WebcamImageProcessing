@@ -12,6 +12,7 @@ namespace KIP2.Models.ImageProcessors {
 
 		protected byte[] _inputArray;
 		protected byte[] _outputArray;
+		protected short[] _depthArray;
 
 		public ImageProcessorBase() {
 			_pixelCount = _imageMaxX * _imageMaxY;
@@ -21,9 +22,9 @@ namespace KIP2.Models.ImageProcessors {
 			_outputArray = new byte[_byteCount];
 		}
 
-		public abstract byte[] ProcessImage(byte[] inputArray);
+		public abstract byte[] ProcessImage(byte[] inputArray, short[] depthArray = null);
 
-		protected int[] GetOffsetsForSquare(int size) {
+		protected int[] SquareOffsets(int size, bool byteMultiplier = true) {
 			if (size % 2 == 0)
 				throw new Exception("Odd sizes only!");
 
@@ -35,7 +36,11 @@ namespace KIP2.Models.ImageProcessors {
 
 			for (int yOffset = areaMin; yOffset <= areaMax; yOffset++) {
 				for (int xOffset = areaMin; xOffset <= areaMax; xOffset++) {
-					offsets[offset] = (xOffset + (yOffset * _imageMaxX)) * 4;
+					offsets[offset] = xOffset + (yOffset * _imageMaxX);
+
+					if (byteMultiplier)
+						offsets[offset] = offsets[offset] * 4;
+
 					offset++;
 				}
 			}

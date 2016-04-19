@@ -27,11 +27,11 @@ namespace KIP2.Models.ImageProcessors {
 			_focusOffsets = new int[_focusAreaSize];
 			_sampleOffsets = new int[_sampleAreaSize];
 
-			_focusOffsets = GetOffsetsForSquare(_focusAreaSize);
-			_sampleOffsets = GetOffsetsForSquare(_sampleAreaSize);
+			_focusOffsets = SquareOffsets(_focusAreaSize);
+			_sampleOffsets = SquareOffsets(_sampleAreaSize);
 		}
 
-		public override byte[] ProcessImage(byte[] inputArray) {
+		public override byte[] ProcessImage(byte[] inputArray, short[] depthArray = null) {
 			_inputArray = inputArray;
 
 			DetectBrightness();

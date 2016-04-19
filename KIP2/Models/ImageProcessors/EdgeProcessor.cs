@@ -14,7 +14,7 @@ namespace KIP2.Models.ImageProcessors {
 			_pixelEdgeThreshold = 60 * 3;
 		}
 
-		public override byte[] ProcessImage(byte[] inputArray) {
+		public override byte[] ProcessImage(byte[] inputArray, short[] depthArray = null) {
 			Buffer.BlockCopy(inputArray, 0, _outputArray, 0, _byteCount);
 
 			for (var i = 0; i < _byteCount; i += 4) {
@@ -24,7 +24,7 @@ namespace KIP2.Models.ImageProcessors {
 					if (_edgeFilterWeights[j] == 0)
 						continue;
 
-					var offset = i + (_edgeFilterOffsets[j] * 4);
+					var offset = i + _edgeFilterOffsets[j];
 
 					if (offset > 0 && offset < _byteCount)
 						sample += _edgeFilterWeights[j] * (inputArray[offset] + inputArray[offset + 1] + inputArray[offset + 2]);
@@ -62,7 +62,7 @@ namespace KIP2.Models.ImageProcessors {
 			//	 0, -1,  0, -1,  0,
 			//};
 
-			var edgeFilterOffsets = GetOffsetsForSquare(edgeFilterWeights.Count);
+			var edgeFilterOffsets = SquareOffsets(edgeFilterWeights.Count);
 
 			var filteredPixelCount = edgeFilterWeights.Where(f => f != 0).Count();
 
@@ -76,7 +76,7 @@ namespace KIP2.Models.ImageProcessors {
 					continue;
 
 				_edgeFilterWeights[j] = edgeFilterWeights[i];
-				_edgeFilterOffsets[j] = edgeFilterOffsets[i];
+				_edgeFilterOffsets[j] = edgeFilterOffsets[i] * 4;
 
 				j++;
 			}

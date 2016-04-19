@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using KIP2.Helpers;
-using KIP2.Models.DepthProcessors;
 using KIP2.Models.ImageProcessors;
 using Microsoft.Kinect;
 
@@ -48,7 +47,7 @@ namespace KIP2.Models {
 		DateTime RunTimer;
 
 		public ImageProcessorBase ImageProcessor;
-		public DepthProcessorBase DepthProcessor;
+		public DepthProcessor DepthProcessor;
 
 		public KinectSensor Sensor;
 		public Int32Rect ImageRect;
@@ -58,6 +57,9 @@ namespace KIP2.Models {
 
 		public byte[] ColorSensorData;
 		public DepthImagePixel[] DepthSensorData;
+		public ColorImagePoint[] ColorCoordinates;
+
+		public short[] ImageDepthData;
 
 		public StreamManager() {
 			Sensor = KinectSensor.KinectSensors.FirstOrDefault(s => s.Status == KinectStatus.Connected);
@@ -75,23 +77,14 @@ namespace KIP2.Models {
 			ColorSourceStride = 640 * 4;
 			ColorSensorData = new byte[640 * 480 * 4];
 
-			Sensor.ColorStream.Enable(ColorImageFormat.RgbResolution640x480Fps30);
-			Sensor.ColorFrameReady += (object sender, ColorImageFrameReadyEventArgs e) => {
-				using (ColorImageFrame colorFrame = e.OpenColorImageFrame()) {
-					try { colorFrame.CopyPixelDataTo(ColorSensorData); }
-					catch { }
-				}
-			};
-
+			DepthProcessor = new DepthProcessor();
 			DepthSensorData = new DepthImagePixel[Sensor.DepthStream.FramePixelDataLength];
+			ColorCoordinates = new ColorImagePoint[Sensor.DepthStream.FramePixelDataLength];
 
+			Sensor.ColorStream.Enable(ColorImageFormat.RgbResolution640x480Fps30);
 			Sensor.DepthStream.Enable(DepthImageFormat.Resolution640x480Fps30);
-			Sensor.DepthFrameReady += (object sender, DepthImageFrameReadyEventArgs e) => {
-				using (DepthImageFrame depthFrame = e.OpenDepthImageFrame()) {
-					try { depthFrame.CopyDepthImagePixelDataTo(DepthSensorData); }
-					catch { }
-				}
-			};
+
+			Sensor.AllFramesReady += SensorAllFramesReady;
 
 			try {
 				Sensor.Start();
@@ -109,6 +102,24 @@ namespace KIP2.Models {
 			RunTimer = DateTime.Now;
 		}
 		
+		void SensorAllFramesReady(object sender, AllFramesReadyEventArgs e) {
+			using (ColorImageFrame colorFrame = e.OpenColorImageFrame()) {
+				try { colorFrame.CopyPixelDataTo(ColorSensorData); }
+				catch { }
+			}
+
+			using (DepthImageFrame depthFrame = e.OpenDepthImageFrame()) {
+				try { depthFrame.CopyDepthImagePixelDataTo(DepthSensorData); }
+				catch { }
+			}
+
+			Sensor.CoordinateMapper.MapDepthFrameToColorFrame(
+				DepthImageFormat.Resolution640x480Fps30,
+				DepthSensorData,
+				ColorImageFormat.RgbResolution640x480Fps30,
+				ColorCoordinates);
+		}
+
 		void ProcessSensorData() {
 			Task.Run(() => {
 				Stopwatch timer;
@@ -117,11 +128,11 @@ namespace KIP2.Models {
 				while (true) {
 					timer = Stopwatch.StartNew();
 
-					//if (DepthProcessor != null)
-
+					if (DepthProcessor != null)
+						ImageDepthData = DepthProcessor.ProcessImage(DepthSensorData);
 
 					if (ImageProcessor != null)
-						processedImage = ImageProcessor.ProcessImage(ColorSensorData);
+						processedImage = ImageProcessor.ProcessImage(ColorSensorData, ImageDepthData);
 
 					if (processedImage == null)
 						continue;

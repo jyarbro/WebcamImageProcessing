@@ -46,14 +46,6 @@
 			</StackPanel>
 
 			<StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-				<Label>Depth Processor:</Label>
-				<ComboBox
-				ItemsSource="{Binding DepthProcessorNames}"  
-				SelectedIndex="{Binding SelectedDepthProcessorIndex}"
-				SelectedItem="{Binding SelectedDepthProcessorName}" />
-			</StackPanel>
-
-			<StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
 				<Label>Frames per second:</Label>
 				<TextBlock Text="{Binding FramesPerSecond}" VerticalAlignment="Center" />
 			</StackPanel>
