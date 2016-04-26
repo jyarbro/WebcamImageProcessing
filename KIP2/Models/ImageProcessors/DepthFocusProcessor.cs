@@ -6,11 +6,19 @@ namespace KIP2.Models.ImageProcessors {
 		int _focusAreaCenter;
 
 		int _sampleAreaGap;
+		int _sampleAreaHorizontalCount;
+		int _sampleAreaVerticalCount;
+		int _sampleAreaTotalCount;
 
 		int[] _sampleOffsets;
 
 		public DepthFocusProcessor() : base() {
 			_sampleAreaGap = 5;
+
+			_sampleAreaHorizontalCount = _imageMaxX / _sampleAreaGap;
+			_sampleAreaVerticalCount = _imageMaxY / _sampleAreaGap;
+			_sampleAreaTotalCount = (_imageMaxX * _imageMaxY) / _sampleAreaGap;
+
 			_sampleOffsets = SquareOffsets(11 * 11, _imageMaxX, false);
 		}
 
@@ -44,8 +52,6 @@ namespace KIP2.Models.ImageProcessors {
 					foreach (var sampleOffset in _sampleOffsets) {
 						if (pixel + sampleOffset > 0 && pixel + sampleOffset < _pixelCount) {
 							var depthOffset = pixel + sampleOffset;
-							var mappingOffset = 
-
 							depth += _depthArray[depthOffset];
 						}
 					}

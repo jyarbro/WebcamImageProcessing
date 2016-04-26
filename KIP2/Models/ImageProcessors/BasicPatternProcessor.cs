@@ -66,26 +66,26 @@ namespace KIP2.Models.ImageProcessors {
 		}
 
 		void LoadFocusPartOffsets() {
-			var focusOffsets = SquareOffsets(9801, 640);
+			var focusOffsets = SquareOffsets(_focusRegionArea, _imageMaxX);
 
-			for (int i = 0; i < 81; i++) {
-				_focusParts.Add(new byte[121 * 4]);
-				_focusPartOffsets.Add(new int[121]);
+			for (int i = 0; i < _focusPartTotalCount; i++) {
+				_focusParts.Add(new byte[_focusPartArea * 4]);
+				_focusPartOffsets.Add(new int[_focusPartArea]);
 			}
 
 			for (var i = 0; i < focusOffsets.Length; i++) {
-				var y = Convert.ToInt32(Math.Floor((double)i / 99));
-				var x = i % 99;
+				var y = Convert.ToInt32(Math.Floor((double)i / _focusRegionWidth));
+				var x = i % _focusRegionWidth;
 
-				var focusPartRow = Convert.ToInt32(Math.Floor((double)y / 11));
-				var focusPartCol = Convert.ToInt32(Math.Floor((double)x / 11));
+				var focusPartRow = Convert.ToInt32(Math.Floor((double) y / _focusPartWidth));
+				var focusPartCol = Convert.ToInt32(Math.Floor((double) x / _focusPartWidth));
 
-				var focusPartOffset = focusPartCol + (focusPartRow * 9);
+				var focusPartOffset = focusPartCol + (focusPartRow * _focusPartHorizontalCount);
 
-				_focusPartOffsets[focusPartOffset][i % 121] = focusOffsets[i];
+				_focusPartOffsets[focusPartOffset][i % _focusPartArea] = focusOffsets[i];
 			}
 		}
-		
+
 		void DetectFocalPoint() {
 			var brightestPixelValue = 0;
 			var brightestPixelDistance = _imageMidX + _imageMidY;
@@ -119,7 +119,7 @@ namespace KIP2.Models.ImageProcessors {
 					}
 				}
 			}
-		 }
+		}
 
 		void LoadFocusArea() {
 			for (int i = 0; i < _focusPartOffsets.Count; i++) {
