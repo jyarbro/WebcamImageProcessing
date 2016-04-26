@@ -3,67 +3,46 @@ using System.Collections.Generic;
 
 namespace KIP2.Models.ImageProcessors {
 	public class BasicPatternProcessor : ImageProcessorBase {
-		int _focusAreaSize;
-		int _focusByteCount;
-		int _focusAreaCenter;
-		int _focusSubAreaWidth;
-		int _sampleCenterOffset;
+		int _focusRegionArea;
+		int _focusRegionWidth;
+		int _focusRegionCenter;
 
-		List<int[]> _focusSubAreaOffsets;
-		List<byte[]> _focusAreas;
+		int _focusPartArea;
+		int _focusPartWidth;
+		int _focusPartHorizontalCount;
+		int _focusPartTotalCount;
 
-		int _sampleAreaGap;
-		int _sampleAreaSize;
+		List<int[]> _focusPartOffsets;
+		List<byte[]> _focusParts;
+
+		int _sampleGap;
 		int _sampleByteCount;
+		int _sampleCenterOffset;
 
 		int[] _sampleOffsets;
 
 		public BasicPatternProcessor() : base() {
-			_sampleAreaSize = 11 * 11;
-			_focusAreaSize = 99 * 99;
-			_sampleAreaGap = 10;
+			_sampleGap = 10;
 
-			_focusSubAreaOffsets = new List<int[]>();
-			_focusAreas = new List<byte[]>();
+			_focusPartWidth = 11;
+			_focusRegionWidth = 99;
+
+			if (_focusRegionWidth % _focusPartWidth > 0)
+				throw new Exception("Focus area width must be divisible by sample area width");
+
+			_focusPartArea = _focusPartWidth * _focusPartWidth; // 121
+			_focusRegionArea = _focusRegionWidth * _focusRegionWidth; // 9801
+
+			_focusPartHorizontalCount = _focusRegionWidth / _focusPartWidth; // 9
+			_focusPartTotalCount = _focusPartHorizontalCount * _focusPartHorizontalCount; // 81
+
+			_focusPartOffsets = new List<int[]>();
+			_focusParts = new List<byte[]>();
 		}
 
 		public override void Load() {
 			LoadSampleOffsets();
-			LoadFocusOffsets();
-		}
-
-		void LoadSampleOffsets() {
-			_sampleByteCount = _sampleAreaSize * 4;
-			_sampleOffsets = SquareOffsets(_sampleAreaSize, _imageMaxX);
-			_sampleCenterOffset = Convert.ToInt32(Math.Floor(Math.Sqrt(_sampleAreaSize) / 2));
-		}
-
-		void LoadFocusOffsets() {
-			_focusByteCount = _focusAreaSize * 4;
-
-			var focusOffsets = SquareOffsets(_focusAreaSize, _imageMaxX);
-			var focusSubAreaCount = (double)_focusAreaSize / _sampleAreaSize;
-
-			_focusSubAreaWidth = Convert.ToInt32(Math.Sqrt(focusSubAreaCount));
-
-			var focusSubAreaOffsets = SquareOffsets(_sampleAreaSize, _focusSubAreaWidth, false);
-
-			for (int y = 0; y < _focusSubAreaWidth; y++) {
-				var yEffective = ((y * _sampleAreaSize) + _sampleCenterOffset) * _focusSubAreaWidth;
-
-				for (int x = 0; x < _focusSubAreaWidth; x++) {
-					var xyTarget = (x * _sampleAreaSize) + _sampleCenterOffset + yEffective;
-
-					_focusAreas.Add(new byte[_sampleAreaSize * 4]);
-
-					var focusSubArea = new int[_sampleAreaSize];
-
-					for (int i = 0; i < focusSubAreaOffsets.Length; i++)
-						focusSubArea[i] = focusOffsets[xyTarget + focusSubAreaOffsets[i]];
-
-					_focusSubAreaOffsets.Add(focusSubArea);
-				}
-			}
+			LoadFocusPartOffsets();
 		}
 
 		public override byte[] ProcessImage(byte[] inputArray, short[] depthArray = null) {
@@ -80,16 +59,43 @@ namespace KIP2.Models.ImageProcessors {
 			return _outputArray;
 		}
 
+		void LoadSampleOffsets() {
+			_sampleByteCount = _focusPartArea * 4;
+			_sampleOffsets = SquareOffsets(_focusPartArea, _imageMaxX);
+			_sampleCenterOffset = Convert.ToInt32(Math.Floor(Math.Sqrt(_focusPartArea) / 2));
+		}
+
+		void LoadFocusPartOffsets() {
+			var focusOffsets = SquareOffsets(9801, 640);
+
+			for (int i = 0; i < 81; i++) {
+				_focusParts.Add(new byte[121 * 4]);
+				_focusPartOffsets.Add(new int[121]);
+			}
+
+			for (var i = 0; i < focusOffsets.Length; i++) {
+				var y = Convert.ToInt32(Math.Floor((double)i / 99));
+				var x = i % 99;
+
+				var focusPartRow = Convert.ToInt32(Math.Floor((double)y / 11));
+				var focusPartCol = Convert.ToInt32(Math.Floor((double)x / 11));
+
+				var focusPartOffset = focusPartCol + (focusPartRow * 9);
+
+				_focusPartOffsets[focusPartOffset][i % 121] = focusOffsets[i];
+			}
+		}
+		
 		void DetectFocalPoint() {
 			var brightestPixelValue = 0;
 			var brightestPixelDistance = _imageMidX + _imageMidY;
 
 			var maxDistanceFromCenter = 0;
 
-			for (int y = 0; y < _imageMaxY; y += _sampleAreaGap) {
+			for (int y = 0; y < _imageMaxY; y += _sampleGap) {
 				var yOffset = y * _imageMaxX;
 
-				for (int x = 0; x < _imageMaxX; x += _sampleAreaGap) {
+				for (int x = 0; x < _imageMaxX; x += _sampleGap) {
 					var pixel = (yOffset + x) * 4;
 					var brightness = 0;
 
@@ -108,7 +114,7 @@ namespace KIP2.Models.ImageProcessors {
 						if (distanceFromCenter <= brightestPixelDistance) {
 							brightestPixelDistance = distanceFromCenter;
 							brightestPixelValue = brightness;
-							_focusAreaCenter = pixel;
+							_focusRegionCenter = pixel;
 						}
 					}
 				}
@@ -116,17 +122,17 @@ namespace KIP2.Models.ImageProcessors {
 		 }
 
 		void LoadFocusArea() {
-			for (int i = 0; i < _focusSubAreaOffsets.Count; i++) {
-				var subAreaOffsets = _focusSubAreaOffsets[i];
+			for (int i = 0; i < _focusPartOffsets.Count; i++) {
+				var subAreaOffsets = _focusPartOffsets[i];
 				var byteCount = 0;
 
 				foreach (var subAreaOffset in subAreaOffsets) {
-					var effectiveOffset = subAreaOffset + _focusAreaCenter;
+					var effectiveOffset = subAreaOffset + _focusRegionCenter;
 
 					if (effectiveOffset > 0 && effectiveOffset < _byteCount) {
-						_focusAreas[i][byteCount] = _inputArray[effectiveOffset];
-						_focusAreas[i][byteCount + 1] = _inputArray[effectiveOffset + 1];
-						_focusAreas[i][byteCount + 2] = _inputArray[effectiveOffset + 2];
+						_focusParts[i][byteCount] = _inputArray[effectiveOffset];
+						_focusParts[i][byteCount + 1] = _inputArray[effectiveOffset + 1];
+						_focusParts[i][byteCount + 2] = _inputArray[effectiveOffset + 2];
 					}
 
 					byteCount += 4;
@@ -141,17 +147,17 @@ namespace KIP2.Models.ImageProcessors {
 				_outputArray[i + 2] = 0;
 			}
 
-			for (int i = 0; i < _focusSubAreaOffsets.Count; i++) {
-				var subAreaOffsets = _focusSubAreaOffsets[i];
+			for (int i = 0; i < _focusPartOffsets.Count; i++) {
+				var subAreaOffsets = _focusPartOffsets[i];
 				var byteCount = 0;
 
 				foreach (var subAreaOffset in subAreaOffsets) {
-					var effectiveOffset = subAreaOffset + _focusAreaCenter;
+					var effectiveOffset = subAreaOffset + _focusRegionCenter;
 
 					if (effectiveOffset > 0 && effectiveOffset < _byteCount) {
-						_outputArray[effectiveOffset] = _focusAreas[i][byteCount];
-						_outputArray[effectiveOffset + 1] = _focusAreas[i][byteCount + 1];
-						_outputArray[effectiveOffset + 2] = _focusAreas[i][byteCount + 2];
+						_outputArray[effectiveOffset] = _focusParts[i][byteCount];
+						_outputArray[effectiveOffset + 1] = _focusParts[i][byteCount + 1];
+						_outputArray[effectiveOffset + 2] = _focusParts[i][byteCount + 2];
 					}
 
 					byteCount += 4;
@@ -161,10 +167,10 @@ namespace KIP2.Models.ImageProcessors {
 
 		void OverlaySamplingInfo() {
 			// Add blue pixels for sampling grid
-			for (int y = 0; y < _imageMaxY; y += _sampleAreaGap) {
+			for (int y = 0; y < _imageMaxY; y += _sampleGap) {
 				var yOffset = y * _imageMaxX;
 
-				for (int x = 0; x < _imageMaxX; x += _sampleAreaGap) {
+				for (int x = 0; x < _imageMaxX; x += _sampleGap) {
 					var pixel = (yOffset + x) * 4;
 
 					_outputArray[pixel + 0] = 255;
@@ -175,10 +181,10 @@ namespace KIP2.Models.ImageProcessors {
 
 			// Add red spot to highlight focal point
 			foreach (var sampleOffset in _sampleOffsets) {
-				if (_focusAreaCenter + sampleOffset > 0 && _focusAreaCenter + sampleOffset < _byteCount) {
-					_outputArray[_focusAreaCenter + sampleOffset] = 0;
-					_outputArray[_focusAreaCenter + sampleOffset + 1] = 0;
-					_outputArray[_focusAreaCenter + sampleOffset + 2] = 255;
+				if (_focusRegionCenter + sampleOffset > 0 && _focusRegionCenter + sampleOffset < _byteCount) {
+					_outputArray[_focusRegionCenter + sampleOffset] = 0;
+					_outputArray[_focusRegionCenter + sampleOffset + 1] = 0;
+					_outputArray[_focusRegionCenter + sampleOffset + 2] = 255;
 				}
 			}
 		}
