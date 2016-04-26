@@ -14,8 +14,8 @@ namespace KIP2.Models.ImageProcessors {
 			_pixelEdgeThreshold = 60 * 3;
 		}
 
-		public override byte[] ProcessImage(byte[] inputArray, short[] depthArray = null) {
-			Buffer.BlockCopy(inputArray, 0, _outputArray, 0, _byteCount);
+		public override byte[] ProcessImage() {
+			Buffer.BlockCopy(ColorSensorData, 0, _outputArray, 0, _byteCount);
 
 			for (var i = 0; i < _byteCount; i += 4) {
 				var sample = 0;
@@ -27,7 +27,7 @@ namespace KIP2.Models.ImageProcessors {
 					var offset = i + _edgeFilterOffsets[j];
 
 					if (offset > 0 && offset < _byteCount)
-						sample += _edgeFilterWeights[j] * (inputArray[offset] + inputArray[offset + 1] + inputArray[offset + 2]);
+						sample += _edgeFilterWeights[j] * (ColorSensorData[offset] + ColorSensorData[offset + 1] + ColorSensorData[offset + 2]);
 				}
 
 				if (sample >= _pixelEdgeThreshold) {

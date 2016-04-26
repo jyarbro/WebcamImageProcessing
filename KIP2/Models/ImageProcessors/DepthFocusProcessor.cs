@@ -1,5 +1,4 @@
 ﻿using System;
-using Microsoft.Kinect;
 
 namespace KIP2.Models.ImageProcessors {
 	public class DepthFocusProcessor : ImageProcessorBase {
@@ -13,7 +12,7 @@ namespace KIP2.Models.ImageProcessors {
 		int[] _sampleOffsets;
 
 		public DepthFocusProcessor() : base() {
-			_sampleAreaGap = 5;
+			_sampleAreaGap = 10;
 
 			_sampleAreaHorizontalCount = _imageMaxX / _sampleAreaGap;
 			_sampleAreaVerticalCount = _imageMaxY / _sampleAreaGap;
@@ -22,13 +21,7 @@ namespace KIP2.Models.ImageProcessors {
 			_sampleOffsets = SquareOffsets(11 * 11, _imageMaxX, false);
 		}
 
-		public override byte[] ProcessImage(byte[] inputArray, short[] depthArray = null) {
-			_inputArray = inputArray;
-			_depthArray = depthArray;
-
-			if (_depthArray == null)
-				return _inputArray;
-
+		public override byte[] ProcessImage() {
 			DetectClosestObject();
 			BuildOutput();
 			OverlaySamplingInfo();
@@ -37,7 +30,7 @@ namespace KIP2.Models.ImageProcessors {
 		}
 
 		void DetectClosestObject() {
-			var closestPixelValue = 0;
+			var closestPixelValue = 10000;
 			var closestPixelDistance = _imageMidX + _imageMidY;
 
 			var maxDistanceFromCenter = 0;
@@ -47,16 +40,9 @@ namespace KIP2.Models.ImageProcessors {
 
 				for (int x = 0; x < _imageMaxX; x += _sampleAreaGap) {
 					var pixel = yOffset + x;
-					var depth = 0;
+					var depth = ImageDepthData[pixel];
 
-					foreach (var sampleOffset in _sampleOffsets) {
-						if (pixel + sampleOffset > 0 && pixel + sampleOffset < _pixelCount) {
-							var depthOffset = pixel + sampleOffset;
-							depth += _depthArray[depthOffset];
-						}
-					}
-
-					if (depth <= closestPixelValue) {
+					if (depth > 0 && depth <= closestPixelValue) {
 						// speed cheat - not true hypoteneuse!
 						var distanceFromCenter = Math.Abs(x - _imageMidX) + Math.Abs(y - _imageMidY);
 
@@ -71,11 +57,23 @@ namespace KIP2.Models.ImageProcessors {
 				}
 			}
 
-			_focusAreaCenter = _focusAreaCenter * 4;
+			_focusAreaCenter *= 4;
 		}
 
 		void BuildOutput() {
-			Buffer.BlockCopy(_inputArray, 0, _outputArray, 0, _inputArray.Length);
+			for (int i = 0; i < ImageDepthData.Length; i++) {
+				var depth = ImageDepthData[i];
+				byte color = 0;
+
+				if (depth > 0)
+					color = Convert.ToByte(depth % 255);
+
+				_outputArray[i * 4] = color;
+				_outputArray[i * 4 + 1] = color;
+				_outputArray[i * 4 + 2] = color;
+			}
+
+			//Buffer.BlockCopy(ColorSensorData, 0, _outputArray, 0, ColorSensorData.Length);
 		}
 
 		void OverlaySamplingInfo() {

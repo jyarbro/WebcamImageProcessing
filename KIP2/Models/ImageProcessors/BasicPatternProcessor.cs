@@ -45,9 +45,7 @@ namespace KIP2.Models.ImageProcessors {
 			LoadFocusPartOffsets();
 		}
 
-		public override byte[] ProcessImage(byte[] inputArray, short[] depthArray = null) {
-			_inputArray = inputArray;
-
+		public override byte[] ProcessImage() {
 			DetectFocalPoint();
 			LoadFocusArea();
 
@@ -101,7 +99,7 @@ namespace KIP2.Models.ImageProcessors {
 
 					foreach (var sampleOffset in _sampleOffsets) {
 						if (pixel + sampleOffset > 0 && pixel + sampleOffset < _byteCount) {
-							brightness += _inputArray[pixel + sampleOffset] + _inputArray[pixel + sampleOffset + 1] + _inputArray[pixel + sampleOffset + 2];
+							brightness += ColorSensorData[pixel + sampleOffset] + ColorSensorData[pixel + sampleOffset + 1] + ColorSensorData[pixel + sampleOffset + 2];
 						}
 					}
 
@@ -130,9 +128,9 @@ namespace KIP2.Models.ImageProcessors {
 					var effectiveOffset = subAreaOffset + _focusRegionCenter;
 
 					if (effectiveOffset > 0 && effectiveOffset < _byteCount) {
-						_focusParts[i][byteCount] = _inputArray[effectiveOffset];
-						_focusParts[i][byteCount + 1] = _inputArray[effectiveOffset + 1];
-						_focusParts[i][byteCount + 2] = _inputArray[effectiveOffset + 2];
+						_focusParts[i][byteCount] = ColorSensorData[effectiveOffset];
+						_focusParts[i][byteCount + 1] = ColorSensorData[effectiveOffset + 1];
+						_focusParts[i][byteCount + 2] = ColorSensorData[effectiveOffset + 2];
 					}
 
 					byteCount += 4;

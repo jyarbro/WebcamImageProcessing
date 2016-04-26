@@ -52,14 +52,8 @@ namespace KIP2.Views {
 
 				_SelectedImageProcessorName = value;
 				
-				if (StreamManager != null) {
-					var processorType = Type.GetType("KIP2.Models.ImageProcessors." + _SelectedImageProcessorName + ", KIP2");
-					var processorInstance = (ImageProcessorBase)Activator.CreateInstance(processorType);
-
-					processorInstance.Load();
-
-					StreamManager.ImageProcessor = processorInstance;
-				}
+				if (StreamManager != null)
+					StreamManager.SetImageProcessor(_SelectedImageProcessorName);
 			}
 		}
 		string _SelectedImageProcessorName;

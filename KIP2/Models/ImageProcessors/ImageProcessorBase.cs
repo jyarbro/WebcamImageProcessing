@@ -2,6 +2,9 @@
 
 namespace KIP2.Models.ImageProcessors {
 	public abstract class ImageProcessorBase {
+		public byte[] ColorSensorData;
+		public short[] ImageDepthData;
+
 		protected int _imageMaxX = 640;
 		protected int _imageMaxY = 480;
 		protected int _imageMidX = 320;
@@ -10,15 +13,12 @@ namespace KIP2.Models.ImageProcessors {
 		protected int _pixelCount;
 		protected int _byteCount;
 
-		protected byte[] _inputArray;
 		protected byte[] _outputArray;
-		protected short[] _depthArray;
 
 		public ImageProcessorBase() {
 			_pixelCount = _imageMaxX * _imageMaxY;
 			_byteCount = _pixelCount * 4;
 
-			_inputArray = new byte[_byteCount];
 			_outputArray = new byte[_byteCount];
 		}
 
@@ -27,7 +27,7 @@ namespace KIP2.Models.ImageProcessors {
 		/// </summary>
 		public virtual void Load() { }
 
-		public abstract byte[] ProcessImage(byte[] inputArray, short[] depthArray = null);
+		public abstract byte[] ProcessImage();
 
 		protected static int[] SquareOffsets(int size, int stride, bool byteMultiplier = true) {
 			if (size % 2 == 0)
