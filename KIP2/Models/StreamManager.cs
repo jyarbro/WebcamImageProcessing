@@ -113,7 +113,7 @@ namespace KIP2.Models {
 			processorInstance.ColorSensorData = ColorSensorData;
 			processorInstance.ImageDepthData = ImageDepthData;
 
-			processorInstance.Load();
+			processorInstance.Prepare();
 
 			ImageProcessor = processorInstance;
 		}

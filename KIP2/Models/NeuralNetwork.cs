@@ -1,19 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KIP2.Models {
 	public class NeuralNetwork {
-		public List<byte[]> Neurons { get; set; }
+		public List<Neuron> Neurons;
+
+		public int SegmentWidth; // 11
+		public int SegmentArea; // 121
+
+		int Index;
+		int X;
+		int Y;
 
 		public NeuralNetwork() {
-			Neurons = new List<byte[]>();
+			Neurons = new List<Neuron>();
 		}
 
-		public void Receive(List<byte[]> segmentedInputArray) {
-
+		public void Receive(List<byte[]> segmentedInput) {
+			foreach (var segment in segmentedInput) {
+				for (Index = 0; Index < SegmentArea; Index++) {
+					Y = Index / SegmentWidth;
+					X = Index % SegmentWidth;
+				}
+			}
 		}
 	}
 }

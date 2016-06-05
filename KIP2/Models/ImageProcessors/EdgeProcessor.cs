@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace KIP2.Models.ImageProcessors {
@@ -15,9 +14,7 @@ namespace KIP2.Models.ImageProcessors {
 		}
 
 		public override byte[] ProcessImage() {
-			Buffer.BlockCopy(ColorSensorData, 0, _outputArray, 0, _byteCount);
-
-			for (var i = 0; i < _byteCount; i += 4) {
+			for (var i = 0; i < ByteCount; i += 4) {
 				var sample = 0;
 
 				for (var j = 0; j < _edgeFilterOffsets.Length; j++) {
@@ -26,23 +23,23 @@ namespace KIP2.Models.ImageProcessors {
 
 					var offset = i + _edgeFilterOffsets[j];
 
-					if (offset > 0 && offset < _byteCount)
+					if (offset > 0 && offset < ByteCount)
 						sample += _edgeFilterWeights[j] * (ColorSensorData[offset] + ColorSensorData[offset + 1] + ColorSensorData[offset + 2]);
 				}
 
 				if (sample >= _pixelEdgeThreshold) {
-					_outputArray[i] = 0;
-					_outputArray[i + 1] = 0;
-					_outputArray[i + 2] = 0;
+					OutputArray[i] = 0;
+					OutputArray[i + 1] = 0;
+					OutputArray[i + 2] = 0;
 				}
 				else {
-					_outputArray[i] = 255;
-					_outputArray[i + 1] = 255;
-					_outputArray[i + 2] = 255;
+					OutputArray[i] = 255;
+					OutputArray[i + 1] = 255;
+					OutputArray[i + 2] = 255;
 				}
 			}
 
-			return _outputArray;
+			return OutputArray;
 		}
 
 		void CalculateFilterValues() {
@@ -62,7 +59,7 @@ namespace KIP2.Models.ImageProcessors {
 			//	 0, -1,  0, -1,  0,
 			//};
 
-			var edgeFilterOffsets = SquareOffsets(edgeFilterWeights.Count, _imageMaxX);
+			var edgeFilterOffsets = PrepareSquareOffsets(edgeFilterWeights.Count, ImageMax.X);
 
 			var filteredPixelCount = edgeFilterWeights.Where(f => f != 0).Count();
 
