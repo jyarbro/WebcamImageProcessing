@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 
 namespace KIP2.Models.ImageProcessors {
+	/// <summary>
+	/// The base for all image processors
+	/// </summary>
 	public abstract class ImageProcessorBase {
 		public int FocusRegionArea;
 		public int FocusRegionWidth;
@@ -43,7 +46,23 @@ namespace KIP2.Models.ImageProcessors {
 			OutputArray = new byte[ByteCount];
 
 			SampleGap = 10;
-			SampleOffsets = PrepareSquareOffsets(11 * 11, ImageMax.X, false);
+
+			FocusPartWidth = 11;
+			FocusPartArea = FocusPartWidth * FocusPartWidth; // 121
+
+			FocusRegionWidth = 99;
+			FocusRegionArea = FocusRegionWidth * FocusRegionWidth; // 9801
+
+			if (FocusRegionWidth % FocusPartWidth > 0)
+				throw new Exception("Focus area width must be divisible by sample area width");
+
+			FocusPartHorizontalCount = FocusRegionWidth / FocusPartWidth; // 9
+			FocusPartTotalCount = FocusPartHorizontalCount * FocusPartHorizontalCount; // 81
+
+			FocusPartOffsets = new List<int[]>();
+			FocusParts = new List<byte[]>();
+
+			SampleOffsets = PrepareSquareOffsets(FocusPartArea, ImageMax.X, false);
 		}
 
 		/// <summary>
@@ -51,8 +70,14 @@ namespace KIP2.Models.ImageProcessors {
 		/// </summary>
 		public virtual void Prepare() { }
 
+		/// <summary>
+		/// Requires override
+		/// </summary>
 		public abstract byte[] ProcessImage();
 
+		/// <summary>
+		/// A universal method for calculating all of the linear offsets for a given square area
+		/// </summary>
 		public int[] PrepareSquareOffsets(int size, int stride, bool byteMultiplier = true) {
 			if (size % 2 == 0)
 				throw new Exception("Odd sizes only!");
@@ -77,12 +102,18 @@ namespace KIP2.Models.ImageProcessors {
 			return offsets;
 		}
 
+		/// <summary>
+		/// Calculates offsets used in sampling.
+		/// </summary>
 		public void PrepareSampleOffsets() {
 			SampleByteCount = FocusPartArea * 4;
 			SampleOffsets = PrepareSquareOffsets(FocusPartArea, ImageMax.X);
 			SampleCenterOffset = Convert.ToInt32(Math.Floor(Math.Sqrt(FocusPartArea) / 2));
 		}
 
+		/// <summary>
+		/// Calculatets offsets used when focal region is split into parts
+		/// </summary>
 		public void PrepareFocusPartOffsets() {
 			var focusOffsets = PrepareSquareOffsets(FocusRegionArea, ImageMax.X);
 
@@ -104,6 +135,9 @@ namespace KIP2.Models.ImageProcessors {
 			}
 		}
 
+		/// <summary>
+		/// Compresses ColorSensorData by 50%
+		/// </summary>
 		public void PrepareCompressedSensorData() {
 			for (int y = 0; y < ImageMax.Y; y += 2) {
 				for (int x = 0; x < ImageMax.X; x += 2) {
@@ -124,6 +158,9 @@ namespace KIP2.Models.ImageProcessors {
 			}
 		}
 
+		/// <summary>
+		/// Calculates the closest focal point near a target coordinate
+		/// </summary>
 		public Coordinates GetNearestFocalPoint(Coordinates Target) {
 			var nearestFocalPoint = new Coordinates();
 
@@ -159,6 +196,9 @@ namespace KIP2.Models.ImageProcessors {
 			return nearestFocalPoint;
 		}
 
+		/// <summary>
+		/// Calculates the brightest focal point near a target coordinate
+		/// </summary>
 		public Coordinates GetBrightestFocalPoint(Coordinates Target) {
 			var nearestFocalPoint = new Coordinates();
 
@@ -232,6 +272,9 @@ namespace KIP2.Models.ImageProcessors {
 			}
 		}
 
+		/// <summary>
+		/// Simply copies the input to the output. Useful in most situations.
+		/// </summary>
 		public virtual void PrepareOutput() {
 			Buffer.BlockCopy(ColorSensorData, 0, OutputArray, 0, ColorSensorData.Length);
 		}

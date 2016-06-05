@@ -2,32 +2,35 @@
 using System.Linq;
 
 namespace KIP2.Models.ImageProcessors {
+	/// <summary>
+	/// A general laplacian edge filter
+	/// </summary>
 	public class EdgeProcessor : ImageProcessorBase {
-		protected int _pixelEdgeThreshold;
+		public int PixelEdgeThreshold;
 
-		protected int[] _edgeFilterWeights;
-		protected int[] _edgeFilterOffsets;
+		public int[] EdgeFilterWeights;
+		public int[] EdgeFilterOffsets;
 
 		public EdgeProcessor() : base() {
 			CalculateFilterValues();
-			_pixelEdgeThreshold = 60 * 3;
+			PixelEdgeThreshold = 60 * 3;
 		}
 
 		public override byte[] ProcessImage() {
 			for (var i = 0; i < ByteCount; i += 4) {
 				var sample = 0;
 
-				for (var j = 0; j < _edgeFilterOffsets.Length; j++) {
-					if (_edgeFilterWeights[j] == 0)
+				for (var j = 0; j < EdgeFilterOffsets.Length; j++) {
+					if (EdgeFilterWeights[j] == 0)
 						continue;
 
-					var offset = i + _edgeFilterOffsets[j];
+					var offset = i + EdgeFilterOffsets[j];
 
 					if (offset > 0 && offset < ByteCount)
-						sample += _edgeFilterWeights[j] * (ColorSensorData[offset] + ColorSensorData[offset + 1] + ColorSensorData[offset + 2]);
+						sample += EdgeFilterWeights[j] * (ColorSensorData[offset] + ColorSensorData[offset + 1] + ColorSensorData[offset + 2]);
 				}
 
-				if (sample >= _pixelEdgeThreshold) {
+				if (sample >= PixelEdgeThreshold) {
 					OutputArray[i] = 0;
 					OutputArray[i + 1] = 0;
 					OutputArray[i + 2] = 0;
@@ -63,8 +66,8 @@ namespace KIP2.Models.ImageProcessors {
 
 			var filteredPixelCount = edgeFilterWeights.Where(f => f != 0).Count();
 
-			_edgeFilterOffsets = new int[filteredPixelCount];
-			_edgeFilterWeights = new int[filteredPixelCount];
+			EdgeFilterOffsets = new int[filteredPixelCount];
+			EdgeFilterWeights = new int[filteredPixelCount];
 
 			var j = 0;
 
@@ -72,8 +75,8 @@ namespace KIP2.Models.ImageProcessors {
 				if (edgeFilterWeights[i] == 0)
 					continue;
 
-				_edgeFilterWeights[j] = edgeFilterWeights[i];
-				_edgeFilterOffsets[j] = edgeFilterOffsets[i] * 4;
+				EdgeFilterWeights[j] = edgeFilterWeights[i];
+				EdgeFilterOffsets[j] = edgeFilterOffsets[i] * 4;
 
 				j++;
 			}

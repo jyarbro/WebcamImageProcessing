@@ -1,9 +1,10 @@
 ﻿using System;
 
 namespace KIP2.Models.ImageProcessors {
+	/// <summary>
+	/// Applies a visual layer to depth sensor data
+	/// </summary>
 	public class DepthFocusProcessor : ImageProcessorBase {
-		public DepthFocusProcessor() : base() { }
-
 		public override byte[] ProcessImage() {
 			PrepareOutput();
 
@@ -15,6 +16,9 @@ namespace KIP2.Models.ImageProcessors {
 			return OutputArray;
 		}
 
+		/// <summary>
+		/// Colors depth data with 0 - 255 values. If values go beyond 255 values, then pattern repeats starting at 0.
+		/// </summary>
 		public override void PrepareOutput() {
 			for (int i = 0; i < ImageDepthData.Length; i++) {
 				var depth = ImageDepthData[i];

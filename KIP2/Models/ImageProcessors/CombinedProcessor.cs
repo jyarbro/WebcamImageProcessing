@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace KIP2.Models.ImageProcessors {
+﻿namespace KIP2.Models.ImageProcessors {
+	/// <summary>
+	/// Combines depth and brightness focusing by getting the brightest point near the nearest point
+	/// </summary>
 	public class CombinedProcessor : ImageProcessorBase {
-		public CombinedProcessor() : base() { }
-
 		public override byte[] ProcessImage() {
 			PrepareOutput();
 

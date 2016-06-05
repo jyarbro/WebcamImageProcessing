@@ -1,27 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace KIP2.Models.ImageProcessors {
+﻿namespace KIP2.Models.ImageProcessors {
+	/// <summary>
+	/// Slices up the focus region into parts and processes each part separately
+	/// </summary>
 	public class FocusPartsProcessor : ImageProcessorBase {
-		public FocusPartsProcessor() : base() {
-			SampleGap = 10;
-
-			FocusPartWidth = 11;
-			FocusRegionWidth = 99;
-
-			if (FocusRegionWidth % FocusPartWidth > 0)
-				throw new Exception("Focus area width must be divisible by sample area width");
-
-			FocusPartArea = FocusPartWidth * FocusPartWidth; // 121
-			FocusRegionArea = FocusRegionWidth * FocusRegionWidth; // 9801
-
-			FocusPartHorizontalCount = FocusRegionWidth / FocusPartWidth; // 9
-			FocusPartTotalCount = FocusPartHorizontalCount * FocusPartHorizontalCount; // 81
-
-			FocusPartOffsets = new List<int[]>();
-			FocusParts = new List<byte[]>();
-		}
-
 		public override void Prepare() {
 			PrepareSampleOffsets();
 			PrepareFocusPartOffsets();
