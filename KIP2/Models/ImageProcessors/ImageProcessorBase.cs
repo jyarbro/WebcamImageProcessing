@@ -27,9 +27,11 @@ namespace KIP2.Models.ImageProcessors {
 		public byte[] ColorSensorData;
 		public short[] ImageDepthData;
 
-		public Coordinates ImageMax = new Coordinates { X = 640, Y = 480 };
-		public Coordinates ImageMid = new Coordinates { X = 320, Y = 240 };
-		public Coordinates FocalPoint = new Coordinates();
+		public Point ImageMax = new Point { X = 640, Y = 480 };
+		public Point ImageMid = new Point { X = 320, Y = 240 };
+		public Point FocalPoint = new Point();
+
+		public Rectangle Window;
 
 		public int ByteCount;
 		public int PixelCount;
@@ -39,6 +41,8 @@ namespace KIP2.Models.ImageProcessors {
 		public int FocalPointOffset { get; set; }
 
 		public ImageProcessorBase() {
+			Window = new Rectangle(-ImageMid.X, -ImageMid.Y, ImageMid.X, ImageMid.Y);
+
 			PixelCount = ImageMid.X * ImageMid.Y;
 			ByteCount = ImageMax.X * ImageMax.Y * 4;
 
@@ -83,13 +87,12 @@ namespace KIP2.Models.ImageProcessors {
 				throw new Exception("Odd sizes only!");
 
 			var offsets = new int[size];
-			var areaMax = Convert.ToInt32(Math.Floor(Math.Sqrt(size) / 2));
-			var areaMin = areaMax * -1;
+			var areaBox = GetCenteredBox(size);
 
 			var offset = 0;
 
-			for (int yOffset = areaMin; yOffset <= areaMax; yOffset++) {
-				for (int xOffset = areaMin; xOffset <= areaMax; xOffset++) {
+			for (int yOffset = areaBox.Origin.Y; yOffset <= areaBox.Extent.Y; yOffset++) {
+				for (int xOffset = areaBox.Origin.X; xOffset <= areaBox.Extent.X; xOffset++) {
 					offsets[offset] = xOffset + (yOffset * stride);
 
 					if (byteMultiplier)
@@ -100,6 +103,13 @@ namespace KIP2.Models.ImageProcessors {
 			}
 
 			return offsets;
+		}
+
+		public Rectangle GetCenteredBox(int size) {
+			var areaMax = Convert.ToInt32(Math.Floor(Math.Sqrt(size) / 2));
+			var areaMin = areaMax * -1;
+
+			return new Rectangle(areaMin, areaMin, areaMax, areaMax);
 		}
 
 		/// <summary>
@@ -139,11 +149,16 @@ namespace KIP2.Models.ImageProcessors {
 		/// Compresses ColorSensorData by 50%
 		/// </summary>
 		public void PrepareCompressedSensorData() {
-			for (int y = 0; y < ImageMax.Y; y += 2) {
-				for (int x = 0; x < ImageMax.X; x += 2) {
-					var pixel = ((y * ImageMax.X) + x) * 4;
+			int y;
+			int x;
+			int pixel;
+			int compressedValue;
 
-					var compressedValue =
+			for (y = 0; y < ImageMax.Y; y += 2) {
+				for (x = 0; x < ImageMax.X; x += 2) {
+					pixel = ((y * ImageMax.X) + x) * 4;
+
+					compressedValue =
 						ColorSensorData[pixel] + ColorSensorData[pixel + 1] + ColorSensorData[pixel + 2]
 						+ ColorSensorData[pixel + 4] + ColorSensorData[pixel + 5] + ColorSensorData[pixel + 6];
 
@@ -153,7 +168,7 @@ namespace KIP2.Models.ImageProcessors {
 						ColorSensorData[pixel] + ColorSensorData[pixel + 1] + ColorSensorData[pixel + 2]
 						+ ColorSensorData[pixel + 4] + ColorSensorData[pixel + 5] + ColorSensorData[pixel + 6];
 
-					CompressedSensorData[((y / 2) * ImageMid.X) + (x / 2)] = compressedValue;
+					CompressedSensorData[((y / 2) * ImageMid.X) + (x / 2)] = compressedValue / 12;
 				}
 			}
 		}
@@ -161,83 +176,74 @@ namespace KIP2.Models.ImageProcessors {
 		/// <summary>
 		/// Calculates the closest focal point near a target coordinate
 		/// </summary>
-		public Coordinates GetNearestFocalPoint(Coordinates Target) {
-			var nearestFocalPoint = new Coordinates();
-
-			var closestPixelValue = 10000;
-			var closestPixelDistance = ImageMid.X + ImageMid.Y;
-
-			var maxDistanceFromCenter = 0;
-
-			for (int y = 0; y < ImageMax.Y; y += SampleGap) {
-				var yOffset = y * ImageMax.X;
-
-				for (int x = 0; x < ImageMax.X; x += SampleGap) {
-					var pixel = yOffset + x;
-					var depth = ImageDepthData[pixel];
-
-					if (depth > 0 && depth <= closestPixelValue) {
-						// speed cheat - not true hypoteneuse!
-						var distanceFromCenter = Math.Abs(x - Target.X) + Math.Abs(y - Target.Y);
-
-						maxDistanceFromCenter = distanceFromCenter;
-
-						if (distanceFromCenter <= closestPixelDistance) {
-							closestPixelDistance = distanceFromCenter;
-							closestPixelValue = depth;
-
-							nearestFocalPoint.X = x;
-							nearestFocalPoint.Y = y;
-						}
-					}
-				}
-			}
-
-			return nearestFocalPoint;
+		public Point GetNearestFocalPoint(Rectangle Window, Point Target) {
+			return GetMeasuredFocalPoint(Window, Target, (pixel) => {
+				return ImageDepthData[pixel];
+			});
 		}
 
 		/// <summary>
 		/// Calculates the brightest focal point near a target coordinate
 		/// </summary>
-		public Coordinates GetBrightestFocalPoint(Coordinates Target) {
-			var nearestFocalPoint = new Coordinates();
+		public Point GetBrightestFocalPoint(Rectangle Window, Point Target) {
+			return GetMeasuredFocalPoint(Window, Target, (pixel) => {
+				pixel = pixel * 4;
+				var measuredValue = 0;
 
-			var brightestPixelValue = 0;
-			var brightestPixelDistance = ImageMid.X + ImageMid.Y;
+				foreach (var sampleOffset in SampleOffsets)
+					if (pixel + sampleOffset > 0 && pixel + sampleOffset < ByteCount)
+						measuredValue += ColorSensorData[pixel + sampleOffset] + ColorSensorData[pixel + sampleOffset + 1] + ColorSensorData[pixel + sampleOffset + 2];
 
-			var maxDistanceFromCenter = 0;
+				return measuredValue;
+			});
+		}
 
-			for (int y = 0; y < ImageMax.Y; y += SampleGap) {
-				var yOffset = y * ImageMax.X;
+		public Point GetMeasuredFocalPoint(Rectangle Window, Point Target, Func<int, int> Measurement) {
+			var focalPoint = new Point();
 
-				for (int x = 0; x < ImageMax.X; x += SampleGap) {
-					var pixel = (yOffset + x) * 4;
-					var brightness = 0;
+			int x;
+			int y;
+			int yOffset;
+			int measuredValue;
 
-					foreach (var sampleOffset in SampleOffsets) {
-						if (pixel + sampleOffset > 0 && pixel + sampleOffset < ByteCount) {
-							brightness += ColorSensorData[pixel + sampleOffset] + ColorSensorData[pixel + sampleOffset + 1] + ColorSensorData[pixel + sampleOffset + 2];
-						}
-					}
+			var xSq = Math.Pow(Math.Abs(ImageMid.X), 2);
+			var ySq = Math.Pow(Math.Abs(ImageMid.Y), 2);
 
-					if (brightness >= brightestPixelValue) {
+			var closestPixelDistance = Math.Sqrt(xSq + ySq);
+
+			double distanceFromCenter;
+			double maxDistanceFromCenter = 0;
+			int highestMeasuredValue = 0;
+
+			for (y = Target.Y + Window.Origin.Y; y < Target.Y + Window.Extent.Y; y += SampleGap) {
+				yOffset = y * ImageMax.X;
+
+				for (x = Target.X + Window.Origin.X; x < Target.X + Window.Extent.X; x += SampleGap) {
+					measuredValue = Measurement(yOffset + x);
+
+					if (measuredValue >= highestMeasuredValue) {
+						xSq = Math.Pow(Math.Abs(x - Target.X), 2);
+						ySq = Math.Pow(Math.Abs(y - Target.Y), 2);
+
+						distanceFromCenter = Math.Sqrt(xSq + ySq);
+
 						// speed cheat - not true hypoteneuse!
-						var distanceFromCenter = Math.Abs(x - Target.X) + Math.Abs(y - Target.Y);
+						//var distanceFromCenter = Math.Abs(x - Target.X) + Math.Abs(y - Target.Y);
 
 						maxDistanceFromCenter = distanceFromCenter;
 
-						if (distanceFromCenter <= brightestPixelDistance) {
-							brightestPixelDistance = distanceFromCenter;
-							brightestPixelValue = brightness;
+						if (distanceFromCenter <= closestPixelDistance) {
+							closestPixelDistance = distanceFromCenter;
+							highestMeasuredValue = measuredValue;
 
-							nearestFocalPoint.X = x;
-							nearestFocalPoint.Y = y;
+							focalPoint.X = x;
+							focalPoint.Y = y;
 						}
 					}
 				}
 			}
 
-			return nearestFocalPoint;
+			return focalPoint;
 		}
 
 		/// <summary>

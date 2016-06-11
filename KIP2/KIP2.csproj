@@ -57,7 +57,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Models\Coordinates.cs" />
+    <Compile Include="Structs\Rectangle.cs" />
+    <Compile Include="Structs\Point.cs" />
     <Compile Include="Models\ImageProcessors\CombinedProcessor.cs" />
     <Compile Include="Models\WeightedValue.cs" />
     <Compile Include="Helpers\RelayCommand.cs" />

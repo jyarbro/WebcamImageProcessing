@@ -8,7 +8,7 @@ namespace KIP2.Models.ImageProcessors {
 		public override byte[] ProcessImage() {
 			PrepareOutput();
 
-			FocalPoint = GetNearestFocalPoint(ImageMid);
+			FocalPoint = GetNearestFocalPoint(Window, ImageMid);
 			FocalPointOffset = ((FocalPoint.Y * ImageMax.X) + FocalPoint.X) * 4;
 
 			OverlayFocalPoint(3);

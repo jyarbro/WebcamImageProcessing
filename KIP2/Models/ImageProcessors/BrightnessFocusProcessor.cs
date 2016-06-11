@@ -6,7 +6,7 @@ namespace KIP2.Models.ImageProcessors {
 	/// </summary>
 	public class BrightnessFocusProcessor : ImageProcessorBase {
 		public override byte[] ProcessImage() {
-			FocalPoint = GetBrightestFocalPoint(ImageMid);
+			FocalPoint = GetBrightestFocalPoint(Window, ImageMid);
 			FocalPointOffset = ((FocalPoint.Y * ImageMax.X) + FocalPoint.X) * 4;
 
 			PrepareOutput();
@@ -18,12 +18,14 @@ namespace KIP2.Models.ImageProcessors {
 		}
 
 		/// <summary>
-		/// Applies a brightness threshold and filters out all color under that threshold
+		/// Applies a brightness filter based on the focal point brightness.
 		/// </summary>
 		public override void PrepareOutput() {
 			var focalPointColor = ColorSensorData[FocalPointOffset] + ColorSensorData[FocalPointOffset + 1] + ColorSensorData[FocalPointOffset + 2];
 
-			var threshold = (focalPointColor - (focalPointColor / 3)) / 3;
+			// This threshold favors bright areas over dark areas
+			// TODO - Need to test top end filtering as well.
+			var threshold = focalPointColor / 4;
 
 			for (int i = 0; i < ColorSensorData.Length; i += 4) {
 				var combined = ColorSensorData[i] + ColorSensorData[i + 1] + ColorSensorData[i + 2];

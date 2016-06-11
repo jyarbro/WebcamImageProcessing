@@ -3,15 +3,25 @@
 	/// Combines depth and brightness focusing by getting the brightest point near the nearest point
 	/// </summary>
 	public class CombinedProcessor : ImageProcessorBase {
+		public Rectangle ImageBoundBox;
+		public Rectangle AreaBoundBox;
+
+		public CombinedProcessor() {
+			ImageBoundBox = new Rectangle(-ImageMid.X, -ImageMid.Y, ImageMid.X, ImageMid.Y);
+			AreaBoundBox = GetCenteredBox(FocusRegionWidth);
+		}
+
 		public override byte[] ProcessImage() {
 			PrepareOutput();
 
-			FocalPoint = GetNearestFocalPoint(ImageMid);
+			OverlaySampleGrid();
+
+			FocalPoint = GetNearestFocalPoint(ImageBoundBox, ImageMid);
 			FocalPointOffset = ((FocalPoint.Y * ImageMax.X) + FocalPoint.X) * 4;
 
 			OverlayFocalPoint(1);
 
-			FocalPoint = GetBrightestFocalPoint(FocalPoint);
+			FocalPoint = GetBrightestFocalPoint(AreaBoundBox, FocalPoint);
 			FocalPointOffset = ((FocalPoint.Y * ImageMax.X) + FocalPoint.X) * 4;
 
 			OverlayFocalPoint(3);

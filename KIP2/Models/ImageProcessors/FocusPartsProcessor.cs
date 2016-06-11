@@ -9,7 +9,7 @@
 		}
 
 		public override byte[] ProcessImage() {
-			FocalPoint = GetBrightestFocalPoint(ImageMid);
+			FocalPoint = GetBrightestFocalPoint(Window, ImageMid);
 			FocalPointOffset = ((FocalPoint.Y * ImageMax.X) + FocalPoint.X) * 4;
 
 			LoadFocusArea();
