@@ -176,7 +176,7 @@ namespace KIP2.Models.ImageProcessors {
 		/// <summary>
 		/// Calculates the closest focal point near a target coordinate
 		/// </summary>
-		public Point GetNearestFocalPoint(Rectangle Window, Point Target) {
+		public Point GetNearestFocalPoint(Rectangle window, Point target) {
 			Func<int, int> measurement = (pixel) => {
 				return ImageDepthData[pixel];
 			};
@@ -185,20 +185,22 @@ namespace KIP2.Models.ImageProcessors {
 				return newValue <= currentValue;
 			};
 
-			return GetMeasuredFocalPoint(Window, Target, measurement, valueComparison);
+			return GetMeasuredFocalPoint(window, target, measurement, valueComparison);
 		}
 
 		/// <summary>
 		/// Calculates the brightest focal point near a target coordinate
 		/// </summary>
-		public Point GetBrightestFocalPoint(Rectangle Window, Point Target) {
+		public Point GetBrightestFocalPoint(Rectangle window, Point target) {
 			Func<int, int> measurement = (pixel) => {
 				pixel = pixel * 4;
 				var measuredValue = 0;
 
-				foreach (var sampleOffset in SampleOffsets)
-					if (pixel + sampleOffset > 0 && pixel + sampleOffset < ByteCount)
+				foreach (var sampleOffset in SampleOffsets) {
+					if (pixel + sampleOffset > 0 && pixel + sampleOffset < ByteCount) {
 						measuredValue += ColorSensorData[pixel + sampleOffset] + ColorSensorData[pixel + sampleOffset + 1] + ColorSensorData[pixel + sampleOffset + 2];
+					}
+				}
 
 				return measuredValue;
 			};
@@ -207,7 +209,7 @@ namespace KIP2.Models.ImageProcessors {
 				return newValue >= currentValue;
 			};
 
-			return GetMeasuredFocalPoint(Window, Target, measurement, valueComparison);
+			return GetMeasuredFocalPoint(window, target, measurement, valueComparison);
 		}
 
 		public Point GetMeasuredFocalPoint(Rectangle window, Point target, Func<int, int> measurement, Func<int, int, bool> valueComparison) {
@@ -224,7 +226,6 @@ namespace KIP2.Models.ImageProcessors {
 			var closestPixelDistance = Math.Sqrt(xSq + ySq);
 
 			double distanceFromCenter;
-			double maxDistanceFromCenter = 0;
 			int highestMeasuredValue = 0;
 
 			for (y = target.Y + window.Origin.Y; y < target.Y + window.Extent.Y; y += SampleGap) {
@@ -241,8 +242,6 @@ namespace KIP2.Models.ImageProcessors {
 
 						// speed cheat - not true hypoteneuse!
 						//var distanceFromCenter = Math.Abs(x - Target.X) + Math.Abs(y - Target.Y);
-
-						maxDistanceFromCenter = distanceFromCenter;
 
 						if (distanceFromCenter <= closestPixelDistance) {
 							closestPixelDistance = distanceFromCenter;

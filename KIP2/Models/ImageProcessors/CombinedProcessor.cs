@@ -8,7 +8,7 @@
 
 		public CombinedProcessor() {
 			ImageBoundBox = new Rectangle(-ImageMid.X, -ImageMid.Y, ImageMid.X, ImageMid.Y);
-			AreaBoundBox = GetCenteredBox(FocusRegionWidth);
+			AreaBoundBox = GetCenteredBox(FocusRegionArea);
 		}
 
 		public override byte[] ProcessImage() {
