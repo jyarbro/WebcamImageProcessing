@@ -177,16 +177,22 @@ namespace KIP2.Models.ImageProcessors {
 		/// Calculates the closest focal point near a target coordinate
 		/// </summary>
 		public Point GetNearestFocalPoint(Rectangle Window, Point Target) {
-			return GetMeasuredFocalPoint(Window, Target, (pixel) => {
+			Func<int, int> measurement = (pixel) => {
 				return ImageDepthData[pixel];
-			});
+			};
+
+			Func<int, int, bool> valueComparison = (newValue, currentValue) => {
+				return newValue <= currentValue;
+			};
+
+			return GetMeasuredFocalPoint(Window, Target, measurement, valueComparison);
 		}
 
 		/// <summary>
 		/// Calculates the brightest focal point near a target coordinate
 		/// </summary>
 		public Point GetBrightestFocalPoint(Rectangle Window, Point Target) {
-			return GetMeasuredFocalPoint(Window, Target, (pixel) => {
+			Func<int, int> measurement = (pixel) => {
 				pixel = pixel * 4;
 				var measuredValue = 0;
 
@@ -195,10 +201,16 @@ namespace KIP2.Models.ImageProcessors {
 						measuredValue += ColorSensorData[pixel + sampleOffset] + ColorSensorData[pixel + sampleOffset + 1] + ColorSensorData[pixel + sampleOffset + 2];
 
 				return measuredValue;
-			});
+			};
+
+			Func<int, int, bool> valueComparison = (newValue, currentValue) => {
+				return newValue >= currentValue;
+			};
+
+			return GetMeasuredFocalPoint(Window, Target, measurement, valueComparison);
 		}
 
-		public Point GetMeasuredFocalPoint(Rectangle Window, Point Target, Func<int, int> Measurement) {
+		public Point GetMeasuredFocalPoint(Rectangle window, Point target, Func<int, int> measurement, Func<int, int, bool> valueComparison) {
 			var focalPoint = new Point();
 
 			int x;
@@ -215,15 +227,15 @@ namespace KIP2.Models.ImageProcessors {
 			double maxDistanceFromCenter = 0;
 			int highestMeasuredValue = 0;
 
-			for (y = Target.Y + Window.Origin.Y; y < Target.Y + Window.Extent.Y; y += SampleGap) {
+			for (y = target.Y + window.Origin.Y; y < target.Y + window.Extent.Y; y += SampleGap) {
 				yOffset = y * ImageMax.X;
 
-				for (x = Target.X + Window.Origin.X; x < Target.X + Window.Extent.X; x += SampleGap) {
-					measuredValue = Measurement(yOffset + x);
+				for (x = target.X + window.Origin.X; x < target.X + window.Extent.X; x += SampleGap) {
+					measuredValue = measurement(yOffset + x);
 
-					if (measuredValue >= highestMeasuredValue) {
-						xSq = Math.Pow(Math.Abs(x - Target.X), 2);
-						ySq = Math.Pow(Math.Abs(y - Target.Y), 2);
+					if (valueComparison(measuredValue, highestMeasuredValue)) {
+						xSq = Math.Pow(Math.Abs(x - target.X), 2);
+						ySq = Math.Pow(Math.Abs(y - target.Y), 2);
 
 						distanceFromCenter = Math.Sqrt(xSq + ySq);
 
