@@ -14,6 +14,8 @@ namespace KIP2.Models.ImageProcessors {
 		public int FocusPartHorizontalCount;
 		public int FocusPartTotalCount;
 
+		public int FocalPointOffset;
+
 		public List<int[]> FocusPartOffsets;
 		public List<byte[]> FocusParts;
 
@@ -38,7 +40,11 @@ namespace KIP2.Models.ImageProcessors {
 
 		public byte[] OutputArray;
 
-		public int FocalPointOffset { get; set; }
+		public Func<int, int> BrightnessMeasurement;
+		public Func<int, int> DepthMeasurement;
+
+		public Func<int, int, bool> BrightnessValueComparison;
+		public Func<int, int, bool> DepthValueComparison;
 
 		public ImageProcessorBase() {
 			Window = new Rectangle(-ImageMid.X, -ImageMid.Y, ImageMid.X, ImageMid.Y);
@@ -67,6 +73,31 @@ namespace KIP2.Models.ImageProcessors {
 			FocusParts = new List<byte[]>();
 
 			SampleOffsets = PrepareSquareOffsets(FocusPartArea, ImageMax.X, false);
+
+			BrightnessMeasurement = (pixel) => {
+				pixel = pixel * 4;
+				var measuredValue = 0;
+
+				foreach (var sampleOffset in SampleOffsets) {
+					if (pixel + sampleOffset > 0 && pixel + sampleOffset < ByteCount) {
+						measuredValue += ColorSensorData[pixel + sampleOffset] + ColorSensorData[pixel + sampleOffset + 1] + ColorSensorData[pixel + sampleOffset + 2];
+					}
+				}
+
+				return measuredValue;
+			};
+
+			DepthMeasurement = (pixel) => {
+				return ImageDepthData[pixel];
+			};
+
+			DepthValueComparison = (newValue, currentValue) => {
+				return newValue <= currentValue;
+			};
+
+			BrightnessValueComparison = (newValue, currentValue) => {
+				return newValue >= currentValue;
+			};
 		}
 
 		/// <summary>
@@ -177,39 +208,14 @@ namespace KIP2.Models.ImageProcessors {
 		/// Calculates the closest focal point near a target coordinate
 		/// </summary>
 		public Point GetNearestFocalPoint(Rectangle window, Point target) {
-			Func<int, int> measurement = (pixel) => {
-				return ImageDepthData[pixel];
-			};
-
-			Func<int, int, bool> valueComparison = (newValue, currentValue) => {
-				return newValue <= currentValue;
-			};
-
-			return GetMeasuredFocalPoint(window, target, measurement, valueComparison);
+			return GetMeasuredFocalPoint(window, target, DepthMeasurement, DepthValueComparison);
 		}
 
 		/// <summary>
 		/// Calculates the brightest focal point near a target coordinate
 		/// </summary>
 		public Point GetBrightestFocalPoint(Rectangle window, Point target) {
-			Func<int, int> measurement = (pixel) => {
-				pixel = pixel * 4;
-				var measuredValue = 0;
-
-				foreach (var sampleOffset in SampleOffsets) {
-					if (pixel + sampleOffset > 0 && pixel + sampleOffset < ByteCount) {
-						measuredValue += ColorSensorData[pixel + sampleOffset] + ColorSensorData[pixel + sampleOffset + 1] + ColorSensorData[pixel + sampleOffset + 2];
-					}
-				}
-
-				return measuredValue;
-			};
-
-			Func<int, int, bool> valueComparison = (newValue, currentValue) => {
-				return newValue >= currentValue;
-			};
-
-			return GetMeasuredFocalPoint(window, target, measurement, valueComparison);
+			return GetMeasuredFocalPoint(window, target, BrightnessMeasurement, BrightnessValueComparison);
 		}
 
 		public Point GetMeasuredFocalPoint(Rectangle window, Point target, Func<int, int> measurement, Func<int, int, bool> valueComparison) {
@@ -239,9 +245,6 @@ namespace KIP2.Models.ImageProcessors {
 						ySq = Math.Pow(Math.Abs(y - target.Y), 2);
 
 						distanceFromCenter = Math.Sqrt(xSq + ySq);
-
-						// speed cheat - not true hypoteneuse!
-						//var distanceFromCenter = Math.Abs(x - Target.X) + Math.Abs(y - Target.Y);
 
 						if (distanceFromCenter <= closestPixelDistance) {
 							closestPixelDistance = distanceFromCenter;
