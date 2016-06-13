@@ -1,13 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace KIP2.Models.ImageProcessors {
 	/// <summary>
 	/// The base for all image processors
 	/// </summary>
 	public abstract class ImageProcessorBase {
+		#region Fields
+
 		public int FocusRegionArea;
 		public int FocusRegionWidth;
+
+		public int[] FocusRegionOffsets;
 
 		public int FocusPartArea;
 		public int FocusPartWidth;
@@ -29,11 +34,17 @@ namespace KIP2.Models.ImageProcessors {
 		public byte[] ColorSensorData;
 		public short[] ImageDepthData;
 
-		public Point ImageMax = new Point { X = 640, Y = 480 };
-		public Point ImageMid = new Point { X = 320, Y = 240 };
-		public Point FocalPoint = new Point();
+		public int[] EdgeFilterWeights;
+		public int[] EdgeFilterOffsets;
+
+		public int PixelEdgeThreshold;
+
+		public Point ImageMax;
+		public Point ImageMid;
+		public Point FocalPoint;
 
 		public Rectangle Window;
+		public Rectangle AreaBoundBox;
 
 		public int ByteCount;
 		public int PixelCount;
@@ -46,7 +57,14 @@ namespace KIP2.Models.ImageProcessors {
 		public Func<int, int, bool> BrightnessValueComparison;
 		public Func<int, int, bool> DepthValueComparison;
 
+		int _sample;
+
+		#endregion
+
 		public ImageProcessorBase() {
+			ImageMax = new Point(640, 480);
+			ImageMid = new Point(320, 240);
+
 			Window = new Rectangle(-ImageMid.X, -ImageMid.Y, ImageMid.X, ImageMid.Y);
 
 			PixelCount = ImageMid.X * ImageMid.Y;
@@ -62,6 +80,8 @@ namespace KIP2.Models.ImageProcessors {
 
 			FocusRegionWidth = 99;
 			FocusRegionArea = FocusRegionWidth * FocusRegionWidth; // 9801
+			FocusRegionOffsets = PrepareSquareOffsets(FocusRegionArea, ImageMax.X, false);
+			AreaBoundBox = GetCenteredBox(FocusRegionArea);
 
 			if (FocusRegionWidth % FocusPartWidth > 0)
 				throw new Exception("Focus area width must be divisible by sample area width");
@@ -72,7 +92,12 @@ namespace KIP2.Models.ImageProcessors {
 			FocusPartOffsets = new List<int[]>();
 			FocusParts = new List<byte[]>();
 
+			FocalPoint = new Point();
+
 			SampleOffsets = PrepareSquareOffsets(FocusPartArea, ImageMax.X, false);
+
+			CalculateEdgeFilterValues();
+			PixelEdgeThreshold = 180;
 
 			BrightnessMeasurement = (pixel) => {
 				pixel = pixel * 4;
@@ -92,7 +117,10 @@ namespace KIP2.Models.ImageProcessors {
 			};
 
 			DepthValueComparison = (newValue, currentValue) => {
-				return newValue <= currentValue;
+				if (currentValue == 0)
+					currentValue = int.MaxValue;
+
+				return newValue > 0 && newValue <= currentValue;
 			};
 
 			BrightnessValueComparison = (newValue, currentValue) => {
@@ -136,8 +164,11 @@ namespace KIP2.Models.ImageProcessors {
 			return offsets;
 		}
 
-		public Rectangle GetCenteredBox(int size) {
-			var areaMax = Convert.ToInt32(Math.Floor(Math.Sqrt(size) / 2));
+		/// <summary>
+		/// Calculate a window around a centered point given only the square's area.
+		/// </summary>
+		public Rectangle GetCenteredBox(int area) {
+			var areaMax = Convert.ToInt32(Math.Floor(Math.Sqrt(area) / 2));
 			var areaMin = areaMax * -1;
 
 			return new Rectangle(areaMin, areaMin, areaMax, areaMax);
@@ -280,15 +311,74 @@ namespace KIP2.Models.ImageProcessors {
 		/// <summary>
 		/// Add color spot to highlight focal point
 		/// </summary>
-		public void OverlayFocalPoint(int color) {
+		public void OverlayFocalPoint(int color, int focalPointOffset) {
 			foreach (var sampleOffset in SampleOffsets) {
 				var sampleByteOffset = sampleOffset * 4;
 
-				if (FocalPointOffset + sampleByteOffset > 0 && FocalPointOffset + sampleByteOffset < ByteCount) {
-					OutputArray[FocalPointOffset + sampleByteOffset] = (byte) (color == 1 ? 255 : 0);
-					OutputArray[FocalPointOffset + sampleByteOffset + 1] = (byte)(color == 2 ? 255 : 0);
-					OutputArray[FocalPointOffset + sampleByteOffset + 2] = (byte)(color == 3 ? 255 : 0);
+				if (focalPointOffset + sampleByteOffset > 0 && focalPointOffset + sampleByteOffset < ByteCount) {
+					OutputArray[focalPointOffset + sampleByteOffset] = (byte)(color == 1 ? 255 : 0);
+					OutputArray[focalPointOffset + sampleByteOffset + 1] = (byte)(color == 2 ? 255 : 0);
+					OutputArray[focalPointOffset + sampleByteOffset + 2] = (byte)(color == 3 ? 255 : 0);
 				}
+			}
+		}
+
+		public void FilterEdges(int focalPointOffset) {
+			foreach (var baseOffset in FocusRegionOffsets) {
+				_sample = 0;
+
+				var byteOffset = baseOffset * 4;
+				var pixelOffset = focalPointOffset + byteOffset;
+
+				if (pixelOffset > 0 && pixelOffset < ByteCount) {
+					for (var j = 0; j < EdgeFilterOffsets.Length; j++) {
+						if (EdgeFilterWeights[j] == 0)
+							continue;
+
+						var offset = pixelOffset + EdgeFilterOffsets[j];
+
+						if (offset > 0 && offset < ByteCount)
+							_sample += EdgeFilterWeights[j] * (ColorSensorData[offset] + ColorSensorData[offset + 1] + ColorSensorData[offset + 2]);
+					}
+
+					if (_sample >= PixelEdgeThreshold) {
+						OutputArray[pixelOffset] = 0;
+						OutputArray[pixelOffset + 1] = 0;
+						OutputArray[pixelOffset + 2] = 0;
+					}
+					else {
+						OutputArray[pixelOffset] = 255;
+						OutputArray[pixelOffset + 1] = 255;
+						OutputArray[pixelOffset + 2] = 255;
+					}
+				}
+			}
+		}
+
+		public void CalculateEdgeFilterValues() {
+			var edgeFilterWeights = new List<int> {
+				-1, -1, -1,
+				-1,  8, -1,
+				-1, -1, -1,
+			};
+			
+			var edgeFilterOffsets = PrepareSquareOffsets(edgeFilterWeights.Count, ImageMax.X);
+
+			var filteredPixelCount = edgeFilterWeights.Where(f => f != 0).Count();
+
+			EdgeFilterOffsets = new int[filteredPixelCount];
+			EdgeFilterWeights = new int[filteredPixelCount];
+
+			var j = 0;
+
+			for (var i = 0; i < edgeFilterWeights.Count; i++) {
+				if (edgeFilterWeights[i] == 0)
+					continue;
+
+				EdgeFilterWeights[j] = edgeFilterWeights[i];
+				EdgeFilterOffsets[j] = edgeFilterOffsets[i] * 4;
+
+				j++;
 			}
 		}
 

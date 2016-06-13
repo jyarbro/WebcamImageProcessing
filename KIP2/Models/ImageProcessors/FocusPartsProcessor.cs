@@ -17,7 +17,7 @@
 			PrepareOutput();
 
 			OverlaySampleGrid();
-			OverlayFocalPoint(3);
+			OverlayFocalPoint(3, FocalPointOffset);
 
 			return OutputArray;
 		}

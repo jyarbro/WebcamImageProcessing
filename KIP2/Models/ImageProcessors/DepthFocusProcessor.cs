@@ -11,7 +11,7 @@ namespace KIP2.Models.ImageProcessors {
 			FocalPoint = GetNearestFocalPoint(Window, ImageMid);
 			FocalPointOffset = ((FocalPoint.Y * ImageMax.X) + FocalPoint.X) * 4;
 
-			OverlayFocalPoint(3);
+			OverlayFocalPoint(3, FocalPointOffset);
 
 			return OutputArray;
 		}
