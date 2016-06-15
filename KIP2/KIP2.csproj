@@ -57,6 +57,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Models\ImageProcessors\DepthLimitedEdgeProcessor.cs" />
     <Compile Include="Structs\Rectangle.cs" />
     <Compile Include="Structs\Point.cs" />
     <Compile Include="Models\ImageProcessors\CombinedProcessor.cs" />

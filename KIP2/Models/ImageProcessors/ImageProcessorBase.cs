@@ -62,70 +62,8 @@ namespace KIP2.Models.ImageProcessors {
 		#endregion
 
 		public ImageProcessorBase() {
-			ImageMax = new Point(640, 480);
-			ImageMid = new Point(320, 240);
-
-			Window = new Rectangle(-ImageMid.X, -ImageMid.Y, ImageMid.X, ImageMid.Y);
-
-			PixelCount = ImageMid.X * ImageMid.Y;
-			ByteCount = ImageMax.X * ImageMax.Y * 4;
-
-			CompressedSensorData = new int[PixelCount];
-			OutputArray = new byte[ByteCount];
-
-			SampleGap = 10;
-
-			FocusPartWidth = 11;
-			FocusPartArea = FocusPartWidth * FocusPartWidth; // 121
-
-			FocusRegionWidth = 99;
-			FocusRegionArea = FocusRegionWidth * FocusRegionWidth; // 9801
-			FocusRegionOffsets = PrepareSquareOffsets(FocusRegionArea, ImageMax.X, false);
-			AreaBoundBox = GetCenteredBox(FocusRegionArea);
-
-			if (FocusRegionWidth % FocusPartWidth > 0)
-				throw new Exception("Focus area width must be divisible by sample area width");
-
-			FocusPartHorizontalCount = FocusRegionWidth / FocusPartWidth; // 9
-			FocusPartTotalCount = FocusPartHorizontalCount * FocusPartHorizontalCount; // 81
-
-			FocusPartOffsets = new List<int[]>();
-			FocusParts = new List<byte[]>();
-
-			FocalPoint = new Point();
-
-			SampleOffsets = PrepareSquareOffsets(FocusPartArea, ImageMax.X, false);
-
-			CalculateEdgeFilterValues();
-			PixelEdgeThreshold = 180;
-
-			BrightnessMeasurement = (pixel) => {
-				pixel = pixel * 4;
-				var measuredValue = 0;
-
-				foreach (var sampleOffset in SampleOffsets) {
-					if (pixel + sampleOffset > 0 && pixel + sampleOffset < ByteCount) {
-						measuredValue += ColorSensorData[pixel + sampleOffset] + ColorSensorData[pixel + sampleOffset + 1] + ColorSensorData[pixel + sampleOffset + 2];
-					}
-				}
-
-				return measuredValue;
-			};
-
-			DepthMeasurement = (pixel) => {
-				return ImageDepthData[pixel];
-			};
-
-			DepthValueComparison = (newValue, currentValue) => {
-				if (currentValue == 0)
-					currentValue = int.MaxValue;
-
-				return newValue > 0 && newValue <= currentValue;
-			};
-
-			BrightnessValueComparison = (newValue, currentValue) => {
-				return newValue >= currentValue;
-			};
+			SetFieldValues();
+			SetDelegates();
 		}
 
 		/// <summary>
@@ -387,6 +325,72 @@ namespace KIP2.Models.ImageProcessors {
 		/// </summary>
 		public virtual void PrepareOutput() {
 			Buffer.BlockCopy(ColorSensorData, 0, OutputArray, 0, ColorSensorData.Length);
+		}
+
+		void SetFieldValues() {
+			ImageMax = new Point(640, 480);
+			ImageMid = new Point(320, 240);
+
+			Window = new Rectangle(-ImageMid.X, -ImageMid.Y, ImageMid.X, ImageMid.Y);
+
+			PixelCount = ImageMid.X * ImageMid.Y;
+			ByteCount = ImageMax.X * ImageMax.Y * 4;
+
+			CompressedSensorData = new int[PixelCount];
+			OutputArray = new byte[ByteCount];
+
+			SampleGap = 10;
+
+			FocusPartWidth = 11;
+			FocusPartArea = FocusPartWidth * FocusPartWidth; // 121
+
+			FocusRegionWidth = 99;
+			FocusRegionArea = FocusRegionWidth * FocusRegionWidth; // 9801
+			FocusRegionOffsets = PrepareSquareOffsets(FocusRegionArea, ImageMax.X, false);
+			AreaBoundBox = GetCenteredBox(FocusRegionArea);
+
+			if (FocusRegionWidth % FocusPartWidth > 0)
+				throw new Exception("Focus area width must be divisible by sample area width");
+
+			FocusPartHorizontalCount = FocusRegionWidth / FocusPartWidth; // 9
+			FocusPartTotalCount = FocusPartHorizontalCount * FocusPartHorizontalCount; // 81
+
+			FocusPartOffsets = new List<int[]>();
+			FocusParts = new List<byte[]>();
+
+			FocalPoint = new Point();
+
+			SampleOffsets = PrepareSquareOffsets(FocusPartArea, ImageMax.X, false);
+
+			CalculateEdgeFilterValues();
+			PixelEdgeThreshold = 180;
+		}
+
+		void SetDelegates() {
+			BrightnessMeasurement = (pixel) => {
+				pixel = pixel * 4;
+				var measuredValue = 0;
+
+				foreach (var sampleOffset in SampleOffsets.Where(s => pixel + s > 0 && pixel + s < ByteCount))
+					measuredValue += ColorSensorData[pixel + sampleOffset] + ColorSensorData[pixel + sampleOffset + 1] + ColorSensorData[pixel + sampleOffset + 2];
+
+				return measuredValue;
+			};
+
+			DepthMeasurement = (pixel) => {
+				return ImageDepthData[pixel];
+			};
+
+			DepthValueComparison = (newValue, currentValue) => {
+				if (currentValue == 0)
+					currentValue = int.MaxValue;
+
+				return newValue > 0 && newValue <= currentValue;
+			};
+
+			BrightnessValueComparison = (newValue, currentValue) => {
+				return newValue >= currentValue;
+			};
 		}
 	}
 }

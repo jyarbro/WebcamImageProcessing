@@ -52,8 +52,7 @@ namespace KIP2.Models {
 		public Int32Rect ImageRect;
 		public WriteableBitmap FilteredImage;
 
-		public int ImageMaxX;
-		public int ImageMaxY;
+		public Point ImageMax;
 
 		public int PixelCount;
 		public int ColorSourceStride;
@@ -63,26 +62,25 @@ namespace KIP2.Models {
 		public ColorImagePoint[] ColorCoordinates;
 
 		public short[] ImageDepthData;
-		
-		public StreamManager() {
-			ImageMaxX = 640;
-			ImageMaxY = 480;
 
-			PixelCount = ImageMaxX * ImageMaxY;
+		public StreamManager() {
+			ImageMax = new Point(640, 480);
+
+			PixelCount = ImageMax.X * ImageMax.Y;
 
 			Sensor = KinectSensor.KinectSensors.FirstOrDefault(s => s.Status == KinectStatus.Connected);
 
 			if (Sensor == null)
 				return;
 
-			ImageRect = new Int32Rect(0, 0, ImageMaxX, ImageMaxY);
+			ImageRect = new Int32Rect(0, 0, ImageMax.X, ImageMax.Y);
 
 			FrameRateDelay = 50;
 			FrameTimer = DateTime.Now.AddMilliseconds(FrameRateDelay);
 
 			ResetFPS();
 
-			ColorSourceStride = ImageMaxX * 4;
+			ColorSourceStride = ImageMax.X * 4;
 
 			ColorSensorData = new byte[PixelCount * 4];
 
@@ -92,7 +90,6 @@ namespace KIP2.Models {
 
 			Sensor.ColorStream.Enable(ColorImageFormat.RgbResolution640x480Fps30);
 			Sensor.DepthStream.Enable(DepthImageFormat.Resolution640x480Fps30);
-
 
 			Sensor.AllFramesReady += SensorAllFramesReady;
 
@@ -144,8 +141,13 @@ namespace KIP2.Models {
 				while (true) {
 					timer = Stopwatch.StartNew();
 
+					Sensor.CoordinateMapper.MapDepthFrameToColorFrame(DepthImageFormat.Resolution640x480Fps30, DepthSensorData, ColorImageFormat.RgbResolution640x480Fps30, ColorCoordinates);
+
 					for (var i = 0; i < PixelCount; i++) {
-						ImageDepthData[i] = DepthSensorData[i].Depth;
+						var point = ColorCoordinates[i];
+
+						if ((point.X >= 0 && point.X < ImageMax.X) && (point.Y >= 0 && point.Y < ImageMax.Y))
+							ImageDepthData[point.Y * ImageMax.X + point.X] = DepthSensorData[i].Depth;
 					}
 
 					if (ImageProcessor != null)
@@ -157,9 +159,7 @@ namespace KIP2.Models {
 					if (Application.Current == null || Application.Current.Dispatcher.HasShutdownStarted)
 						return;
 
-					try {
-						Application.Current.Dispatcher.Invoke(() => { FilteredImage.WritePixels(ImageRect, processedImage, ColorSourceStride, 0); });
-					}
+					try { Application.Current.Dispatcher.Invoke(() => { FilteredImage.WritePixels(ImageRect, processedImage, ColorSourceStride, 0); }); }
 					catch { }
 
 					FrameCount++;
