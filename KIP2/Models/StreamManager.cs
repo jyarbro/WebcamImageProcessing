@@ -52,6 +52,9 @@ namespace KIP2.Models {
 		public Int32Rect ImageRect;
 		public WriteableBitmap FilteredImage;
 
+		ColorImageFrame ColorFrame;
+		DepthImageFrame DepthFrame;
+
 		public Point ImageMax;
 
 		public int PixelCount;
@@ -122,32 +125,35 @@ namespace KIP2.Models {
 		}
 		
 		void SensorAllFramesReady(object sender, AllFramesReadyEventArgs e) {
-			using (ColorImageFrame colorFrame = e.OpenColorImageFrame()) {
-				try { colorFrame.CopyPixelDataTo(ColorSensorData); }
-				catch { }
-			}
+			try {
+				ColorFrame = e.OpenColorImageFrame();
+				DepthFrame = e.OpenDepthImageFrame();
 
-			using (DepthImageFrame depthFrame = e.OpenDepthImageFrame()) {
-				try { depthFrame.CopyDepthImagePixelDataTo(DepthSensorData); }
-				catch { }
+				ColorFrame.CopyPixelDataTo(ColorSensorData);
+				DepthFrame.CopyDepthImagePixelDataTo(DepthSensorData);
+
+				ColorFrame.Dispose();
+				DepthFrame.Dispose();
 			}
+			catch { }
 		}
 
 		void ProcessSensorData() {
 			Task.Run(() => {
 				Stopwatch timer;
 				byte[] processedImage = null;
+				int pixel;
 
 				while (true) {
 					timer = Stopwatch.StartNew();
 
 					Sensor.CoordinateMapper.MapDepthFrameToColorFrame(DepthImageFormat.Resolution640x480Fps30, DepthSensorData, ColorImageFormat.RgbResolution640x480Fps30, ColorCoordinates);
 
-					for (var i = 0; i < PixelCount; i++) {
-						var point = ColorCoordinates[i];
+					for (pixel = 0; pixel < PixelCount; pixel++) {
+						var point = ColorCoordinates[pixel];
 
 						if ((point.X >= 0 && point.X < ImageMax.X) && (point.Y >= 0 && point.Y < ImageMax.Y))
-							ImageDepthData[point.Y * ImageMax.X + point.X] = DepthSensorData[i].Depth;
+							ImageDepthData[point.Y * ImageMax.X + point.X] = DepthSensorData[pixel].Depth;
 					}
 
 					if (ImageProcessor != null)
