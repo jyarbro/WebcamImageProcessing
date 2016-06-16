@@ -26,6 +26,10 @@ namespace KIP3.Models {
 
 		public short[] ImageDepthData;
 
+		public int PixelCount;
+		public int FrameWidth;
+		public int FrameHeight;
+
 		public double FrameDuration;
 		public uint FrameRateDelay;
 		public DateTime FrameTimer;
@@ -65,10 +69,14 @@ namespace KIP3.Models {
 
 			Sensor = KinectSensor.KinectSensors.FirstOrDefault(s => s.Status == KinectStatus.Connected);
 
+			FrameWidth = Sensor.ColorStream.FrameWidth;
+			FrameHeight = Sensor.ColorStream.FrameHeight;
+			PixelCount = FrameWidth * FrameHeight;
+
 			ImageProcessor = new ImageProcessor();
 			ImageProcessor.Load();
 
-			ColorSensorData = new byte[Sensor.ColorStream.FrameWidth * Sensor.ColorStream.FrameHeight * Sensor.ColorStream.FrameBytesPerPixel];
+			ColorSensorData = new byte[PixelCount * 4];
 			ImageProcessor.ColorSensorData = ColorSensorData;
 
 			DepthSensorData = new DepthImagePixel[Sensor.DepthStream.FramePixelDataLength];
@@ -110,8 +118,8 @@ namespace KIP3.Models {
 				byte[] processedImage = null;
 				int pixel;
 
-				var imageRect = new Int32Rect(0, 0, Sensor.DepthStream.FrameWidth, Sensor.DepthStream.FrameHeight);
-				var imageStride = Sensor.ColorStream.FrameWidth * Sensor.ColorStream.FrameBytesPerPixel;
+				var imageRect = new Int32Rect(0, 0, FrameWidth, FrameHeight);
+				var imageStride = FrameWidth * 4;
 
 				var colorCoordinates = new ColorImagePoint[Sensor.DepthStream.FramePixelDataLength];
 
@@ -120,11 +128,11 @@ namespace KIP3.Models {
 
 					Sensor.CoordinateMapper.MapDepthFrameToColorFrame(DepthImageFormat.Resolution640x480Fps30, DepthSensorData, ColorImageFormat.RgbResolution640x480Fps30, colorCoordinates);
 
-					for (pixel = 0; pixel < Sensor.DepthStream.FramePixelDataLength; pixel++) {
+					for (pixel = 0; pixel < PixelCount; pixel++) {
 						var point = colorCoordinates[pixel];
 
-						if ((point.X >= 0 && point.X < Sensor.DepthStream.FrameWidth) && (point.Y >= 0 && point.Y < Sensor.DepthStream.FrameHeight))
-							ImageDepthData[point.Y * Sensor.DepthStream.FrameWidth + point.X] = DepthSensorData[pixel].Depth;
+						if ((point.X >= 0 && point.X < FrameWidth) && (point.Y >= 0 && point.Y < FrameHeight))
+							ImageDepthData[point.Y * FrameWidth + point.X] = DepthSensorData[pixel].Depth;
 					}
 
 					if (ImageProcessor != null)

@@ -250,7 +250,6 @@ namespace KIP3.Infrastructure {
 			PixelCount = ImageMid.X * ImageMid.Y;
 			ByteCount = ImageMax.X * ImageMax.Y * 4;
 
-
 			SampleGap = 10;
 
 			if (ImageMid.X % SampleGap > 0)
