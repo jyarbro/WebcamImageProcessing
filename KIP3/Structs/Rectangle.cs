@@ -12,7 +12,7 @@
 			};
 		}
 
-		public Point Origin { get; set; }
-		public Point Extent { get; set; }
+		public Point Origin;
+		public Point Extent;
 	}
 }
