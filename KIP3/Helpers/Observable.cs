@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace KIP2.Helpers {
+namespace KIP3.Helpers {
 	public class Observable : INotifyPropertyChanged {
 		public event PropertyChangedEventHandler PropertyChanged;
 

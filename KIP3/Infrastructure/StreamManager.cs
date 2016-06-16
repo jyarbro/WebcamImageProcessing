@@ -1,20 +1,37 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
-using KIP2.Helpers;
-using KIP2.Models.ImageProcessors;
+using KIP3.Helpers;
+using KIP3.Infrastructure;
 using Microsoft.Kinect;
 
-namespace KIP2.Models {
+namespace KIP3.Models {
 	public class StreamManager : Observable {
 		public event EventHandler<FrameRateEventArgs> UpdateFrameRate;
 
-		double FrameCount {
+		public KinectSensor Sensor;
+		public ImageProcessor ImageProcessor;
+
+		public WriteableBitmap FilteredImage;
+
+		public ColorImageFrame ColorFrame;
+		public DepthImageFrame DepthFrame;
+
+		public byte[] ColorSensorData;
+		public DepthImagePixel[] DepthSensorData;
+
+		public short[] ImageDepthData;
+
+		public double FrameDuration;
+		public uint FrameRateDelay;
+		public DateTime FrameTimer;
+		public DateTime RunTimer;
+
+		public double FrameCount {
 			get { return _FrameCount; }
 			set {
 				if (_FrameCount == value)
@@ -40,82 +57,31 @@ namespace KIP2.Models {
 		}
 		double _FrameCount = 0;
 
-		protected double FrameDuration;
-
-		uint FrameRateDelay;
-		DateTime FrameTimer;
-		DateTime RunTimer;
-
-		public ImageProcessorBase ImageProcessor;
-
-		public KinectSensor Sensor;
-		public Int32Rect ImageRect;
-		public WriteableBitmap FilteredImage;
-
-		ColorImageFrame ColorFrame;
-		DepthImageFrame DepthFrame;
-
-		public Point ImageMax;
-
-		public int PixelCount;
-		public int ColorSourceStride;
-
-		public byte[] ColorSensorData;
-		public DepthImagePixel[] DepthSensorData;
-		public ColorImagePoint[] ColorCoordinates;
-
-		public short[] ImageDepthData;
-
-		public StreamManager() {
-			ImageMax = new Point(640, 480);
-
-			PixelCount = ImageMax.X * ImageMax.Y;
-
-			Sensor = KinectSensor.KinectSensors.FirstOrDefault(s => s.Status == KinectStatus.Connected);
-
-			if (Sensor == null)
-				return;
-
-			ImageRect = new Int32Rect(0, 0, ImageMax.X, ImageMax.Y);
-
+		public void Load() {
 			FrameRateDelay = 50;
 			FrameTimer = DateTime.Now.AddMilliseconds(FrameRateDelay);
 
 			ResetFPS();
 
-			ColorSourceStride = ImageMax.X * 4;
+			Sensor = KinectSensor.KinectSensors.FirstOrDefault(s => s.Status == KinectStatus.Connected);
 
-			ColorSensorData = new byte[PixelCount * 4];
+			ImageProcessor = new ImageProcessor();
+			ImageProcessor.Load();
+
+			ColorSensorData = new byte[Sensor.DepthStream.FramePixelDataLength * Sensor.DepthStream.FrameBytesPerPixel];
+			ImageProcessor.ColorSensorData = ColorSensorData;
 
 			DepthSensorData = new DepthImagePixel[Sensor.DepthStream.FramePixelDataLength];
-			ColorCoordinates = new ColorImagePoint[Sensor.DepthStream.FramePixelDataLength];
-			ImageDepthData = new short[PixelCount];
+			ImageDepthData = new short[Sensor.DepthStream.FramePixelDataLength];
+			ImageProcessor.ImageDepthData = ImageDepthData;
 
 			Sensor.ColorStream.Enable(ColorImageFormat.RgbResolution640x480Fps30);
 			Sensor.DepthStream.Enable(DepthImageFormat.Resolution640x480Fps30);
 
 			Sensor.AllFramesReady += SensorAllFramesReady;
-
-			try {
-				Sensor.Start();
-			}
-			catch (IOException) {
-				Sensor = null;
-			}
+			Sensor.Start();
 
 			ProcessSensorData();
-		}
-
-		public void SetImageProcessor(string selectedImageProcessorName) {
-			var processorType = Type.GetType("KIP2.Models.ImageProcessors." + selectedImageProcessorName + ", KIP2");
-			var processorInstance = (ImageProcessorBase)Activator.CreateInstance(processorType);
-
-			processorInstance.ColorSensorData = ColorSensorData;
-			processorInstance.ImageDepthData = ImageDepthData;
-
-			processorInstance.Prepare();
-
-			ImageProcessor = processorInstance;
 		}
 
 		void ResetFPS() {
@@ -144,16 +110,21 @@ namespace KIP2.Models {
 				byte[] processedImage = null;
 				int pixel;
 
+				var imageRect = new Int32Rect(0, 0, Sensor.DepthStream.FrameWidth, Sensor.DepthStream.FrameHeight);
+				var imageStride = Sensor.DepthStream.FrameWidth * Sensor.DepthStream.FrameBytesPerPixel;
+
+				var colorCoordinates = new ColorImagePoint[Sensor.DepthStream.FramePixelDataLength];
+
 				while (true) {
 					timer = Stopwatch.StartNew();
 
-					Sensor.CoordinateMapper.MapDepthFrameToColorFrame(DepthImageFormat.Resolution640x480Fps30, DepthSensorData, ColorImageFormat.RgbResolution640x480Fps30, ColorCoordinates);
+					Sensor.CoordinateMapper.MapDepthFrameToColorFrame(DepthImageFormat.Resolution640x480Fps30, DepthSensorData, ColorImageFormat.RgbResolution640x480Fps30, colorCoordinates);
 
-					for (pixel = 0; pixel < PixelCount; pixel++) {
-						var point = ColorCoordinates[pixel];
+					for (pixel = 0; pixel < Sensor.DepthStream.FramePixelDataLength; pixel++) {
+						var point = colorCoordinates[pixel];
 
-						if ((point.X >= 0 && point.X < ImageMax.X) && (point.Y >= 0 && point.Y < ImageMax.Y))
-							ImageDepthData[point.Y * ImageMax.X + point.X] = DepthSensorData[pixel].Depth;
+						if ((point.X >= 0 && point.X < Sensor.DepthStream.FrameWidth) && (point.Y >= 0 && point.Y < Sensor.DepthStream.FrameHeight))
+							ImageDepthData[point.Y * Sensor.DepthStream.FrameWidth + point.X] = DepthSensorData[pixel].Depth;
 					}
 
 					if (ImageProcessor != null)
@@ -165,7 +136,7 @@ namespace KIP2.Models {
 					if (Application.Current == null || Application.Current.Dispatcher.HasShutdownStarted)
 						return;
 
-					try { Application.Current.Dispatcher.Invoke(() => { FilteredImage.WritePixels(ImageRect, processedImage, ColorSourceStride, 0); }); }
+					try { Application.Current.Dispatcher.Invoke(() => { FilteredImage.WritePixels(imageRect, processedImage, imageStride, 0); }); }
 					catch { }
 
 					FrameCount++;

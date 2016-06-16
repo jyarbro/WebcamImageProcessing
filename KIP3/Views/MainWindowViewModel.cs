@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Windows.Media;
+﻿using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using KIP2.Helpers;
-using KIP2.Models;
-using KIP2.Models.ImageProcessors;
+using KIP3.Helpers;
+using KIP3.Models;
 
-namespace KIP2.Views {
+namespace KIP3.Views {
 	public class MainWindowViewModel : Observable {
 		public string StatusText {
 			get { return _StatusText ?? (_StatusText = string.Empty); }
@@ -36,28 +31,6 @@ namespace KIP2.Views {
 
 		public StreamManager StreamManager { get; set; }
 
-		public List<string> ImageProcessorNames { get; set; }
-
-		public int SelectedImageProcessorIndex {
-			get { return _SelectedImageProcessorIndex; }
-			set { SetProperty(ref _SelectedImageProcessorIndex, value); }
-		}
-		int _SelectedImageProcessorIndex;
-
-		public string SelectedImageProcessorName {
-			get { return _SelectedImageProcessorName; }
-			set {
-				if (value == _SelectedImageProcessorName)
-					return;
-
-				_SelectedImageProcessorName = value;
-				
-				if (StreamManager != null)
-					StreamManager.SetImageProcessor(_SelectedImageProcessorName);
-			}
-		}
-		string _SelectedImageProcessorName;
-
 		public MainWindowViewModel() {
 			OutputImage = new WriteableBitmap(640, 480, 96.0, 96.0, PixelFormats.Bgr32, null);
 
@@ -65,11 +38,7 @@ namespace KIP2.Views {
 				FilteredImage = OutputImage
 			};
 
-			ImageProcessorNames = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.BaseType.Equals(typeof(ImageProcessorBase))).Select(t => t.Name).ToList();
-
-			SelectedImageProcessorName = ImageProcessorNames.First();
-			SelectedImageProcessorIndex = ImageProcessorNames.IndexOf(SelectedImageProcessorName);
-
+			StreamManager.Load();
 			StreamManager.UpdateFrameRate += UpdateFrameRate;
 		}
 

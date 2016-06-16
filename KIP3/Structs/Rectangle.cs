@@ -1,4 +1,4 @@
-﻿namespace KIP2 {
+﻿namespace KIP3 {
 	public struct Rectangle {
 		public Rectangle(int ox, int oy, int ex, int ey) {
 			Origin = new Point {

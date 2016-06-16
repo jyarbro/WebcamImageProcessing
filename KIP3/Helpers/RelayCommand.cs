@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Input;
 
-namespace KIP2.Helpers {
+namespace KIP3.Helpers {
 	public class RelayCommand : ICommand {
 		public event EventHandler CanExecuteChanged {
 			add {

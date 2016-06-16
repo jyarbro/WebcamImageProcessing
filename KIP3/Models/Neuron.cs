@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace KIP2.Models {
+namespace KIP3.Models {
 	public class Neuron {
 		public int signature;
 		public object Memory;

@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KIP2", "KIP2\KIP2.csproj", "{821597D0-0822-4A16-A73A-47F653F01EF8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KIP3", "KIP3\KIP3.csproj", "{928D93BA-FD58-4FE3-8924-9C05BF1D2E4E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +11,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{821597D0-0822-4A16-A73A-47F653F01EF8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{821597D0-0822-4A16-A73A-47F653F01EF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{821597D0-0822-4A16-A73A-47F653F01EF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{821597D0-0822-4A16-A73A-47F653F01EF8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{928D93BA-FD58-4FE3-8924-9C05BF1D2E4E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{928D93BA-FD58-4FE3-8924-9C05BF1D2E4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{928D93BA-FD58-4FE3-8924-9C05BF1D2E4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{928D93BA-FD58-4FE3-8924-9C05BF1D2E4E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

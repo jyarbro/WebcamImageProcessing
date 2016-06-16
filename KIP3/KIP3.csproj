@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{821597D0-0822-4A16-A73A-47F653F01EF8}</ProjectGuid>
+    <ProjectGuid>{928D93BA-FD58-4FE3-8924-9C05BF1D2E4E}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>KIP2</RootNamespace>
-    <AssemblyName>KIP2</AssemblyName>
+    <RootNamespace>KIP3</RootNamespace>
+    <AssemblyName>KIP3</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -38,7 +38,6 @@
     <Reference Include="Microsoft.Kinect, Version=1.8.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -57,38 +56,32 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Models\ImageProcessors\DepthLimitedEdgeProcessor.cs" />
-    <Compile Include="Structs\Rectangle.cs" />
-    <Compile Include="Structs\Point.cs" />
-    <Compile Include="Models\ImageProcessors\CombinedProcessor.cs" />
-    <Compile Include="Models\WeightedValue.cs" />
-    <Compile Include="Helpers\RelayCommand.cs" />
-    <Compile Include="Models\ImageProcessors\FocusPartsProcessor.cs" />
-    <Compile Include="Models\ImageProcessors\DepthFocusProcessor.cs" />
-    <Compile Include="Models\NeuralNetwork.cs" />
-    <Compile Include="Models\Neuron.cs" />
-    <Compile Include="Models\StreamManager.cs" />
-    <Compile Include="Models\ImageProcessors\EdgeProcessor.cs" />
-    <Compile Include="Models\ImageProcessors\ImageProcessorBase.cs" />
-    <Compile Include="Models\ImageProcessors\BrightnessFocusProcessor.cs" />
+    <Compile Include="Extensions\WeightedValueExtension.cs" />
     <Compile Include="Helpers\FrameRateEventArgs.cs" />
+    <Compile Include="Helpers\NotifyPropertyChangedActionAttribute.cs" />
+    <Compile Include="Helpers\Observable.cs" />
+    <Compile Include="Helpers\RelayCommand.cs" />
+    <Compile Include="Infrastructure\ImageProcessor.cs" />
+    <Compile Include="Infrastructure\NeuralNetwork.cs" />
+    <Compile Include="Infrastructure\StreamManager.cs" />
+    <Compile Include="Models\Neuron.cs" />
+    <Compile Include="Structs\Point.cs" />
+    <Compile Include="Structs\Rectangle.cs" />
+    <Compile Include="Structs\WeightedValue.cs" />
+    <Compile Include="Views\MainWindow.xaml.cs">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\MainWindowViewModel.cs" />
-    <Page Include="Views\MainWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Views\MainWindow.xaml.cs">
-      <DependentUpon>MainWindow.xaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
+    <Page Include="Views\MainWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Helpers\NotifyPropertyChangedActionAttribute.cs" />
-    <Compile Include="Helpers\Observable.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -115,6 +108,7 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

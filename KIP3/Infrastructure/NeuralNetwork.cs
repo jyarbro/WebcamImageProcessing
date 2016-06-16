@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace KIP2.Models {
+namespace KIP3.Models {
 	public class NeuralNetwork {
 		public List<Neuron> Neurons;
 

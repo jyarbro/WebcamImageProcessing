@@ -1,4 +1,4 @@
-﻿namespace KIP2 {
+﻿namespace KIP3 {
 	public struct Point {
 		public Point(int x, int y) {
 			X = x;

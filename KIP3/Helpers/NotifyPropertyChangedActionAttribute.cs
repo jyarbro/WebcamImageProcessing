@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace KIP2.Helpers {
+namespace KIP3.Helpers {
 	[AttributeUsage(AttributeTargets.Method)]
 	public class NotifyPropertyChangedActionAttribute : Attribute {
 		public NotifyPropertyChangedActionAttribute() { }
