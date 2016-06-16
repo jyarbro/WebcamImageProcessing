@@ -68,7 +68,7 @@ namespace KIP3.Models {
 			ImageProcessor = new ImageProcessor();
 			ImageProcessor.Load();
 
-			ColorSensorData = new byte[Sensor.DepthStream.FramePixelDataLength * Sensor.DepthStream.FrameBytesPerPixel];
+			ColorSensorData = new byte[Sensor.ColorStream.FrameWidth * Sensor.ColorStream.FrameHeight * Sensor.ColorStream.FrameBytesPerPixel];
 			ImageProcessor.ColorSensorData = ColorSensorData;
 
 			DepthSensorData = new DepthImagePixel[Sensor.DepthStream.FramePixelDataLength];
@@ -111,7 +111,7 @@ namespace KIP3.Models {
 				int pixel;
 
 				var imageRect = new Int32Rect(0, 0, Sensor.DepthStream.FrameWidth, Sensor.DepthStream.FrameHeight);
-				var imageStride = Sensor.DepthStream.FrameWidth * Sensor.DepthStream.FrameBytesPerPixel;
+				var imageStride = Sensor.ColorStream.FrameWidth * Sensor.ColorStream.FrameBytesPerPixel;
 
 				var colorCoordinates = new ColorImagePoint[Sensor.DepthStream.FramePixelDataLength];
 

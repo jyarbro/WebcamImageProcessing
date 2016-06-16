@@ -77,10 +77,10 @@ namespace KIP3.Infrastructure {
 		public byte[] ProcessImage() {
 			PrepareOutput();
 
-			SetMeasuredFocalPoint(Window, ImageMid, DepthMeasurement, DepthValueComparison);
-			SetMeasuredFocalPoint(AreaBoundBox, FocalPoint, BrightnessMeasurement, BrightnessValueComparison);
+			//SetMeasuredFocalPoint(Window, ImageMid, DepthMeasurement, DepthValueComparison);
+			//SetMeasuredFocalPoint(AreaBoundBox, FocalPoint, BrightnessMeasurement, BrightnessValueComparison);
 
-			FilterEdges();
+			//FilterEdges();
 
 			return OutputArray;
 		}
