@@ -22,13 +22,8 @@ namespace KIP3.Infrastructure {
 		public int FocusPartWidth;
 
 		public int SampleGap;
-		public int SampleByteCount;
-		public int SampleCenterOffset;
 
 		public int[] FocusPartOffsets;
-
-		public byte[] ColorSensorData;
-		public short[] ImageDepthData;
 
 		public int[] EdgeFilterWeights;
 		public int[] EdgeFilterOffsets;
@@ -37,21 +32,18 @@ namespace KIP3.Infrastructure {
 
 		public Point ImageMax;
 		public Point ImageMid;
-		public Point FocalPoint;
 
 		public Rectangle Window;
-		public Rectangle AreaBoundBox;
+
+		public Pixel[] Pixels;
+		public PixelLocation[] PixelLocations;
+		public Pixel CurrentPixel;
+		public int FocusIndex;
 
 		public int ByteCount;
 		public int PixelCount;
 
-		public byte[] OutputArray;
-
-		public Func<int, int> BrightnessMeasurement;
-		public Func<int, int> DepthMeasurement;
-
-		public Func<int, int, bool> BrightnessValueComparison;
-		public Func<int, int, bool> DepthValueComparison;
+		public byte[] OutputData;
 
 		public int i;
 		public int j;
@@ -75,46 +67,91 @@ namespace KIP3.Infrastructure {
 		#endregion
 
 		public void Load() {
-			SetFieldValues();
-			SetDelegates();
-		}
+			ImageMax = new Point(640, 480);
+			ImageMid = new Point(320, 240);
 
-		public byte[] ProcessImage() {
-			PrepareOutput();
-			ResetOutput();
+			PixelCount = ImageMax.X * ImageMax.Y;
+			ByteCount = ImageMax.X * ImageMax.Y * 4;
+			
+			SampleGap = 10;
 
-			SetMeasuredFocalPoint(Window, ImageMid, DepthMeasurement, DepthValueComparison);
-			SetMeasuredFocalPoint(AreaBoundBox, FocalPoint, BrightnessMeasurement, BrightnessValueComparison);
+			if (ImageMid.X % SampleGap > 0)
+				throw new Exception("Image width must be evently divisible by sample gap.");
 
-			FilterObjectByDepth();
+			FocusPartWidth = 11;
+			FocusPartArea = FocusPartWidth * FocusPartWidth; // 121
 
-			return OutputArray;
+			var halfWidth = Convert.ToInt32(Math.Floor((double)FocusPartWidth / 2));
+
+			FocusPartOffsets = PrepareOffsets(new Rectangle(-halfWidth, -halfWidth, halfWidth, halfWidth), FocusPartArea, ImageMax.X, false);
+
+			FocusRegionWidth = 99;
+			FocusRegionArea = FocusRegionWidth * FocusRegionWidth; // 9801
+
+			halfWidth = Convert.ToInt32(Math.Floor((double)FocusRegionWidth / 2));
+
+			if (FocusRegionWidth % FocusPartWidth > 0)
+				throw new Exception("Focus region width must be evenly divisible by focus part width");
+
+			FocusRegionOffsets = PrepareOffsets(new Rectangle(-halfWidth, -halfWidth, halfWidth, halfWidth), FocusRegionArea, ImageMax.X, false);
+
+			PrepareEdgeFilterOffsetsAndWeights();
+			PixelEdgeThreshold = 180;
+
+			Window = new Rectangle(-ImageMid.X, -ImageMid.Y, ImageMid.X, ImageMid.Y);
+
+			PreparePixels();
 		}
 
 		/// <summary>
-		/// A universal method for calculating all of the linear offsets for a given square area
+		/// Precalculate pixel values
 		/// </summary>
-		public int[] PrepareSquareOffsets(int size, int stride, bool byteMultiplier = true) {
-			if (size % 2 == 0)
-				throw new Exception("Odd sizes only!");
+		public void PreparePixels() {
+			Pixels = new Pixel[PixelCount];
+			PixelLocations = new PixelLocation[PixelCount];
 
-			var offsets = new int[size];
-			var areaBox = GetCenteredBox(size);
+			for (i = 0; i < PixelCount; i++) {
+				var y = i / ImageMax.X;
+				var x = i % ImageMax.X;
 
-			var offset = 0;
+				var xSq = Math.Pow(Math.Abs(x - ImageMid.X), 2);
+				var ySq = Math.Pow(Math.Abs(y - ImageMid.Y), 2);
+				var distance = Math.Sqrt(xSq + ySq);
 
-			for (int yOffset = areaBox.Origin.Y; yOffset <= areaBox.Extent.Y; yOffset++) {
-				for (int xOffset = areaBox.Origin.X; xOffset <= areaBox.Extent.X; xOffset++) {
-					offsets[offset] = xOffset + (yOffset * stride);
-
-					if (byteMultiplier)
-						offsets[offset] = offsets[offset] * 4;
-
-					offset++;
-				}
+				PixelLocations[i] = new PixelLocation {
+					X = x,
+					Y = y,
+					Distance = distance,
+					OffsetB = i * 4,
+					OffsetG = i * 4 + 1,
+					OffsetR = i * 4 + 2
+				};
 			}
+		}
 
-			return offsets;
+		public void ProcessImage() {
+			SetFocusIndex();
+
+			byteOffset = 0;
+
+			for (i = 0; i < PixelCount; i++) {
+				OutputData[byteOffset] = Pixels[i].B;
+				OutputData[byteOffset + 1] = Pixels[i].G;
+				OutputData[byteOffset + 2] = Pixels[i].R;
+
+				byteOffset += 4;
+			}
+		}
+
+		public void SetFocusIndex() {
+			FocusIndex = 0;
+			
+			for (i = 0; i < PixelCount; i++) {
+				if (Pixels[i].Depth > 0 && Pixels[i].Depth <= Pixels[FocusIndex].Depth 
+					&& PixelLocations[i].Distance <= PixelLocations[FocusIndex].Distance)
+
+					FocusIndex = i;
+			}
 		}
 
 		/// <summary>
@@ -127,7 +164,7 @@ namespace KIP3.Infrastructure {
 				-1, -1, -1,
 			};
 
-			var edgeFilterOffsets = PrepareSquareOffsets(edgeFilterWeights.Count, ImageMax.X);
+			var edgeFilterOffsets = PrepareOffsets(new Rectangle(-1, -1, 1, 1), edgeFilterWeights.Count, ImageMax.X);
 
 			var filteredPixelCount = edgeFilterWeights.Where(f => f != 0).Count();
 
@@ -148,171 +185,28 @@ namespace KIP3.Infrastructure {
 		}
 
 		/// <summary>
-		/// Calculate a window around a centered point given only the square's area.
+		/// A universal method for calculating all of the linear offsets for a given square area
 		/// </summary>
-		public Rectangle GetCenteredBox(int area) {
-			var areaMax = Convert.ToInt32(Math.Floor(Math.Sqrt(area) / 2));
-			var areaMin = areaMax * -1;
+		public int[] PrepareOffsets(Rectangle areaBox, int area, int stride, bool byteMultiplier = true) {
+			if (area % 2 == 0)
+				throw new Exception("Odd sizes only!");
 
-			return new Rectangle(areaMin, areaMin, areaMax, areaMax);
-		}
+			var offsets = new int[area];
 
-		public void SetMeasuredFocalPoint(Rectangle window, Point target, Func<int, int> measurement, Func<int, int, bool> valueComparison) {
-			xSq = Math.Pow(Math.Abs(ImageMid.X), 2);
-			ySq = Math.Pow(Math.Abs(ImageMid.Y), 2);
+			var offset = 0;
 
-			closestPixelDistance = Math.Sqrt(xSq + ySq);
+			for (int yOffset = areaBox.Origin.Y; yOffset <= areaBox.Extent.Y; yOffset++) {
+				for (int xOffset = areaBox.Origin.X; xOffset <= areaBox.Extent.X; xOffset++) {
+					offsets[offset] = xOffset + (yOffset * stride);
 
-			highestMeasuredValue = 0;
-			
-			for (y = target.Y + window.Origin.Y; y < target.Y + window.Extent.Y; y += SampleGap) {
-				yOffset = y * ImageMax.X;
+					if (byteMultiplier)
+						offsets[offset] = offsets[offset] * 4;
 
-				for (x = target.X + window.Origin.X; x < target.X + window.Extent.X; x += SampleGap) {
-					measuredValue = measurement(yOffset + x);
-
-					if (valueComparison(measuredValue, highestMeasuredValue)) {
-						xSq = Math.Pow(Math.Abs(x - target.X), 2);
-						ySq = Math.Pow(Math.Abs(y - target.Y), 2);
-
-						distanceFromCenter = Math.Sqrt(xSq + ySq);
-
-						if (distanceFromCenter <= closestPixelDistance) {
-							closestPixelDistance = distanceFromCenter;
-							highestMeasuredValue = measuredValue;
-
-							FocalPoint.X = x;
-							FocalPoint.Y = y;
-						}
-					}
+					offset++;
 				}
 			}
-		}
 
-		public void FilterEdges() {
-			filterFocalPointOffset = ((FocalPoint.Y * ImageMax.X) + FocalPoint.X);
-
-			for (i = 0; i < FocusRegionOffsets.Length; i++) {
-				measuredValue = 0;
-
-				byteOffset = (filterFocalPointOffset + FocusRegionOffsets[i]) * 4;
-
-				if (byteOffset > 0 && byteOffset < ByteCount) {
-					for (j = 0; j < EdgeFilterOffsets.Length; j++) {
-						if (EdgeFilterWeights[j] == 0)
-							continue;
-
-						offset = byteOffset + EdgeFilterOffsets[j];
-
-						if (offset > 0 && offset < ByteCount)
-							measuredValue += EdgeFilterWeights[j] * (ColorSensorData[offset] + ColorSensorData[offset + 1] + ColorSensorData[offset + 2]);
-					}
-
-					if (measuredValue >= PixelEdgeThreshold) {
-						OutputArray[byteOffset] = 0;
-						OutputArray[byteOffset + 1] = 0;
-						OutputArray[byteOffset + 2] = 0;
-					}
-					else {
-						OutputArray[byteOffset] = 255;
-						OutputArray[byteOffset + 1] = 255;
-						OutputArray[byteOffset + 2] = 255;
-					}
-				}
-			}
-		}
-
-		public void FilterObjectByDepth() {
-			filterFocalPointOffset = ((FocalPoint.Y * ImageMax.X) + FocalPoint.X);
-			var filterFocalPointDepth = ImageDepthData[filterFocalPointOffset];
-
-			byteOffset = 0;
-
-			for (i = 0; i < PixelCount; i++) {
-				measuredValue = ImageDepthData[i] - filterFocalPointDepth;
-
-				if (measuredValue > -300 && measuredValue < 300) {
-					OutputArray[byteOffset] = ColorSensorData[byteOffset];
-					OutputArray[byteOffset + 1] = ColorSensorData[byteOffset + 1];
-					OutputArray[byteOffset + 2] = ColorSensorData[byteOffset + 2];
-				}
-
-				byteOffset += 4;
-			}
-		}
-
-		public void ResetOutput() {
-			for (i = 0; i < OutputArray.Length; i++)
-				OutputArray[i] = 0;
-		}
-
-		/// <summary>
-		/// Simply copies the input to the output. Useful in most situations.
-		/// </summary>
-		public void PrepareOutput() {
-			Buffer.BlockCopy(ColorSensorData, 0, OutputArray, 0, ColorSensorData.Length);
-		}
-
-		void SetFieldValues() {
-			ImageMax = new Point(640, 480);
-			ImageMid = new Point(320, 240);
-
-			PixelCount = ImageMax.X * ImageMax.Y;
-			ByteCount = ImageMax.X * ImageMax.Y * 4;
-
-			SampleGap = 10;
-
-			if (ImageMid.X % SampleGap > 0)
-				throw new Exception("Image width must be evently divisible by sample gap.");
-
-			FocusPartWidth = 11;
-			FocusPartArea = FocusPartWidth * FocusPartWidth; // 121
-
-			FocusPartOffsets = PrepareSquareOffsets(FocusPartArea, ImageMax.X, false);
-
-			FocusRegionWidth = 99;
-			FocusRegionArea = FocusRegionWidth * FocusRegionWidth; // 9801
-
-			if (FocusRegionWidth % FocusPartWidth > 0)
-				throw new Exception("Focus region width must be evenly divisible by focus part width");
-
-			FocusRegionOffsets = PrepareSquareOffsets(FocusRegionArea, ImageMax.X, false);
-			AreaBoundBox = GetCenteredBox(FocusRegionArea);
-
-			PrepareEdgeFilterOffsetsAndWeights();
-			PixelEdgeThreshold = 180;
-
-			Window = new Rectangle(-ImageMid.X, -ImageMid.Y, ImageMid.X, ImageMid.Y);
-
-			FocalPoint = new Point();
-			OutputArray = new byte[ByteCount];
-		}
-
-		void SetDelegates() {
-			BrightnessMeasurement = (pixel) => {
-				pixel = pixel * 4;
-				var measuredValue = 0;
-
-				foreach (var sampleOffset in FocusPartOffsets.Where(offset => pixel + offset > 0 && pixel + offset < ByteCount - 4))
-					measuredValue += ColorSensorData[pixel + sampleOffset] + ColorSensorData[pixel + sampleOffset + 1] + ColorSensorData[pixel + sampleOffset + 2];
-
-				return measuredValue;
-			};
-
-			DepthMeasurement = (pixel) => {
-				return ImageDepthData[pixel];
-			};
-
-			DepthValueComparison = (newValue, currentValue) => {
-				if (currentValue == 0)
-					currentValue = int.MaxValue;
-
-				return newValue > 0 && newValue <= currentValue;
-			};
-
-			BrightnessValueComparison = (newValue, currentValue) => {
-				return newValue >= currentValue;
-			};
+			return offsets;
 		}
 	}
 }

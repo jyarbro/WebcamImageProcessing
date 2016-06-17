@@ -65,6 +65,8 @@
     <Compile Include="Infrastructure\NeuralNetwork.cs" />
     <Compile Include="Infrastructure\StreamManager.cs" />
     <Compile Include="Models\Neuron.cs" />
+    <Compile Include="Models\PixelLocation.cs" />
+    <Compile Include="Structs\Pixel.cs" />
     <Compile Include="Structs\Point.cs" />
     <Compile Include="Structs\Rectangle.cs" />
     <Compile Include="Structs\WeightedValue.cs" />
