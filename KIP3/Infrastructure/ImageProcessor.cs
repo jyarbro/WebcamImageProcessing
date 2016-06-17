@@ -22,7 +22,6 @@ namespace KIP3.Infrastructure {
 		public int[] EdgeFilterOffsets;
 
 		public Point ImageMax;
-		public Point ImageMid;
 
 		public Pixel[] Pixels;
 		public PixelLocation[] PixelLocations;
@@ -30,6 +29,7 @@ namespace KIP3.Infrastructure {
 		public int FocusIndex;
 
 		public int PixelCount;
+		public int ByteCount;
 
 		public byte[] OutputData;
 
@@ -41,15 +41,12 @@ namespace KIP3.Infrastructure {
 		public void Load() {
 			SampleGap = 10;
 
-			if (ImageMid.X % SampleGap > 0)
-				throw new Exception("Image width must be evently divisible by sample gap.");
-
 			FocusPartWidth = 11;
 			FocusPartArea = FocusPartWidth * FocusPartWidth; // 121
 
 			var halfWidth = Convert.ToInt32(Math.Floor((double)FocusPartWidth / 2));
 
-			FocusPartOffsets = PrepareOffsets(new Rectangle(-halfWidth, -halfWidth, halfWidth, halfWidth), FocusPartArea, ImageMax.X, false);
+			FocusPartOffsets = PrepareOffsets(new Rectangle(-halfWidth, -halfWidth, halfWidth, halfWidth), FocusPartArea, ImageMax.X, true);
 
 			PrepareEdgeFilterOffsetsAndWeights();
 		}
@@ -63,6 +60,23 @@ namespace KIP3.Infrastructure {
 				OutputData[byteOffset + 2] = Pixels[i].R;
 
 				byteOffset += 4;
+			}
+
+			OverlayFocalPoint();
+		}
+
+		/// <summary>
+		/// Add color spot to highlight focal point
+		/// </summary>
+		public void OverlayFocalPoint(int color = 3) {
+			for (i = 0; i < FocusPartOffsets.Length; i++) {
+				byteOffset = (FocusIndex * 4) + FocusPartOffsets[i];
+
+				if (byteOffset > 0 && byteOffset < ByteCount) {
+					OutputData[byteOffset] = (byte)(color == 1 ? 255 : 0);
+					OutputData[byteOffset + 1] = (byte)(color == 2 ? 255 : 0);
+					OutputData[byteOffset + 2] = (byte)(color == 3 ? 255 : 0);
+				}
 			}
 		}
 

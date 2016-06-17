@@ -19,29 +19,10 @@ namespace KIP3.Models {
 		}
 		string _StatusText;
 
-		public KinectSensor Sensor;
-		public ImageProcessor ImageProcessor;
-
-		public WriteableBitmap FilteredImage;
-
-		public byte[] OutputData;
-		public byte[] ColorSensorData;
-
-		public ColorImagePoint[] ColorCoordinates;
-		public DepthImagePixel[] RawDepthSensorData;
-
-		public Pixel[] Pixels;
-		public PixelLocation[] PixelLocations;
-
-		public int FrameWidth;
-		public int FrameHeight;
-
 		public double FrameDuration;
 		public uint FrameRateDelay;
 		public DateTime FrameTimer;
 		public DateTime RunTimer;
-
-		public int PixelCount;
 
 		public double FrameCount {
 			get { return _FrameCount; }
@@ -69,6 +50,24 @@ namespace KIP3.Models {
 		}
 		double _FrameCount = 0;
 
+		public WriteableBitmap FilteredImage;
+
+		public KinectSensor Sensor;
+		public ImageProcessor ImageProcessor;
+
+		public byte[] OutputData;
+
+		public ColorImagePoint[] ColorCoordinates;
+		public DepthImagePixel[] RawDepthSensorData;
+
+		public int FrameWidth;
+		public int FrameHeight;
+		public int PixelCount;
+		public int ByteCount;
+
+		public Pixel[] Pixels;
+		public PixelLocation[] PixelLocations;
+
 		public void Load() {
 			FrameRateDelay = 50;
 			FrameTimer = DateTime.Now.AddMilliseconds(FrameRateDelay);
@@ -80,9 +79,9 @@ namespace KIP3.Models {
 			FrameWidth = Sensor.ColorStream.FrameWidth;
 			FrameHeight = Sensor.ColorStream.FrameHeight;
 			PixelCount = Sensor.DepthStream.FramePixelDataLength;
+			ByteCount = PixelCount * 4;
 
-			OutputData = new byte[PixelCount * 4];
-			ColorSensorData = new byte[PixelCount * 4];
+			OutputData = new byte[ByteCount];
 			ColorCoordinates = new ColorImagePoint[PixelCount];
 
 			PreparePixels();
@@ -92,7 +91,9 @@ namespace KIP3.Models {
 				OutputData = OutputData,
 				PixelLocations = PixelLocations,
 				Pixels = Pixels,
-				PixelCount = PixelCount
+				PixelCount = PixelCount,
+				ByteCount = ByteCount,
+				ImageMax = new Point(FrameWidth, FrameHeight)
 			};
 
 			ImageProcessor.PropertyChanged += ImageProcessor_PropertyChanged;
@@ -172,6 +173,7 @@ namespace KIP3.Models {
 								pixel->B = *(color);
 								pixel->G = *(color + 1);
 								pixel->R = *(color + 2);
+								pixel->Depth = short.MaxValue;
 
 								color += 4;
 								pixel++;
@@ -197,8 +199,7 @@ namespace KIP3.Models {
 
 									var pixelOffset = colorCoordinatesPoint->Y * FrameWidth + colorCoordinatesPoint->X;
 
-									if (depthSensorPoint->Depth > 0 && depthSensorPoint->Depth <= Pixels[ImageProcessor.FocusIndex].Depth
-										&& PixelLocations[pixelOffset].Distance <= PixelLocations[ImageProcessor.FocusIndex].Distance) {
+									if (depthSensorPoint->Depth > 0 && depthSensorPoint->Depth <= Pixels[ImageProcessor.FocusIndex].Depth) {
 
 										ImageProcessor.FocusIndex = pixelOffset;
 									}
