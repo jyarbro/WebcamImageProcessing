@@ -24,12 +24,10 @@ namespace KIP3.Models {
 
 		public WriteableBitmap FilteredImage;
 
-		public ColorImageFrame ColorFrame;
-		public DepthImageFrame DepthFrame;
-
 		public byte[] OutputData;
 		public byte[] ColorSensorData;
-		public DepthImagePixel[] DepthSensorData;
+		public ColorImagePoint[] ColorCoordinates;
+		public DepthImagePixel[] RawDepthSensorData;
 
 		public int FrameWidth;
 		public int FrameHeight;
@@ -78,11 +76,11 @@ namespace KIP3.Models {
 
 			FrameWidth = Sensor.ColorStream.FrameWidth;
 			FrameHeight = Sensor.ColorStream.FrameHeight;
-			PixelCount = FrameWidth * FrameHeight;
+			PixelCount = Sensor.DepthStream.FramePixelDataLength;
 
 			OutputData = new byte[PixelCount * 4];
 			ColorSensorData = new byte[PixelCount * 4];
-			DepthSensorData = new DepthImagePixel[Sensor.DepthStream.FramePixelDataLength];
+			ColorCoordinates = new ColorImagePoint[PixelCount];
 
 			ImageProcessor = new ImageProcessor {
 				StatusText = StatusText,
@@ -114,15 +112,67 @@ namespace KIP3.Models {
 		}
 
 		void SensorAllFramesReady(object sender, AllFramesReadyEventArgs e) {
+			Task.Run(() => {
+				using (var colorFrame = e.OpenColorImageFrame()) {
+					using (var depthFrame = e.OpenDepthImageFrame()) {
+						CopyFrameData(colorFrame, depthFrame);
+					}
+				}
+			});
+		}
+
+		void CopyFrameData(ColorImageFrame colorFrame, DepthImageFrame depthFrame) {
 			try {
-				ColorFrame = e.OpenColorImageFrame();
-				DepthFrame = e.OpenDepthImageFrame();
+				unsafe
+				{
+					var i = 0;
 
-				ColorFrame.CopyPixelDataTo(ColorSensorData);
-				DepthFrame.CopyDepthImagePixelDataTo(DepthSensorData);
+					fixed (Pixel* pixels = ImageProcessor.Pixels)
+					{
+						fixed (byte* colorSensorData = colorFrame.GetRawPixelData())
+						{
+							var pixel = pixels;
+							var color = colorSensorData;
 
-				ColorFrame.Dispose();
-				DepthFrame.Dispose();
+							while (i++ < PixelCount) {
+								pixel->B = *(color);
+								pixel->G = *(color + 1);
+								pixel->R = *(color + 2);
+
+								color += 4;
+								pixel++;
+							}
+						}
+					}
+
+					RawDepthSensorData = depthFrame.GetRawPixelData();
+					Sensor.CoordinateMapper.MapDepthFrameToColorFrame(DepthImageFormat.Resolution640x480Fps30, RawDepthSensorData, ColorImageFormat.RgbResolution640x480Fps30, ColorCoordinates);
+
+					i = 0;
+
+					fixed (DepthImagePixel* depthSensorData = RawDepthSensorData)
+					{
+						fixed (ColorImagePoint* colorCoordinates = ColorCoordinates)
+						{
+							var depthSensorPoint = depthSensorData;
+							var colorCoordinatesPoint = colorCoordinates;
+
+							while (i++ < PixelCount) {
+								if ((colorCoordinatesPoint->X >= 0 && colorCoordinatesPoint->X < FrameWidth)
+									&& (colorCoordinatesPoint->Y >= 0 && colorCoordinatesPoint->Y < FrameHeight)) {
+
+									ImageProcessor.Pixels[colorCoordinatesPoint->Y * FrameWidth + colorCoordinatesPoint->X].Depth = depthSensorPoint->Depth;
+								}
+
+								colorCoordinatesPoint++;
+								depthSensorPoint++;
+							}
+						}
+					}
+				}
+
+				colorFrame.Dispose();
+				depthFrame.Dispose();
 			}
 			catch { }
 		}
@@ -130,50 +180,12 @@ namespace KIP3.Models {
 		void ProcessSensorData() {
 			Task.Run(() => {
 				Stopwatch timer;
-				int i;
-
 				var imageRect = new Int32Rect(0, 0, FrameWidth, FrameHeight);
 				var imageStride = FrameWidth * 4;
 
-				var colorCoordinates = new ColorImagePoint[Sensor.DepthStream.FramePixelDataLength];
-
-				ColorImagePoint colorCoordinatesPoint;
-
 				while (true) {
 					timer = Stopwatch.StartNew();
-
-					Sensor.CoordinateMapper.MapDepthFrameToColorFrame(DepthImageFormat.Resolution640x480Fps30, DepthSensorData, ColorImageFormat.RgbResolution640x480Fps30, colorCoordinates);
-
-					i = 0;
-
-					unsafe
-					{
-						fixed(Pixel* pixels = ImageProcessor.Pixels)
-						{
-							fixed(byte* colorSensorData = ColorSensorData)
-							{
-								var pixel = pixels;
-								var color = colorSensorData;
-
-								while (i++ < PixelCount) {
-									pixel->B = *(color);
-									pixel->G = *(color + 1);
-									pixel->R = *(color + 2);
-
-									color += 4;
-									pixel++;
-								}
-							}
-						}
-					}
-
-					for (i = 0; i < PixelCount; i++) {
-						colorCoordinatesPoint = colorCoordinates[i];
-
-						if ((colorCoordinatesPoint.X >= 0 && colorCoordinatesPoint.X < FrameWidth) && (colorCoordinatesPoint.Y >= 0 && colorCoordinatesPoint.Y < FrameHeight))
-							ImageProcessor.Pixels[colorCoordinatesPoint.Y * FrameWidth + colorCoordinatesPoint.X].Depth = DepthSensorData[i].Depth;
-					}
-
+					
 					//Buffer.BlockCopy(ColorSensorData, 0, OutputData, 0, ColorSensorData.Length);
 
 					ImageProcessor.ProcessImage();
