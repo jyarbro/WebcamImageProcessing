@@ -52,30 +52,52 @@ namespace KIP3.Infrastructure {
 		}
 
 		public void ProcessImage() {
-			byteOffset = 0;
 
-			for (i = 0; i < PixelCount; i++) {
-				OutputData[byteOffset] = Pixels[i].B;
-				OutputData[byteOffset + 1] = Pixels[i].G;
-				OutputData[byteOffset + 2] = Pixels[i].R;
+			unsafe
+			{
+				fixed(Pixel* pixels = Pixels)
+				{
+					fixed(byte* outputData = OutputData)
+					{
+						var pixel = pixels;
+						var outputByte = outputData;
+						i = 0;
 
-				byteOffset += 4;
-			}
+						while(i++ < PixelCount) {
+							*(outputByte) = pixel->B;
+							*(outputByte + 1) = pixel->G;
+							*(outputByte + 2) = pixel->R;
 
-			OverlayFocalPoint();
-		}
+							pixel++;
+							outputByte += 4;
+						}
+					}
+				}
 
-		/// <summary>
-		/// Add color spot to highlight focal point
-		/// </summary>
-		public void OverlayFocalPoint(int color = 3) {
-			for (i = 0; i < FocusPartOffsets.Length; i++) {
-				byteOffset = (FocusIndex * 4) + FocusPartOffsets[i];
+				fixed(int* focusPartOffsets = FocusPartOffsets)
+				{
+					var focusPartOffset = focusPartOffsets;
+					var focusOffset = FocusIndex * 4;
+					i = 0;
+					byteOffset = 0;
 
-				if (byteOffset > 0 && byteOffset < ByteCount) {
-					OutputData[byteOffset] = (byte)(color == 1 ? 255 : 0);
-					OutputData[byteOffset + 1] = (byte)(color == 2 ? 255 : 0);
-					OutputData[byteOffset + 2] = (byte)(color == 3 ? 255 : 0);
+					while (i++ < FocusPartOffsets.Length) {
+						byteOffset = focusOffset + *(focusPartOffset);
+
+						if (byteOffset > 0 && byteOffset < ByteCount) {
+							fixed(byte* outputData = OutputData)
+							{
+								var outputByte = outputData;
+								outputByte += byteOffset;
+
+								*(outputByte) = 0;
+								*(outputByte + 1) = 0;
+								*(outputByte + 2) = 255;
+							}
+						}
+
+						focusPartOffset++;
+					}
 				}
 			}
 		}
