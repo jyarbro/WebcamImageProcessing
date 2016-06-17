@@ -104,7 +104,7 @@ namespace KIP3.Models {
 
 		private void ImageProcessor_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e) {
 			if (e.PropertyName == "StatusText")
-				StatusText = ((ImageProcessor) sender).StatusText;
+				StatusText = ((ImageProcessor)sender).StatusText;
 		}
 
 		void ResetFPS() {
@@ -112,7 +112,7 @@ namespace KIP3.Models {
 			FrameDuration = 0;
 			RunTimer = DateTime.Now;
 		}
-		
+
 		void SensorAllFramesReady(object sender, AllFramesReadyEventArgs e) {
 			try {
 				ColorFrame = e.OpenColorImageFrame();
@@ -131,7 +131,6 @@ namespace KIP3.Models {
 			Task.Run(() => {
 				Stopwatch timer;
 				int i;
-				int ByteOffset;
 
 				var imageRect = new Int32Rect(0, 0, FrameWidth, FrameHeight);
 				var imageStride = FrameWidth * 4;
@@ -142,19 +141,30 @@ namespace KIP3.Models {
 
 				while (true) {
 					timer = Stopwatch.StartNew();
-					
+
 					Sensor.CoordinateMapper.MapDepthFrameToColorFrame(DepthImageFormat.Resolution640x480Fps30, DepthSensorData, ColorImageFormat.RgbResolution640x480Fps30, colorCoordinates);
 
-					ByteOffset = 0;
+					i = 0;
 
-					for (i = 0; i < PixelCount; i++) {
-						ImageProcessor.Pixels[i] = new Pixel {
-							B = ColorSensorData[ByteOffset],
-							G = ColorSensorData[ByteOffset + 1],
-							R = ColorSensorData[ByteOffset + 2],
-						};
+					unsafe
+					{
+						fixed(Pixel* pixels = ImageProcessor.Pixels)
+						{
+							fixed(byte* colorSensorData = ColorSensorData)
+							{
+								var pixel = pixels;
+								var color = colorSensorData;
 
-						ByteOffset += 4;
+								while (i++ < PixelCount) {
+									pixel->B = *(color);
+									pixel->G = *(color + 1);
+									pixel->R = *(color + 2);
+
+									color += 4;
+									pixel++;
+								}
+							}
+						}
 					}
 
 					for (i = 0; i < PixelCount; i++) {
