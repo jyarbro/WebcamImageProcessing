@@ -1,4 +1,5 @@
-﻿using System.Windows.Media;
+﻿using System.ComponentModel;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using KIP3.Helpers;
 using KIP3.Models;
@@ -38,8 +39,15 @@ namespace KIP3.Views {
 				FilteredImage = OutputImage
 			};
 
+			StreamManager.PropertyChanged += StreamManager_PropertyChanged;
+
 			StreamManager.Load();
 			StreamManager.UpdateFrameRate += UpdateFrameRate;
+		}
+
+		void StreamManager_PropertyChanged(object sender, PropertyChangedEventArgs e) {
+			if (e.PropertyName == "StatusText")
+				StatusText = ((StreamManager)sender).StatusText;
 		}
 
 		void UpdateFrameRate(object sender, FrameRateEventArgs args) {

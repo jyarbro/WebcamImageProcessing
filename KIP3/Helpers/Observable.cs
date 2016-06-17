@@ -7,7 +7,7 @@ namespace KIP3.Helpers {
 
 		[NotifyPropertyChangedAction]
 		protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null) {
-			if (PropertyChanged != null) PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 		}
 
 		protected virtual void SetProperty<T>(ref T member, T val, [CallerMemberName] string propertyName = null) {
@@ -16,7 +16,7 @@ namespace KIP3.Helpers {
 
 			member = val;
 
-			if (PropertyChanged != null) PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 		}
 	}
 }

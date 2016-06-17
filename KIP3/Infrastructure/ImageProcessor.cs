@@ -1,10 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using KIP3.Helpers;
 
 namespace KIP3.Infrastructure {
-	public class ImageProcessor {
+	public class ImageProcessor : Observable {
 		#region Fields
+
+		public string StatusText {
+			get { return _StatusText ?? (_StatusText = string.Empty); }
+			set { SetProperty(ref _StatusText, value); }
+		}
+		string _StatusText;
 
 		public int FocusRegionArea;
 		public int FocusRegionWidth;
@@ -13,8 +20,6 @@ namespace KIP3.Infrastructure {
 
 		public int FocusPartArea;
 		public int FocusPartWidth;
-		public int FocusPartHorizontalCount;
-		public int FocusPartTotalCount;
 
 		public int SampleGap;
 		public int SampleByteCount;
@@ -76,11 +81,12 @@ namespace KIP3.Infrastructure {
 
 		public byte[] ProcessImage() {
 			PrepareOutput();
+			ResetOutput();
 
-			//SetMeasuredFocalPoint(Window, ImageMid, DepthMeasurement, DepthValueComparison);
-			//SetMeasuredFocalPoint(AreaBoundBox, FocalPoint, BrightnessMeasurement, BrightnessValueComparison);
+			SetMeasuredFocalPoint(Window, ImageMid, DepthMeasurement, DepthValueComparison);
+			SetMeasuredFocalPoint(AreaBoundBox, FocalPoint, BrightnessMeasurement, BrightnessValueComparison);
 
-			//FilterEdges();
+			FilterObjectByDepth();
 
 			return OutputArray;
 		}
@@ -218,22 +224,26 @@ namespace KIP3.Infrastructure {
 
 		public void FilterObjectByDepth() {
 			filterFocalPointOffset = ((FocalPoint.Y * ImageMax.X) + FocalPoint.X);
+			var filterFocalPointDepth = ImageDepthData[filterFocalPointOffset];
 
-			for (i = 0; i < FocusRegionOffsets.Length; i++) {
-				pixelOffset = filterFocalPointOffset + FocusRegionOffsets[i];
+			byteOffset = 0;
 
-				if (pixelOffset > 0 && pixelOffset < ByteCount) {
-					measuredValue = ImageDepthData[pixelOffset] - ImageDepthData[filterFocalPointOffset];
+			for (i = 0; i < PixelCount; i++) {
+				measuredValue = ImageDepthData[i] - filterFocalPointDepth;
 
-					if (measuredValue > -400 && measuredValue < 400) {
-						byteOffset = pixelOffset * 4;
-
-						OutputArray[byteOffset] = 255;
-						OutputArray[byteOffset + 1] = 0;
-						OutputArray[byteOffset + 2] = 0;
-					}
+				if (measuredValue > -300 && measuredValue < 300) {
+					OutputArray[byteOffset] = ColorSensorData[byteOffset];
+					OutputArray[byteOffset + 1] = ColorSensorData[byteOffset + 1];
+					OutputArray[byteOffset + 2] = ColorSensorData[byteOffset + 2];
 				}
+
+				byteOffset += 4;
 			}
+		}
+
+		public void ResetOutput() {
+			for (i = 0; i < OutputArray.Length; i++)
+				OutputArray[i] = 0;
 		}
 
 		/// <summary>
@@ -247,7 +257,7 @@ namespace KIP3.Infrastructure {
 			ImageMax = new Point(640, 480);
 			ImageMid = new Point(320, 240);
 
-			PixelCount = ImageMid.X * ImageMid.Y;
+			PixelCount = ImageMax.X * ImageMax.Y;
 			ByteCount = ImageMax.X * ImageMax.Y * 4;
 
 			SampleGap = 10;
@@ -269,9 +279,6 @@ namespace KIP3.Infrastructure {
 			FocusRegionOffsets = PrepareSquareOffsets(FocusRegionArea, ImageMax.X, false);
 			AreaBoundBox = GetCenteredBox(FocusRegionArea);
 
-			FocusPartHorizontalCount = FocusRegionWidth / FocusPartWidth; // 9
-			FocusPartTotalCount = FocusPartHorizontalCount * FocusPartHorizontalCount; // 81
-
 			PrepareEdgeFilterOffsetsAndWeights();
 			PixelEdgeThreshold = 180;
 
@@ -286,7 +293,7 @@ namespace KIP3.Infrastructure {
 				pixel = pixel * 4;
 				var measuredValue = 0;
 
-				foreach (var sampleOffset in FocusPartOffsets.Where(offset => pixel + offset > 0 && pixel + offset < ByteCount))
+				foreach (var sampleOffset in FocusPartOffsets.Where(offset => pixel + offset > 0 && pixel + offset < ByteCount - 4))
 					measuredValue += ColorSensorData[pixel + sampleOffset] + ColorSensorData[pixel + sampleOffset + 1] + ColorSensorData[pixel + sampleOffset + 2];
 
 				return measuredValue;
