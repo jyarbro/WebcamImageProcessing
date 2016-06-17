@@ -13,66 +13,32 @@ namespace KIP3.Infrastructure {
 		}
 		string _StatusText;
 
-		public int FocusRegionArea;
-		public int FocusRegionWidth;
-
-		public int[] FocusRegionOffsets;
-
+		public int SampleGap;
 		public int FocusPartArea;
 		public int FocusPartWidth;
-
-		public int SampleGap;
-
 		public int[] FocusPartOffsets;
 
 		public int[] EdgeFilterWeights;
 		public int[] EdgeFilterOffsets;
 
-		public int PixelEdgeThreshold;
-
 		public Point ImageMax;
 		public Point ImageMid;
 
-		public Rectangle Window;
-
 		public Pixel[] Pixels;
 		public PixelLocation[] PixelLocations;
-		public Pixel CurrentPixel;
+
 		public int FocusIndex;
 
-		public int ByteCount;
 		public int PixelCount;
 
 		public byte[] OutputData;
 
 		public int i;
-		public int j;
-		public int x;
-		public int y;
-		public int yOffset;
-		public int xOffset;
-		public int measuredValue;
-		public int highestMeasuredValue;
-		public int offset;
 		public int byteOffset;
-		public int pixelOffset;
-		public int focalPointOffset;
-		public int filterFocalPointOffset;
-
-		public double xSq;
-		public double ySq;
-		public double closestPixelDistance;
-		public double distanceFromCenter;
 
 		#endregion
 
 		public void Load() {
-			ImageMax = new Point(640, 480);
-			ImageMid = new Point(320, 240);
-
-			PixelCount = ImageMax.X * ImageMax.Y;
-			ByteCount = ImageMax.X * ImageMax.Y * 4;
-			
 			SampleGap = 10;
 
 			if (ImageMid.X % SampleGap > 0)
@@ -85,53 +51,10 @@ namespace KIP3.Infrastructure {
 
 			FocusPartOffsets = PrepareOffsets(new Rectangle(-halfWidth, -halfWidth, halfWidth, halfWidth), FocusPartArea, ImageMax.X, false);
 
-			FocusRegionWidth = 99;
-			FocusRegionArea = FocusRegionWidth * FocusRegionWidth; // 9801
-
-			halfWidth = Convert.ToInt32(Math.Floor((double)FocusRegionWidth / 2));
-
-			if (FocusRegionWidth % FocusPartWidth > 0)
-				throw new Exception("Focus region width must be evenly divisible by focus part width");
-
-			FocusRegionOffsets = PrepareOffsets(new Rectangle(-halfWidth, -halfWidth, halfWidth, halfWidth), FocusRegionArea, ImageMax.X, false);
-
 			PrepareEdgeFilterOffsetsAndWeights();
-			PixelEdgeThreshold = 180;
-
-			Window = new Rectangle(-ImageMid.X, -ImageMid.Y, ImageMid.X, ImageMid.Y);
-
-			PreparePixels();
-		}
-
-		/// <summary>
-		/// Precalculate pixel values
-		/// </summary>
-		public void PreparePixels() {
-			Pixels = new Pixel[PixelCount];
-			PixelLocations = new PixelLocation[PixelCount];
-
-			for (i = 0; i < PixelCount; i++) {
-				var y = i / ImageMax.X;
-				var x = i % ImageMax.X;
-
-				var xSq = Math.Pow(Math.Abs(x - ImageMid.X), 2);
-				var ySq = Math.Pow(Math.Abs(y - ImageMid.Y), 2);
-				var distance = Math.Sqrt(xSq + ySq);
-
-				PixelLocations[i] = new PixelLocation {
-					X = x,
-					Y = y,
-					Distance = distance,
-					OffsetB = i * 4,
-					OffsetG = i * 4 + 1,
-					OffsetR = i * 4 + 2
-				};
-			}
 		}
 
 		public void ProcessImage() {
-			SetFocusIndex();
-
 			byteOffset = 0;
 
 			for (i = 0; i < PixelCount; i++) {
@@ -140,17 +63,6 @@ namespace KIP3.Infrastructure {
 				OutputData[byteOffset + 2] = Pixels[i].R;
 
 				byteOffset += 4;
-			}
-		}
-
-		public void SetFocusIndex() {
-			FocusIndex = 0;
-			
-			for (i = 0; i < PixelCount; i++) {
-				if (Pixels[i].Depth > 0 && Pixels[i].Depth <= Pixels[FocusIndex].Depth 
-					&& PixelLocations[i].Distance <= PixelLocations[FocusIndex].Distance)
-
-					FocusIndex = i;
 			}
 		}
 

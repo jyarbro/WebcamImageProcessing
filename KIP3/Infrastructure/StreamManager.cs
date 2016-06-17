@@ -26,8 +26,12 @@ namespace KIP3.Models {
 
 		public byte[] OutputData;
 		public byte[] ColorSensorData;
+
 		public ColorImagePoint[] ColorCoordinates;
 		public DepthImagePixel[] RawDepthSensorData;
+
+		public Pixel[] Pixels;
+		public PixelLocation[] PixelLocations;
 
 		public int FrameWidth;
 		public int FrameHeight;
@@ -38,7 +42,6 @@ namespace KIP3.Models {
 		public DateTime RunTimer;
 
 		public int PixelCount;
-		public Pixel CurrentPixel;
 
 		public double FrameCount {
 			get { return _FrameCount; }
@@ -82,9 +85,14 @@ namespace KIP3.Models {
 			ColorSensorData = new byte[PixelCount * 4];
 			ColorCoordinates = new ColorImagePoint[PixelCount];
 
+			PreparePixels();
+
 			ImageProcessor = new ImageProcessor {
 				StatusText = StatusText,
-				OutputData = OutputData
+				OutputData = OutputData,
+				PixelLocations = PixelLocations,
+				Pixels = Pixels,
+				PixelCount = PixelCount
 			};
 
 			ImageProcessor.PropertyChanged += ImageProcessor_PropertyChanged;
@@ -100,15 +108,41 @@ namespace KIP3.Models {
 			ProcessSensorData();
 		}
 
-		private void ImageProcessor_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e) {
-			if (e.PropertyName == "StatusText")
-				StatusText = ((ImageProcessor)sender).StatusText;
+		/// <summary>
+		/// Precalculate pixel values
+		/// </summary>
+		public void PreparePixels() {
+			Pixels = new Pixel[PixelCount];
+			PixelLocations = new PixelLocation[PixelCount];
+
+			for (var i = 0; i < PixelCount; i++) {
+				var y = i / FrameWidth;
+				var x = i % FrameWidth;
+
+				var xSq = Math.Pow(Math.Abs(x - (FrameWidth / 2)), 2);
+				var ySq = Math.Pow(Math.Abs(y - (FrameHeight / 2)), 2);
+				var distance = Math.Sqrt(xSq + ySq);
+
+				PixelLocations[i] = new PixelLocation {
+					X = x,
+					Y = y,
+					Distance = distance,
+					OffsetB = i * 4,
+					OffsetG = i * 4 + 1,
+					OffsetR = i * 4 + 2
+				};
+			}
 		}
 
 		void ResetFPS() {
 			FrameCount = 0;
 			FrameDuration = 0;
 			RunTimer = DateTime.Now;
+		}
+
+		void ImageProcessor_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e) {
+			if (e.PropertyName == "StatusText")
+				StatusText = ((ImageProcessor)sender).StatusText;
 		}
 
 		void SensorAllFramesReady(object sender, AllFramesReadyEventArgs e) {
@@ -161,7 +195,15 @@ namespace KIP3.Models {
 								if ((colorCoordinatesPoint->X >= 0 && colorCoordinatesPoint->X < FrameWidth)
 									&& (colorCoordinatesPoint->Y >= 0 && colorCoordinatesPoint->Y < FrameHeight)) {
 
-									ImageProcessor.Pixels[colorCoordinatesPoint->Y * FrameWidth + colorCoordinatesPoint->X].Depth = depthSensorPoint->Depth;
+									var pixelOffset = colorCoordinatesPoint->Y * FrameWidth + colorCoordinatesPoint->X;
+
+									if (depthSensorPoint->Depth > 0 && depthSensorPoint->Depth <= Pixels[ImageProcessor.FocusIndex].Depth
+										&& PixelLocations[pixelOffset].Distance <= PixelLocations[ImageProcessor.FocusIndex].Distance) {
+
+										ImageProcessor.FocusIndex = pixelOffset;
+									}
+
+									Pixels[pixelOffset].Depth = depthSensorPoint->Depth;
 								}
 
 								colorCoordinatesPoint++;
