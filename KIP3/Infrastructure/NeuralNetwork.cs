@@ -9,7 +9,7 @@ namespace KIP3.Models {
 			Neurons = new List<Neuron>();
 		}
 
-		public void Receive(List<byte[]> segmentedInput) {
+		public void Receive() {
 		}
 	}
 }

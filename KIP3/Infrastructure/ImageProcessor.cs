@@ -52,7 +52,6 @@ namespace KIP3.Infrastructure {
 		}
 
 		public void ProcessImage() {
-
 			unsafe
 			{
 				fixed(Pixel* pixels = Pixels)
