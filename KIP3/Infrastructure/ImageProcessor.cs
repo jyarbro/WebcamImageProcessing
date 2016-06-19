@@ -26,7 +26,7 @@ namespace KIP3.Infrastructure {
 		public int FrameHeight;
 
 		public Pixel[] Pixels;
-		public PixelLocation[] PixelLocations;
+		public Location[] PixelLocations;
 
 		public ColorImagePoint[] ColorCoordinates;
 		public DepthImagePixel[] RawDepthSensorData;
@@ -113,7 +113,7 @@ namespace KIP3.Infrastructure {
 		/// </summary>
 		public void PreparePixels() {
 			Pixels = new Pixel[PixelCount];
-			PixelLocations = new PixelLocation[PixelCount];
+			PixelLocations = new Location[PixelCount];
 
 			for (var i = 0; i < PixelCount; i++) {
 				var y = i / FrameWidth;
@@ -123,13 +123,10 @@ namespace KIP3.Infrastructure {
 				var ySq = Math.Pow(Math.Abs(y - (FrameHeight / 2)), 2);
 				var distance = Math.Sqrt(xSq + ySq);
 
-				PixelLocations[i] = new PixelLocation {
+				PixelLocations[i] = new Location {
 					X = x,
 					Y = y,
-					Distance = distance,
-					OffsetB = i * 4,
-					OffsetG = i * 4 + 1,
-					OffsetR = i * 4 + 2
+					Distance = distance
 				};
 			}
 		}
