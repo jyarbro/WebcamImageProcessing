@@ -63,9 +63,7 @@
     <Compile Include="Helpers\Observable.cs" />
     <Compile Include="Helpers\RelayCommand.cs" />
     <Compile Include="Infrastructure\ImageProcessor.cs" />
-    <Compile Include="Infrastructure\NeuralNetwork.cs" />
     <Compile Include="Infrastructure\StreamManager.cs" />
-    <Compile Include="Models\Neuron.cs" />
     <Compile Include="Models\PixelLocation.cs" />
     <Compile Include="Structs\Pixel.cs" />
     <Compile Include="Structs\Point.cs" />

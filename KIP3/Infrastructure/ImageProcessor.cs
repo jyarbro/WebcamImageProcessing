@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using KIP3.Helpers;
+using Microsoft.Kinect;
 
 namespace KIP3.Infrastructure {
 	public class ImageProcessor : Observable {
@@ -21,10 +22,14 @@ namespace KIP3.Infrastructure {
 		public int[] EdgeFilterWeights;
 		public int[] EdgeFilterOffsets;
 
-		public Point ImageMax;
+		public int FrameWidth;
+		public int FrameHeight;
 
 		public Pixel[] Pixels;
 		public PixelLocation[] PixelLocations;
+
+		public ColorImagePoint[] ColorCoordinates;
+		public DepthImagePixel[] RawDepthSensorData;
 
 		public int FocusIndex;
 
@@ -39,6 +44,7 @@ namespace KIP3.Infrastructure {
 		#endregion
 
 		public void Load() {
+			ColorCoordinates = new ColorImagePoint[PixelCount];
 			SampleGap = 10;
 
 			FocusPartWidth = 11;
@@ -46,9 +52,10 @@ namespace KIP3.Infrastructure {
 
 			var halfWidth = Convert.ToInt32(Math.Floor((double)FocusPartWidth / 2));
 
-			FocusPartOffsets = PrepareOffsets(new Rectangle(-halfWidth, -halfWidth, halfWidth, halfWidth), FocusPartArea, ImageMax.X, true);
+			FocusPartOffsets = PrepareOffsets(new Rectangle(-halfWidth, -halfWidth, halfWidth, halfWidth), FocusPartArea, FrameWidth, true);
 
 			PrepareEdgeFilterOffsetsAndWeights();
+			PreparePixels();
 		}
 
 		public void ProcessImage() {
@@ -102,6 +109,32 @@ namespace KIP3.Infrastructure {
 		}
 
 		/// <summary>
+		/// Precalculate pixel values
+		/// </summary>
+		public void PreparePixels() {
+			Pixels = new Pixel[PixelCount];
+			PixelLocations = new PixelLocation[PixelCount];
+
+			for (var i = 0; i < PixelCount; i++) {
+				var y = i / FrameWidth;
+				var x = i % FrameWidth;
+
+				var xSq = Math.Pow(Math.Abs(x - (FrameWidth / 2)), 2);
+				var ySq = Math.Pow(Math.Abs(y - (FrameHeight / 2)), 2);
+				var distance = Math.Sqrt(xSq + ySq);
+
+				PixelLocations[i] = new PixelLocation {
+					X = x,
+					Y = y,
+					Distance = distance,
+					OffsetB = i * 4,
+					OffsetG = i * 4 + 1,
+					OffsetR = i * 4 + 2
+				};
+			}
+		}
+
+		/// <summary>
 		/// Calculates offsets and weights used in edge filtering.
 		/// </summary>
 		public void PrepareEdgeFilterOffsetsAndWeights() {
@@ -111,7 +144,7 @@ namespace KIP3.Infrastructure {
 				-1, -1, -1,
 			};
 
-			var edgeFilterOffsets = PrepareOffsets(new Rectangle(-1, -1, 1, 1), edgeFilterWeights.Count, ImageMax.X);
+			var edgeFilterOffsets = PrepareOffsets(new Rectangle(-1, -1, 1, 1), edgeFilterWeights.Count, FrameWidth);
 
 			var filteredPixelCount = edgeFilterWeights.Where(f => f != 0).Count();
 
@@ -154,6 +187,70 @@ namespace KIP3.Infrastructure {
 			}
 
 			return offsets;
+		}
+
+		public void CopyFrameData(KinectSensor sensor, ColorImageFrame colorFrame, DepthImageFrame depthFrame) {
+			try {
+				unsafe
+				{
+					var i = 0;
+
+					fixed (Pixel* pixels = Pixels)
+					{
+						fixed (byte* colorSensorData = colorFrame.GetRawPixelData())
+						{
+							var pixel = pixels;
+							var color = colorSensorData;
+
+							while (i++ < PixelCount) {
+								pixel->B = *(color);
+								pixel->G = *(color + 1);
+								pixel->R = *(color + 2);
+								pixel->Depth = short.MaxValue;
+
+								color += 4;
+								pixel++;
+							}
+						}
+					}
+
+					RawDepthSensorData = depthFrame.GetRawPixelData();
+					sensor.CoordinateMapper.MapDepthFrameToColorFrame(DepthImageFormat.Resolution640x480Fps30, RawDepthSensorData, ColorImageFormat.RgbResolution640x480Fps30, ColorCoordinates);
+
+					i = 0;
+
+					fixed (DepthImagePixel* depthSensorData = RawDepthSensorData)
+					{
+						fixed (ColorImagePoint* colorCoordinates = ColorCoordinates)
+						{
+							var depthSensorPoint = depthSensorData;
+							var colorCoordinatesPoint = colorCoordinates;
+
+							while (i++ < PixelCount) {
+								if ((colorCoordinatesPoint->X >= 0 && colorCoordinatesPoint->X < FrameWidth)
+									&& (colorCoordinatesPoint->Y >= 0 && colorCoordinatesPoint->Y < FrameHeight)) {
+
+									var pixelOffset = colorCoordinatesPoint->Y * FrameWidth + colorCoordinatesPoint->X;
+
+									if (depthSensorPoint->Depth > 0 && depthSensorPoint->Depth <= Pixels[FocusIndex].Depth) {
+
+										FocusIndex = pixelOffset;
+									}
+
+									Pixels[pixelOffset].Depth = depthSensorPoint->Depth;
+								}
+
+								colorCoordinatesPoint++;
+								depthSensorPoint++;
+							}
+						}
+					}
+				}
+
+				colorFrame.Dispose();
+				depthFrame.Dispose();
+			}
+			catch { }
 		}
 	}
 }

@@ -50,23 +50,16 @@ namespace KIP3.Models {
 		}
 		double _FrameCount = 0;
 
-		public WriteableBitmap FilteredImage;
-
 		public KinectSensor Sensor;
 		public ImageProcessor ImageProcessor;
+		public WriteableBitmap FilteredImage;
 
 		public byte[] OutputData;
-
-		public ColorImagePoint[] ColorCoordinates;
-		public DepthImagePixel[] RawDepthSensorData;
 
 		public int FrameWidth;
 		public int FrameHeight;
 		public int PixelCount;
 		public int ByteCount;
-
-		public Pixel[] Pixels;
-		public PixelLocation[] PixelLocations;
 
 		public void Load() {
 			FrameRateDelay = 50;
@@ -82,18 +75,14 @@ namespace KIP3.Models {
 			ByteCount = PixelCount * 4;
 
 			OutputData = new byte[ByteCount];
-			ColorCoordinates = new ColorImagePoint[PixelCount];
-
-			PreparePixels();
 
 			ImageProcessor = new ImageProcessor {
 				StatusText = StatusText,
 				OutputData = OutputData,
-				PixelLocations = PixelLocations,
-				Pixels = Pixels,
 				PixelCount = PixelCount,
 				ByteCount = ByteCount,
-				ImageMax = new Point(FrameWidth, FrameHeight)
+				FrameWidth = FrameWidth,
+				FrameHeight = FrameHeight
 			};
 
 			ImageProcessor.PropertyChanged += ImageProcessor_PropertyChanged;
@@ -107,32 +96,6 @@ namespace KIP3.Models {
 			Sensor.Start();
 
 			ProcessSensorData();
-		}
-
-		/// <summary>
-		/// Precalculate pixel values
-		/// </summary>
-		public void PreparePixels() {
-			Pixels = new Pixel[PixelCount];
-			PixelLocations = new PixelLocation[PixelCount];
-
-			for (var i = 0; i < PixelCount; i++) {
-				var y = i / FrameWidth;
-				var x = i % FrameWidth;
-
-				var xSq = Math.Pow(Math.Abs(x - (FrameWidth / 2)), 2);
-				var ySq = Math.Pow(Math.Abs(y - (FrameHeight / 2)), 2);
-				var distance = Math.Sqrt(xSq + ySq);
-
-				PixelLocations[i] = new PixelLocation {
-					X = x,
-					Y = y,
-					Distance = distance,
-					OffsetB = i * 4,
-					OffsetG = i * 4 + 1,
-					OffsetR = i * 4 + 2
-				};
-			}
 		}
 
 		void ResetFPS() {
@@ -150,74 +113,10 @@ namespace KIP3.Models {
 			Task.Run(() => {
 				using (var colorFrame = e.OpenColorImageFrame()) {
 					using (var depthFrame = e.OpenDepthImageFrame()) {
-						CopyFrameData(colorFrame, depthFrame);
+						ImageProcessor.CopyFrameData(Sensor, colorFrame, depthFrame);
 					}
 				}
 			});
-		}
-
-		void CopyFrameData(ColorImageFrame colorFrame, DepthImageFrame depthFrame) {
-			try {
-				unsafe
-				{
-					var i = 0;
-
-					fixed (Pixel* pixels = ImageProcessor.Pixels)
-					{
-						fixed (byte* colorSensorData = colorFrame.GetRawPixelData())
-						{
-							var pixel = pixels;
-							var color = colorSensorData;
-
-							while (i++ < PixelCount) {
-								pixel->B = *(color);
-								pixel->G = *(color + 1);
-								pixel->R = *(color + 2);
-								pixel->Depth = short.MaxValue;
-
-								color += 4;
-								pixel++;
-							}
-						}
-					}
-
-					RawDepthSensorData = depthFrame.GetRawPixelData();
-					Sensor.CoordinateMapper.MapDepthFrameToColorFrame(DepthImageFormat.Resolution640x480Fps30, RawDepthSensorData, ColorImageFormat.RgbResolution640x480Fps30, ColorCoordinates);
-
-					i = 0;
-
-					fixed (DepthImagePixel* depthSensorData = RawDepthSensorData)
-					{
-						fixed (ColorImagePoint* colorCoordinates = ColorCoordinates)
-						{
-							var depthSensorPoint = depthSensorData;
-							var colorCoordinatesPoint = colorCoordinates;
-
-							while (i++ < PixelCount) {
-								if ((colorCoordinatesPoint->X >= 0 && colorCoordinatesPoint->X < FrameWidth)
-									&& (colorCoordinatesPoint->Y >= 0 && colorCoordinatesPoint->Y < FrameHeight)) {
-
-									var pixelOffset = colorCoordinatesPoint->Y * FrameWidth + colorCoordinatesPoint->X;
-
-									if (depthSensorPoint->Depth > 0 && depthSensorPoint->Depth <= Pixels[ImageProcessor.FocusIndex].Depth) {
-
-										ImageProcessor.FocusIndex = pixelOffset;
-									}
-
-									Pixels[pixelOffset].Depth = depthSensorPoint->Depth;
-								}
-
-								colorCoordinatesPoint++;
-								depthSensorPoint++;
-							}
-						}
-					}
-				}
-
-				colorFrame.Dispose();
-				depthFrame.Dispose();
-			}
-			catch { }
 		}
 
 		void ProcessSensorData() {
