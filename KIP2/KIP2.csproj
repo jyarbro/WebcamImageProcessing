@@ -65,8 +65,6 @@
     <Compile Include="Helpers\RelayCommand.cs" />
     <Compile Include="Models\ImageProcessors\FocusPartsProcessor.cs" />
     <Compile Include="Models\ImageProcessors\DepthFocusProcessor.cs" />
-    <Compile Include="Models\NeuralNetwork.cs" />
-    <Compile Include="Models\Neuron.cs" />
     <Compile Include="Models\StreamManager.cs" />
     <Compile Include="Models\ImageProcessors\EdgeProcessor.cs" />
     <Compile Include="Models\ImageProcessors\ImageProcessorBase.cs" />
