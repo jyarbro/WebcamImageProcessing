@@ -4,5 +4,7 @@
 		public byte G;
 		public byte B;
 		public short Depth;
+
+		public GraphLocation Location;
 	}
 }

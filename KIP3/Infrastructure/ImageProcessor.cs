@@ -25,10 +25,9 @@ namespace KIP3.Infrastructure {
 		public int FrameHeight;
 
 		public Pixel[] Pixels;
-		public GraphLocation[] PixelLocations;
 
-		public ColorImagePoint[] ColorCoordinates;
-		public DepthImagePixel[] RawDepthSensorData;
+		public ColorImagePoint[] CalculatedDepthPoints;
+		public DepthImagePixel[] RawDepthPixels;
 
 		public int FocusIndex;
 
@@ -43,7 +42,7 @@ namespace KIP3.Infrastructure {
 		#endregion
 
 		public void Load() {
-			ColorCoordinates = new ColorImagePoint[PixelCount];
+			CalculatedDepthPoints = new ColorImagePoint[PixelCount];
 
 			FocusPartWidth = 11;
 			FocusPartArea = FocusPartWidth * FocusPartWidth; // 121
@@ -116,7 +115,6 @@ namespace KIP3.Infrastructure {
 		/// </summary>
 		public void PreparePixels() {
 			Pixels = new Pixel[PixelCount];
-			PixelLocations = new GraphLocation[PixelCount];
 
 			var imageMidX = FrameWidth / 2;
 			var imageMidY = FrameHeight / 2;
@@ -129,7 +127,7 @@ namespace KIP3.Infrastructure {
 				var bSq = Math.Pow(y - imageMidY, 2);
 				var cSq = Math.Sqrt(aSq + bSq);
 
-				PixelLocations[i] = new GraphLocation {
+				Pixels[i].Location = new GraphLocation {
 					X = x,
 					Y = y,
 					Distance = cSq
@@ -222,40 +220,45 @@ namespace KIP3.Infrastructure {
 						}
 					}
 
-					RawDepthSensorData = depthFrame.GetRawPixelData();
-					sensor.CoordinateMapper.MapDepthFrameToColorFrame(DepthImageFormat.Resolution640x480Fps30, RawDepthSensorData, ColorImageFormat.RgbResolution640x480Fps30, ColorCoordinates);
+					RawDepthPixels = depthFrame.GetRawPixelData();
+					sensor.CoordinateMapper.MapDepthFrameToColorFrame(DepthImageFormat.Resolution640x480Fps30, RawDepthPixels, ColorImageFormat.RgbResolution640x480Fps30, CalculatedDepthPoints);
 
 					i = 0;
 
-					fixed (DepthImagePixel* depthSensorData = RawDepthSensorData)
+					fixed (DepthImagePixel* rawDepthPixels = RawDepthPixels)
 					{
-						fixed (ColorImagePoint* colorCoordinates = ColorCoordinates)
+						fixed (ColorImagePoint* calculatedDepthPoints = CalculatedDepthPoints)
 						{
-							var depthData = depthSensorData;
-							var depthPoint = colorCoordinates;
+							var rawDepthPixel = rawDepthPixels;
+							var calculatedDepthPoint = calculatedDepthPoints;
 							var currentMinimumDepth = int.MaxValue;
 							double currentMinimumDistance = double.MaxValue;
 
 							while (i++ < PixelCount) {
-								if ((depthPoint->X >= 0 && depthPoint->X < FrameWidth)
-									&& (depthPoint->Y >= 0 && depthPoint->Y < FrameHeight)) {
+								if ((calculatedDepthPoint->X >= 0 && calculatedDepthPoint->X < FrameWidth)
+									&& (calculatedDepthPoint->Y >= 0 && calculatedDepthPoint->Y < FrameHeight)) {
 
-									var depthPixelOffset = depthPoint->Y * FrameWidth + depthPoint->X;
+									var depthPixelOffset = calculatedDepthPoint->Y * FrameWidth + calculatedDepthPoint->X;
 
-									Pixels[depthPixelOffset].Depth = depthData->Depth;
+									fixed (Pixel* pixels = Pixels)
+									{
+										var pixel = pixels + depthPixelOffset;
 
-									if (depthData->Depth > 0 && depthData->Depth <= currentMinimumDepth
-										&& PixelLocations[depthPixelOffset].Distance <= currentMinimumDistance) {
+										pixel->Depth = rawDepthPixel->Depth;
 
-										FocusIndex = depthPixelOffset;
+										if (rawDepthPixel->Depth > 0 && rawDepthPixel->Depth <= currentMinimumDepth
+											&& pixel->Location.Distance <= currentMinimumDistance) {
 
-										currentMinimumDepth = depthData->Depth;
-										currentMinimumDistance = PixelLocations[FocusIndex].Distance;
+											FocusIndex = depthPixelOffset;
+
+											currentMinimumDepth = rawDepthPixel->Depth;
+											currentMinimumDistance = pixel->Location.Distance;
+										}
 									}
 								}
 
-								depthPoint++;
-								depthData++;
+								calculatedDepthPoint++;
+								rawDepthPixel++;
 							}
 						}
 					}
