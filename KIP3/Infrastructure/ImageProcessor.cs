@@ -6,8 +6,6 @@ using Microsoft.Kinect;
 
 namespace KIP3.Infrastructure {
 	public class ImageProcessor : Observable {
-		#region Fields
-
 		public string StatusText {
 			get { return _StatusText ?? (_StatusText = string.Empty); }
 			set { SetProperty(ref _StatusText, value); }
@@ -39,9 +37,7 @@ namespace KIP3.Infrastructure {
 		int _i;
 		int _byteOffset;
 
-		#endregion
-
-		public void Load() {
+		public void LoadProcessor() {
 			CalculatedDepthPoints = new ColorImagePoint[PixelCount];
 
 			FocusPartWidth = 11;
@@ -60,60 +56,25 @@ namespace KIP3.Infrastructure {
 			PreparePixels();
 		}
 
-		public void ProcessImage() {
-			unsafe
-			{
-				fixed(Pixel* pixels = Pixels)
-				{
-					fixed(byte* outputData = OutputData)
-					{
-						var pixel = pixels;
-						var outputByte = outputData;
-						_i = 0;
+		public void UpdateInput(KinectSensor sensor, ColorImageFrame colorFrame, DepthImageFrame depthFrame) {
+			CopyColorFrame(colorFrame);
+			colorFrame.Dispose();
 
-						while(_i++ < PixelCount) {
-							*(outputByte) = pixel->B;
-							*(outputByte + 1) = pixel->G;
-							*(outputByte + 2) = pixel->R;
-
-							pixel++;
-							outputByte += 4;
-						}
-					}
-				}
-
-				fixed(int* focusPartOffsets = FocusPartOffsets)
-				{
-					var focusPartOffset = focusPartOffsets;
-					var focusOffset = FocusIndex * 4;
-					_i = 0;
-					_byteOffset = 0;
-
-					while (_i++ < FocusPartOffsets.Length) {
-						_byteOffset = focusOffset + *(focusPartOffset);
-
-						if (_byteOffset > 0 && _byteOffset < ByteCount) {
-							fixed(byte* outputData = OutputData)
-							{
-								var outputByte = outputData;
-								outputByte += _byteOffset;
-
-								*(outputByte) = 0;
-								*(outputByte + 1) = 0;
-								*(outputByte + 2) = 255;
-							}
-						}
-
-						focusPartOffset++;
-					}
-				}
-			}
+			CopyDepthFrame(sensor, depthFrame);
+			depthFrame.Dispose();
 		}
+
+		public void UpdateOutput() {
+			CopyPixelsToOutput();
+			CopyFocalPointToOutput();
+		}
+
+		#region Loading
 
 		/// <summary>
 		/// Precalculate pixel values
 		/// </summary>
-		public void PreparePixels() {
+		void PreparePixels() {
 			Pixels = new Pixel[PixelCount];
 
 			var imageMidX = FrameWidth / 2;
@@ -138,7 +99,7 @@ namespace KIP3.Infrastructure {
 		/// <summary>
 		/// Calculates offsets and weights used in edge filtering.
 		/// </summary>
-		public void PrepareEdgeFilterOffsetsAndWeights() {
+		void PrepareEdgeFilterOffsetsAndWeights() {
 			var edgeFilterWeights = new List<int> {
 				-1, -1, -1,
 				-1,  8, -1,
@@ -173,7 +134,7 @@ namespace KIP3.Infrastructure {
 		/// <summary>
 		/// A universal method for calculating all of the linear offsets for a given square area
 		/// </summary>
-		public int[] PrepareOffsets(Rectangle areaBox, int area, int stride, bool byteMultiplier = true) {
+		int[] PrepareOffsets(Rectangle areaBox, int area, int stride, bool byteMultiplier = true) {
 			if (area % 2 == 0)
 				throw new Exception("Odd sizes only!");
 
@@ -195,79 +156,137 @@ namespace KIP3.Infrastructure {
 			return offsets;
 		}
 
-		public void CopyFrameData(KinectSensor sensor, ColorImageFrame colorFrame, DepthImageFrame depthFrame) {
-			try {
-				unsafe
+		#endregion
+
+		#region Updating Input
+
+		unsafe void CopyColorFrame(ColorImageFrame colorFrame) {
+			var i = 0;
+
+			fixed (Pixel* pixels = Pixels)
+			{
+				fixed (byte* colorSensorData = colorFrame.GetRawPixelData())
 				{
-					var i = 0;
+					var pixel = pixels;
+					var color = colorSensorData;
 
-					fixed (Pixel* pixels = Pixels)
-					{
-						fixed (byte* colorSensorData = colorFrame.GetRawPixelData())
-						{
-							var pixel = pixels;
-							var color = colorSensorData;
+					while (i++ < PixelCount) {
+						pixel->B = *(color);
+						pixel->G = *(color + 1);
+						pixel->R = *(color + 2);
+						pixel->Depth = short.MaxValue;
 
-							while (i++ < PixelCount) {
-								pixel->B = *(color);
-								pixel->G = *(color + 1);
-								pixel->R = *(color + 2);
-								pixel->Depth = short.MaxValue;
-
-								color += 4;
-								pixel++;
-							}
-						}
-					}
-
-					RawDepthPixels = depthFrame.GetRawPixelData();
-					sensor.CoordinateMapper.MapDepthFrameToColorFrame(DepthImageFormat.Resolution640x480Fps30, RawDepthPixels, ColorImageFormat.RgbResolution640x480Fps30, CalculatedDepthPoints);
-
-					i = 0;
-
-					fixed (DepthImagePixel* rawDepthPixels = RawDepthPixels)
-					{
-						fixed (ColorImagePoint* calculatedDepthPoints = CalculatedDepthPoints)
-						{
-							var rawDepthPixel = rawDepthPixels;
-							var calculatedDepthPoint = calculatedDepthPoints;
-							var currentMinimumDepth = int.MaxValue;
-							double currentMinimumDistance = double.MaxValue;
-
-							while (i++ < PixelCount) {
-								if ((calculatedDepthPoint->X >= 0 && calculatedDepthPoint->X < FrameWidth)
-									&& (calculatedDepthPoint->Y >= 0 && calculatedDepthPoint->Y < FrameHeight)) {
-
-									var depthPixelOffset = calculatedDepthPoint->Y * FrameWidth + calculatedDepthPoint->X;
-
-									fixed (Pixel* pixels = Pixels)
-									{
-										var pixel = pixels + depthPixelOffset;
-
-										pixel->Depth = rawDepthPixel->Depth;
-
-										if (rawDepthPixel->Depth > 0 && rawDepthPixel->Depth <= currentMinimumDepth
-											&& pixel->Location.Distance <= currentMinimumDistance) {
-
-											FocusIndex = depthPixelOffset;
-
-											currentMinimumDepth = rawDepthPixel->Depth;
-											currentMinimumDistance = pixel->Location.Distance;
-										}
-									}
-								}
-
-								calculatedDepthPoint++;
-								rawDepthPixel++;
-							}
-						}
+						color += 4;
+						pixel++;
 					}
 				}
-
-				colorFrame.Dispose();
-				depthFrame.Dispose();
 			}
-			catch { }
 		}
+
+		unsafe void CopyDepthFrame(KinectSensor sensor, DepthImageFrame depthFrame) {
+			RawDepthPixels = depthFrame.GetRawPixelData();
+			sensor.CoordinateMapper.MapDepthFrameToColorFrame(DepthImageFormat.Resolution640x480Fps30, RawDepthPixels, ColorImageFormat.RgbResolution640x480Fps30, CalculatedDepthPoints);
+
+			var i = 0;
+
+			fixed (DepthImagePixel* rawDepthPixels = RawDepthPixels)
+			{
+				fixed (ColorImagePoint* calculatedDepthPoints = CalculatedDepthPoints)
+				{
+					var rawDepthPixel = rawDepthPixels;
+					var calculatedDepthPoint = calculatedDepthPoints;
+					var currentMinimumDepth = int.MaxValue;
+					double currentMinimumDistance = double.MaxValue;
+
+					while (i++ < PixelCount) {
+						if ((calculatedDepthPoint->X >= 0 && calculatedDepthPoint->X < FrameWidth)
+							&& (calculatedDepthPoint->Y >= 0 && calculatedDepthPoint->Y < FrameHeight)) {
+
+							var depthPixelOffset = calculatedDepthPoint->Y * FrameWidth + calculatedDepthPoint->X;
+
+							fixed (Pixel* pixels = Pixels)
+							{
+								var pixel = pixels + depthPixelOffset;
+
+								pixel->Depth = rawDepthPixel->Depth;
+
+								if (rawDepthPixel->Depth > 0 && rawDepthPixel->Depth <= currentMinimumDepth
+									&& pixel->Location.Distance <= currentMinimumDistance) {
+
+									FocusIndex = depthPixelOffset;
+
+									currentMinimumDepth = rawDepthPixel->Depth;
+									currentMinimumDistance = pixel->Location.Distance;
+								}
+							}
+						}
+
+						calculatedDepthPoint++;
+						rawDepthPixel++;
+					}
+				}
+			}
+		}
+
+		#endregion
+
+		#region Processing
+
+
+
+		#endregion
+
+		#region Updating Output
+
+		unsafe void CopyPixelsToOutput() {
+			fixed (Pixel* pixels = Pixels)
+			{
+				fixed (byte* outputData = OutputData)
+				{
+					var pixel = pixels;
+					var outputByte = outputData;
+					_i = 0;
+
+					while (_i++ < PixelCount) {
+						*(outputByte) = pixel->B;
+						*(outputByte + 1) = pixel->G;
+						*(outputByte + 2) = pixel->R;
+
+						pixel++;
+						outputByte += 4;
+					}
+				}
+			}
+		}
+
+		unsafe void CopyFocalPointToOutput() {
+			fixed (int* focusPartOffsets = FocusPartOffsets)
+			{
+				var focusPartOffset = focusPartOffsets;
+				var focusOffset = FocusIndex * 4;
+				_i = 0;
+				_byteOffset = 0;
+
+				while (_i++ < FocusPartOffsets.Length) {
+					_byteOffset = focusOffset + *(focusPartOffset);
+
+					if (_byteOffset > 0 && _byteOffset < ByteCount) {
+						fixed (byte* outputData = OutputData)
+						{
+							var outputByte = outputData;
+							outputByte += _byteOffset;
+
+							*(outputByte) = 0;
+							*(outputByte + 1) = 0;
+							*(outputByte + 2) = 255;
+						}
+					}
+
+					focusPartOffset++;
+				}
+			}
+		}
+
+		#endregion
 	}
 }

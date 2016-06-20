@@ -87,7 +87,7 @@ namespace KIP3.Models {
 
 			ImageProcessor.PropertyChanged += ImageProcessor_PropertyChanged;
 
-			ImageProcessor.Load();
+			ImageProcessor.LoadProcessor();
 
 			Sensor.ColorStream.Enable(ColorImageFormat.RgbResolution640x480Fps30);
 			Sensor.DepthStream.Enable(DepthImageFormat.Resolution640x480Fps30);
@@ -111,11 +111,14 @@ namespace KIP3.Models {
 
 		void SensorAllFramesReady(object sender, AllFramesReadyEventArgs e) {
 			Task.Run(() => {
-				using (var colorFrame = e.OpenColorImageFrame()) {
-					using (var depthFrame = e.OpenDepthImageFrame()) {
-						ImageProcessor.CopyFrameData(Sensor, colorFrame, depthFrame);
+				try {
+					using (var colorFrame = e.OpenColorImageFrame()) {
+						using (var depthFrame = e.OpenDepthImageFrame()) {
+							ImageProcessor.UpdateInput(Sensor, colorFrame, depthFrame);
+						}
 					}
 				}
+				catch { }
 			});
 		}
 
@@ -130,7 +133,7 @@ namespace KIP3.Models {
 					
 					//Buffer.BlockCopy(ColorSensorData, 0, OutputData, 0, ColorSensorData.Length);
 
-					ImageProcessor.ProcessImage();
+					ImageProcessor.UpdateOutput();
 
 					try { Application.Current.Dispatcher.Invoke(() => { FilteredImage.WritePixels(imageRect, OutputData, imageStride, 0); }); }
 					catch { }
