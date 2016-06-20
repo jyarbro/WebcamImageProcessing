@@ -115,18 +115,21 @@ namespace KIP3.Infrastructure {
 			Pixels = new Pixel[PixelCount];
 			PixelLocations = new Location[PixelCount];
 
+			var imageMidX = FrameWidth / 2;
+			var imageMidY = FrameHeight / 2;
+
 			for (var i = 0; i < PixelCount; i++) {
 				var y = i / FrameWidth;
 				var x = i % FrameWidth;
 
-				var xSq = Math.Pow(Math.Abs(x - (FrameWidth / 2)), 2);
-				var ySq = Math.Pow(Math.Abs(y - (FrameHeight / 2)), 2);
-				var distance = Math.Sqrt(xSq + ySq);
+				var aSq = Math.Pow(x - imageMidX, 2);
+				var bSq = Math.Pow(y - imageMidY, 2);
+				var cSq = Math.Sqrt(aSq + bSq);
 
 				PixelLocations[i] = new Location {
 					X = x,
 					Y = y,
-					Distance = distance
+					Distance = cSq
 				};
 			}
 		}
@@ -220,26 +223,31 @@ namespace KIP3.Infrastructure {
 					{
 						fixed (ColorImagePoint* colorCoordinates = ColorCoordinates)
 						{
-							var depthPoint = depthSensorData;
-							var colorPoint = colorCoordinates;
+							var depthData = depthSensorData;
+							var depthPoint = colorCoordinates;
+							var currentMinimumDepth = int.MaxValue;
+							double currentMinimumDistance = double.MaxValue;
 
 							while (i++ < PixelCount) {
-								if ((colorPoint->X >= 0 && colorPoint->X < FrameWidth)
-									&& (colorPoint->Y >= 0 && colorPoint->Y < FrameHeight)) {
+								if ((depthPoint->X >= 0 && depthPoint->X < FrameWidth)
+									&& (depthPoint->Y >= 0 && depthPoint->Y < FrameHeight)) {
 
-									var pixelOffset = colorPoint->Y * FrameWidth + colorPoint->X;
+									var depthPixelOffset = depthPoint->Y * FrameWidth + depthPoint->X;
 
-									// SOMETHING IS DORKED UP WITH THE DISTANCE CALC HERE. IT IS ALWAYS PICKING CENTER.
-									if(depthPoint->Depth > 0 && depthPoint->Depth <= Pixels[FocusIndex].Depth
-										&& PixelLocations[pixelOffset].Distance <= PixelLocations[FocusIndex].Distance) {
-										FocusIndex = pixelOffset;
+									Pixels[depthPixelOffset].Depth = depthData->Depth;
+
+									if (depthData->Depth > 0 && depthData->Depth <= currentMinimumDepth
+										&& PixelLocations[depthPixelOffset].Distance <= currentMinimumDistance) {
+
+										FocusIndex = depthPixelOffset;
+
+										currentMinimumDepth = depthData->Depth;
+										currentMinimumDistance = PixelLocations[FocusIndex].Distance;
 									}
-
-									Pixels[pixelOffset].Depth = depthPoint->Depth;
 								}
 
-								colorPoint++;
 								depthPoint++;
+								depthData++;
 							}
 						}
 					}
