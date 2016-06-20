@@ -1,5 +1,5 @@
 ﻿namespace KIP3 {
-	public struct Location {
+	public struct GraphLocation {
 		public int X;
 		public int Y;
 		public double Distance;

@@ -14,7 +14,6 @@ namespace KIP3.Infrastructure {
 		}
 		string _StatusText;
 
-		public int SampleGap;
 		public int FocusPartArea;
 		public int FocusPartWidth;
 		public int[] FocusPartOffsets;
@@ -26,7 +25,7 @@ namespace KIP3.Infrastructure {
 		public int FrameHeight;
 
 		public Pixel[] Pixels;
-		public Location[] PixelLocations;
+		public GraphLocation[] PixelLocations;
 
 		public ColorImagePoint[] ColorCoordinates;
 		public DepthImagePixel[] RawDepthSensorData;
@@ -38,21 +37,25 @@ namespace KIP3.Infrastructure {
 
 		public byte[] OutputData;
 
-		public int i;
-		public int byteOffset;
+		int _i;
+		int _byteOffset;
 
 		#endregion
 
 		public void Load() {
 			ColorCoordinates = new ColorImagePoint[PixelCount];
-			SampleGap = 10;
 
 			FocusPartWidth = 11;
 			FocusPartArea = FocusPartWidth * FocusPartWidth; // 121
 
 			var halfWidth = Convert.ToInt32(Math.Floor((double)FocusPartWidth / 2));
 
-			FocusPartOffsets = PrepareOffsets(new Rectangle(-halfWidth, -halfWidth, halfWidth, halfWidth), FocusPartArea, FrameWidth, true);
+			var window = new Rectangle {
+				Origin = new GraphLocation { X = -halfWidth, Y = -halfWidth },
+				Extent = new GraphLocation { X = halfWidth, Y = halfWidth }
+			};
+
+			FocusPartOffsets = PrepareOffsets(window, FocusPartArea, FrameWidth, true);
 
 			PrepareEdgeFilterOffsetsAndWeights();
 			PreparePixels();
@@ -67,9 +70,9 @@ namespace KIP3.Infrastructure {
 					{
 						var pixel = pixels;
 						var outputByte = outputData;
-						i = 0;
+						_i = 0;
 
-						while(i++ < PixelCount) {
+						while(_i++ < PixelCount) {
 							*(outputByte) = pixel->B;
 							*(outputByte + 1) = pixel->G;
 							*(outputByte + 2) = pixel->R;
@@ -84,17 +87,17 @@ namespace KIP3.Infrastructure {
 				{
 					var focusPartOffset = focusPartOffsets;
 					var focusOffset = FocusIndex * 4;
-					i = 0;
-					byteOffset = 0;
+					_i = 0;
+					_byteOffset = 0;
 
-					while (i++ < FocusPartOffsets.Length) {
-						byteOffset = focusOffset + *(focusPartOffset);
+					while (_i++ < FocusPartOffsets.Length) {
+						_byteOffset = focusOffset + *(focusPartOffset);
 
-						if (byteOffset > 0 && byteOffset < ByteCount) {
+						if (_byteOffset > 0 && _byteOffset < ByteCount) {
 							fixed(byte* outputData = OutputData)
 							{
 								var outputByte = outputData;
-								outputByte += byteOffset;
+								outputByte += _byteOffset;
 
 								*(outputByte) = 0;
 								*(outputByte + 1) = 0;
@@ -113,7 +116,7 @@ namespace KIP3.Infrastructure {
 		/// </summary>
 		public void PreparePixels() {
 			Pixels = new Pixel[PixelCount];
-			PixelLocations = new Location[PixelCount];
+			PixelLocations = new GraphLocation[PixelCount];
 
 			var imageMidX = FrameWidth / 2;
 			var imageMidY = FrameHeight / 2;
@@ -126,7 +129,7 @@ namespace KIP3.Infrastructure {
 				var bSq = Math.Pow(y - imageMidY, 2);
 				var cSq = Math.Sqrt(aSq + bSq);
 
-				PixelLocations[i] = new Location {
+				PixelLocations[i] = new GraphLocation {
 					X = x,
 					Y = y,
 					Distance = cSq
@@ -144,7 +147,12 @@ namespace KIP3.Infrastructure {
 				-1, -1, -1,
 			};
 
-			var edgeFilterOffsets = PrepareOffsets(new Rectangle(-1, -1, 1, 1), edgeFilterWeights.Count, FrameWidth);
+			var areaBox = new Rectangle {
+				Origin = new GraphLocation { X = -1, Y = -1 },
+				Extent = new GraphLocation { X = 1, Y = 1 },
+			};
+
+			var edgeFilterOffsets = PrepareOffsets(areaBox, edgeFilterWeights.Count, FrameWidth);
 
 			var filteredPixelCount = edgeFilterWeights.Where(f => f != 0).Count();
 
