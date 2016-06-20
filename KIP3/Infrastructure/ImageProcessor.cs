@@ -220,25 +220,26 @@ namespace KIP3.Infrastructure {
 					{
 						fixed (ColorImagePoint* colorCoordinates = ColorCoordinates)
 						{
-							var depthSensorPoint = depthSensorData;
-							var colorCoordinatesPoint = colorCoordinates;
+							var depthPoint = depthSensorData;
+							var colorPoint = colorCoordinates;
 
 							while (i++ < PixelCount) {
-								if ((colorCoordinatesPoint->X >= 0 && colorCoordinatesPoint->X < FrameWidth)
-									&& (colorCoordinatesPoint->Y >= 0 && colorCoordinatesPoint->Y < FrameHeight)) {
+								if ((colorPoint->X >= 0 && colorPoint->X < FrameWidth)
+									&& (colorPoint->Y >= 0 && colorPoint->Y < FrameHeight)) {
 
-									var pixelOffset = colorCoordinatesPoint->Y * FrameWidth + colorCoordinatesPoint->X;
+									var pixelOffset = colorPoint->Y * FrameWidth + colorPoint->X;
 
-									if (depthSensorPoint->Depth > 0 && depthSensorPoint->Depth <= Pixels[FocusIndex].Depth) {
-
+									// SOMETHING IS DORKED UP WITH THE DISTANCE CALC HERE. IT IS ALWAYS PICKING CENTER.
+									if(depthPoint->Depth > 0 && depthPoint->Depth <= Pixels[FocusIndex].Depth
+										&& PixelLocations[pixelOffset].Distance <= PixelLocations[FocusIndex].Distance) {
 										FocusIndex = pixelOffset;
 									}
 
-									Pixels[pixelOffset].Depth = depthSensorPoint->Depth;
+									Pixels[pixelOffset].Depth = depthPoint->Depth;
 								}
 
-								colorCoordinatesPoint++;
-								depthSensorPoint++;
+								colorPoint++;
+								depthPoint++;
 							}
 						}
 					}
