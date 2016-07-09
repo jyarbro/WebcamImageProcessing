@@ -22,7 +22,8 @@ namespace KIP3.Infrastructure {
 		public int FrameWidth;
 		public int FrameHeight;
 
-		public Pixel[] Pixels;
+		public Pixel[][] OverlayLayers;
+		public Pixel[] InputLayer;
 
 		public ColorImagePoint[] CalculatedDepthPoints;
 		public DepthImagePixel[] RawDepthPixels;
@@ -33,9 +34,16 @@ namespace KIP3.Infrastructure {
 		public int ByteCount;
 
 		public byte[] OutputData;
+		public byte[] ByteScratchLayer;
 
-		int _i;
-		int _byteOffset;
+		int _inputTick;
+		int _processTick;
+		int _outputTick;
+
+		public enum Layer {
+			FocalPoint,
+			Middles
+		}
 
 		public void LoadProcessor() {
 			CalculatedDepthPoints = new ColorImagePoint[PixelCount];
@@ -46,27 +54,32 @@ namespace KIP3.Infrastructure {
 			var halfWidth = Convert.ToInt32(Math.Floor((double)FocusPartWidth / 2));
 
 			var window = new Rectangle {
-				Origin = new GraphLocation { X = -halfWidth, Y = -halfWidth },
-				Extent = new GraphLocation { X = halfWidth, Y = halfWidth }
+				Origin = new Point { X = -halfWidth, Y = -halfWidth },
+				Extent = new Point { X = halfWidth, Y = halfWidth }
 			};
 
-			FocusPartOffsets = PrepareOffsets(window, FocusPartArea, FrameWidth, true);
+			FocusPartOffsets = PrepareOffsets(window, FocusPartArea, FrameWidth, false);
 
 			PrepareEdgeFilterOffsetsAndWeights();
-			PreparePixels();
+
+			PreparePixelLayers();
 		}
 
 		public void UpdateInput(KinectSensor sensor, ColorImageFrame colorFrame, DepthImageFrame depthFrame) {
-			CopyColorFrame(colorFrame);
-			colorFrame.Dispose();
+			try {
+				CopyColorFrame(colorFrame);
+				colorFrame.Dispose();
 
-			CopyDepthFrame(sensor, depthFrame);
-			depthFrame.Dispose();
+				CopyDepthFrame(sensor, depthFrame);
+				depthFrame.Dispose();
+			}
+			catch { }
 		}
 
 		public void UpdateOutput() {
-			CopyPixelsToOutput();
-			CopyFocalPointToOutput();
+			//UpdateMiddlesLayer();
+			UpdateFocalPointLayer();
+			SendLayersToOutput();
 		}
 
 		#region Loading
@@ -74,8 +87,15 @@ namespace KIP3.Infrastructure {
 		/// <summary>
 		/// Precalculate pixel values
 		/// </summary>
-		void PreparePixels() {
-			Pixels = new Pixel[PixelCount];
+		void PreparePixelLayers() {
+			var layers = Enum.GetValues(typeof(Layer));
+
+			OverlayLayers = new Pixel[layers.Length][];
+
+			foreach (int layer in layers)
+				OverlayLayers[layer] = new Pixel[PixelCount];
+
+			InputLayer = new Pixel[PixelCount];
 
 			var imageMidX = FrameWidth / 2;
 			var imageMidY = FrameHeight / 2;
@@ -88,7 +108,7 @@ namespace KIP3.Infrastructure {
 				var bSq = Math.Pow(y - imageMidY, 2);
 				var cSq = Math.Sqrt(aSq + bSq);
 
-				Pixels[i].Location = new GraphLocation {
+				InputLayer[i].Location = new Point {
 					X = x,
 					Y = y,
 					Distance = cSq
@@ -107,8 +127,8 @@ namespace KIP3.Infrastructure {
 			};
 
 			var areaBox = new Rectangle {
-				Origin = new GraphLocation { X = -1, Y = -1 },
-				Extent = new GraphLocation { X = 1, Y = 1 },
+				Origin = new Point { X = -1, Y = -1 },
+				Extent = new Point { X = 1, Y = 1 },
 			};
 
 			var edgeFilterOffsets = PrepareOffsets(areaBox, edgeFilterWeights.Count, FrameWidth);
@@ -144,7 +164,7 @@ namespace KIP3.Infrastructure {
 
 			for (int yOffset = areaBox.Origin.Y; yOffset <= areaBox.Extent.Y; yOffset++) {
 				for (int xOffset = areaBox.Origin.X; xOffset <= areaBox.Extent.X; xOffset++) {
-					offsets[offset] = xOffset + (yOffset * stride);
+					offsets[offset] = (yOffset * stride) + xOffset;
 
 					if (byteMultiplier)
 						offsets[offset] = offsets[offset] * 4;
@@ -158,19 +178,19 @@ namespace KIP3.Infrastructure {
 
 		#endregion
 
-		#region Updating Input
+		#region Base Layer
 
 		unsafe void CopyColorFrame(ColorImageFrame colorFrame) {
-			var i = 0;
+			_inputTick = 0;
 
-			fixed (Pixel* pixels = Pixels)
+			fixed (Pixel* pixels = InputLayer)
 			{
 				fixed (byte* colorSensorData = colorFrame.GetRawPixelData())
 				{
 					var pixel = pixels;
 					var color = colorSensorData;
 
-					while (i++ < PixelCount) {
+					while (_inputTick++ < PixelCount) {
 						pixel->B = *(color);
 						pixel->G = *(color + 1);
 						pixel->R = *(color + 2);
@@ -187,7 +207,7 @@ namespace KIP3.Infrastructure {
 			RawDepthPixels = depthFrame.GetRawPixelData();
 			sensor.CoordinateMapper.MapDepthFrameToColorFrame(DepthImageFormat.Resolution640x480Fps30, RawDepthPixels, ColorImageFormat.RgbResolution640x480Fps30, CalculatedDepthPoints);
 
-			var i = 0;
+			_inputTick = 0;
 
 			fixed (DepthImagePixel* rawDepthPixels = RawDepthPixels)
 			{
@@ -198,13 +218,13 @@ namespace KIP3.Infrastructure {
 					var currentMinimumDepth = int.MaxValue;
 					double currentMinimumDistance = double.MaxValue;
 
-					while (i++ < PixelCount) {
+					while (_inputTick++ < PixelCount) {
 						if ((calculatedDepthPoint->X >= 0 && calculatedDepthPoint->X < FrameWidth)
 							&& (calculatedDepthPoint->Y >= 0 && calculatedDepthPoint->Y < FrameHeight)) {
 
 							var depthPixelOffset = calculatedDepthPoint->Y * FrameWidth + calculatedDepthPoint->X;
 
-							fixed (Pixel* pixels = Pixels)
+							fixed (Pixel* pixels = InputLayer)
 							{
 								var pixel = pixels + depthPixelOffset;
 
@@ -230,63 +250,127 @@ namespace KIP3.Infrastructure {
 
 		#endregion
 
-		#region Processing
+		#region Processed Layers
 
+		unsafe void UpdateFocalPointLayer() {
+			_processTick = 0;
 
+			fixed (int* focusPartOffsets = FocusPartOffsets)
+			{
+				var focusPartOffset = focusPartOffsets;
+
+				while (_processTick++ < FocusPartOffsets.Length) {
+					var offset = FocusIndex + *(focusPartOffset);
+
+					if (offset > 0 && offset < PixelCount)
+						OverlayLayers[(int)Layer.FocalPoint][offset].R = 255;
+
+					focusPartOffset++;
+				}
+			}
+
+			_processTick = 0;
+		}
+
+		unsafe void UpdateMiddlesLayer() {
+			_processTick = 0;
+			int x = 0;
+			int y = 0;
+
+			fixed (Pixel* inputPixels = InputLayer, outputPixels = OverlayLayers[(int)Layer.Middles])
+			{
+				var inputPixel = inputPixels;
+				var outputPixel = outputPixels;
+
+				while (_processTick++ < PixelCount) {
+					fixed(Pixel* neighbors = InputLayer)
+					{
+						var neighbor = neighbors;
+
+						var j = -4;
+						var neighborTotal = 0;
+
+						while (j++ < 5) {
+							if (j != 0)
+								neighborTotal += neighbor->B + neighbor->G + neighbor->R;
+
+							neighbor++;
+						}
+
+						if (neighborTotal > (inputPixel->B + inputPixel->G + inputPixel->R) * 8 + 180) {
+							outputPixel->B = 0;
+							outputPixel->G = 0;
+							outputPixel->R = 255;
+						}
+
+						j = 0;
+					}
+
+					x++;
+
+					if (x > FrameWidth) {
+						x = 0;
+						y++;
+					}
+
+					inputPixel++;
+					outputPixel++;
+				}
+			}
+		}
 
 		#endregion
+		
+		unsafe void SendLayersToOutput() {
+			ByteScratchLayer = new byte[ByteCount];
 
-		#region Updating Output
+			foreach (var pixelLayer in OverlayLayers) {
+				_outputTick = 0;
 
-		unsafe void CopyPixelsToOutput() {
-			fixed (Pixel* pixels = Pixels)
+				fixed (Pixel* pixels = pixelLayer)
+				{
+					fixed (byte* outputData = ByteScratchLayer)
+					{
+						var pixel = pixels;
+						var outputByte = outputData;
+
+						while (_outputTick++ < PixelCount) {
+							if (*(outputByte) == 0) *(outputByte) = pixel->B;
+							if (*(outputByte + 1) == 0) *(outputByte + 1) = pixel->G;
+							if (*(outputByte + 2) == 0) *(outputByte + 2) = pixel->R;
+
+							pixel->B = 0;
+							pixel->G = 0;
+							pixel->R = 0;
+
+							pixel++;
+							outputByte += 4;
+						}
+					}
+				}
+			}
+
+			_outputTick = 0;
+
+			fixed (Pixel* pixels = InputLayer)
 			{
-				fixed (byte* outputData = OutputData)
+				fixed (byte* outputData = ByteScratchLayer)
 				{
 					var pixel = pixels;
 					var outputByte = outputData;
-					_i = 0;
 
-					while (_i++ < PixelCount) {
-						*(outputByte) = pixel->B;
-						*(outputByte + 1) = pixel->G;
-						*(outputByte + 2) = pixel->R;
+					while (_outputTick++ < PixelCount) {
+						if (*(outputByte) == 0) *(outputByte) = pixel->B;
+						if (*(outputByte + 1) == 0) *(outputByte + 1) = pixel->G;
+						if (*(outputByte + 2) == 0) *(outputByte + 2) = pixel->R;
 
 						pixel++;
 						outputByte += 4;
 					}
 				}
 			}
+
+			Buffer.BlockCopy(ByteScratchLayer, 0, OutputData, 0, ByteCount);
 		}
-
-		unsafe void CopyFocalPointToOutput() {
-			fixed (int* focusPartOffsets = FocusPartOffsets)
-			{
-				var focusPartOffset = focusPartOffsets;
-				var focusOffset = FocusIndex * 4;
-				_i = 0;
-				_byteOffset = 0;
-
-				while (_i++ < FocusPartOffsets.Length) {
-					_byteOffset = focusOffset + *(focusPartOffset);
-
-					if (_byteOffset > 0 && _byteOffset < ByteCount) {
-						fixed (byte* outputData = OutputData)
-						{
-							var outputByte = outputData;
-							outputByte += _byteOffset;
-
-							*(outputByte) = 0;
-							*(outputByte + 1) = 0;
-							*(outputByte + 2) = 255;
-						}
-					}
-
-					focusPartOffset++;
-				}
-			}
-		}
-
-		#endregion
 	}
 }

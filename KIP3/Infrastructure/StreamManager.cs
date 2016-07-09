@@ -67,7 +67,7 @@ namespace KIP3.Models {
 
 			ResetFPS();
 
-			Sensor = KinectSensor.KinectSensors.FirstOrDefault(s => s.Status == KinectStatus.Connected);
+			Sensor = KinectSensor.KinectSensors.First(s => s.Status == KinectStatus.Connected);
 
 			FrameWidth = Sensor.ColorStream.FrameWidth;
 			FrameHeight = Sensor.ColorStream.FrameHeight;

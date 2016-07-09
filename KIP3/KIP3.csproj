@@ -63,7 +63,7 @@
     <Compile Include="Helpers\RelayCommand.cs" />
     <Compile Include="Infrastructure\ImageProcessor.cs" />
     <Compile Include="Infrastructure\StreamManager.cs" />
-    <Compile Include="Structs\GraphLocation.cs" />
+    <Compile Include="Structs\Point.cs" />
     <Compile Include="Structs\Pixel.cs" />
     <Compile Include="Structs\Rectangle.cs" />
     <Compile Include="Views\MainWindow.xaml.cs">
