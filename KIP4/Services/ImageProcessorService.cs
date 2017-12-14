@@ -9,7 +9,7 @@ using System.Windows.Media.Imaging;
 
 namespace KIP4.Services {
 	public class ImageProcessorService {
-		const int THRESHOLD = 128;
+		const int THRESHOLD = 128 * 3;
 		const int FOCUSPARTWIDTH = 11;
 
 		public WriteableBitmap OutputImage { get; } = new WriteableBitmap(1920, 1080, 96.0, 96.0, PixelFormats.Bgr32, null);
@@ -28,6 +28,9 @@ namespace KIP4.Services {
 		byte[] OutputData;
 
 		int _i;
+		int _j;
+		Pixel _pixel;
+		int _pixelValue;
 
 		public void UpdateInput(ColorFrame colorFrame) {
 			if (colorFrame.FrameDescription.Width != OutputImage.PixelWidth || colorFrame.FrameDescription.Height != OutputImage.PixelHeight)
@@ -97,37 +100,36 @@ namespace KIP4.Services {
 
 		unsafe void ApplyFilter() {
 			fixed (byte* outputData = OutputData) {
-				var outputByte = outputData;
+				var outputBytePtr = outputData;
 				_i = 0;
 
 				while (_i++ < PixelCount) {
 					var totalEffectiveValue = 0;
 
 					for (var edgeFilterIndex = 0; edgeFilterIndex < EdgeFilterOffsets.Length; edgeFilterIndex++) {
-						var pixelIndex = _i + EdgeFilterOffsets[edgeFilterIndex];
+						_j = _i + EdgeFilterOffsets[edgeFilterIndex];
 
-						if (pixelIndex < 0 || pixelIndex >= PixelCount)
+						if (_j < 0 || _j >= PixelCount)
 							continue;
 
-						var pixel = Pixels[pixelIndex];
-						var pixelValue = (pixel.B + pixel.G + pixel.R) / 3;
-						var pixelEffectiveValue = pixelValue * EdgeFilterWeights[edgeFilterIndex];
+						_pixel = Pixels[_j];
+						_pixelValue = (_pixel.B + _pixel.G + _pixel.R) * EdgeFilterWeights[edgeFilterIndex];
 
-						totalEffectiveValue += pixelEffectiveValue;
+						totalEffectiveValue += _pixelValue;
 					}
 
 					if (totalEffectiveValue > THRESHOLD) {
-						*(outputByte) = 0;
-						*(outputByte + 1) = 0;
-						*(outputByte + 2) = 0;
+						*(outputBytePtr) = 0;
+						*(outputBytePtr + 1) = 0;
+						*(outputBytePtr + 2) = 0;
 					}
 					else {
-						*(outputByte) = 255;
-						*(outputByte + 1) = 255;
-						*(outputByte + 2) = 255;
+						*(outputBytePtr) = 255;
+						*(outputBytePtr + 1) = 255;
+						*(outputBytePtr + 2) = 255;
 					}
 
-					outputByte += 4;
+					outputBytePtr += 4;
 				}
 			}
 		}
