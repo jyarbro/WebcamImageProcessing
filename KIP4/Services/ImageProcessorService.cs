@@ -2,15 +2,14 @@
 using Microsoft.Kinect;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace KIP4.Services {
 	public class ImageProcessorService {
+		const int THRESHOLD = 128;
 		const int FOCUSPARTWIDTH = 11;
 
 		public WriteableBitmap OutputImage { get; } = new WriteableBitmap(1920, 1080, 96.0, 96.0, PixelFormats.Bgr32, null);
@@ -20,18 +19,14 @@ namespace KIP4.Services {
 		Pixel[][] OverlayLayers;
 		Pixel[] Pixels;
 		int FrameWidth;
-		int FrameHeight;
 		int FrameStride;
-		int FocusPartArea;
 		uint PixelCount;
-		uint ByteCount;
 		int[] FocusPartOffsets;
 		int[] EdgeFilterWeights;
 		int[] EdgeFilterOffsets;
 		byte[] ColorFrameData;
 		byte[] OutputData;
 
-		int _processTick;
 		int _i;
 
 		public void UpdateInput(ColorFrame colorFrame) {
@@ -50,7 +45,8 @@ namespace KIP4.Services {
 
 		public void UpdateOutput() {
 			CopyFrameData();
-			SendToOutputData();
+			ResetOutputToBaseline();
+			ApplyFilter();
 
 			Application.Current?.Dispatcher.Invoke(() => {
 				OutputImage.Lock();
@@ -60,45 +56,78 @@ namespace KIP4.Services {
 			});
 		}
 
-		void CopyFrameData() {
-			unsafe {
-				_i = 0;
+		unsafe void CopyFrameData() {
+			_i = 0;
 
-				fixed (Pixel* pixels = Pixels) {
-					fixed (byte* inputData = ColorFrameData) {
-						var pixel = pixels;
-						var color = inputData;
+			fixed (Pixel* pixels = Pixels) {
+				fixed (byte* inputData = ColorFrameData) {
+					var pixel = pixels;
+					var color = inputData;
 
-						while (_i++ < PixelCount) {
-							pixel->B = *(color);
-							pixel->G = *(color + 1);
-							pixel->R = *(color + 2);
+					while (_i++ < PixelCount) {
+						pixel->B = *(color);
+						pixel->G = *(color + 1);
+						pixel->R = *(color + 2);
 
-							color += 4;
-							pixel++;
-						}
+						color += 4;
+						pixel++;
 					}
 				}
 			}
 		}
 
-		void SendToOutputData() {
-			unsafe {
-				fixed (Pixel* pixels = Pixels) {
-					fixed (byte* outputData = OutputData) {
-						var pixel = pixels;
-						var outputByte = outputData;
-						_i = 0;
+		unsafe void ResetOutputToBaseline() {
+			fixed (Pixel* pixels = Pixels) {
+				fixed (byte* outputData = OutputData) {
+					var pixel = pixels;
+					var outputByte = outputData;
+					_i = 0;
 
-						while (_i++ < PixelCount) {
-							*(outputByte) = pixel->B;
-							*(outputByte + 1) = pixel->G;
-							*(outputByte + 2) = pixel->R;
+					while (_i++ < PixelCount) {
+						*(outputByte) = pixel->B;
+						*(outputByte + 1) = pixel->G;
+						*(outputByte + 2) = pixel->R;
 
-							pixel++;
-							outputByte += 4;
-						}
+						pixel++;
+						outputByte += 4;
 					}
+				}
+			}
+		}
+
+		unsafe void ApplyFilter() {
+			fixed (byte* outputData = OutputData) {
+				var outputByte = outputData;
+				_i = 0;
+
+				while (_i++ < PixelCount) {
+					var totalEffectiveValue = 0;
+
+					for (var edgeFilterIndex = 0; edgeFilterIndex < EdgeFilterOffsets.Length; edgeFilterIndex++) {
+						var pixelIndex = _i + EdgeFilterOffsets[edgeFilterIndex];
+
+						if (pixelIndex < 0 || pixelIndex >= PixelCount)
+							continue;
+
+						var pixel = Pixels[pixelIndex];
+						var pixelValue = (pixel.B + pixel.G + pixel.R) / 3;
+						var pixelEffectiveValue = pixelValue * EdgeFilterWeights[edgeFilterIndex];
+
+						totalEffectiveValue += pixelEffectiveValue;
+					}
+
+					if (totalEffectiveValue > THRESHOLD) {
+						*(outputByte) = 0;
+						*(outputByte + 1) = 0;
+						*(outputByte + 2) = 0;
+					}
+					else {
+						*(outputByte) = 255;
+						*(outputByte + 1) = 255;
+						*(outputByte + 2) = 255;
+					}
+
+					outputByte += 4;
 				}
 			}
 		}
@@ -226,11 +255,8 @@ namespace KIP4.Services {
 
 			var service = new ImageProcessorService {
 				FrameWidth = frameWidth,
-				FrameHeight = frameHeight,
 				FrameStride = frameStride,
-				FocusPartArea = focusPartArea,
 				PixelCount = pixelCount,
-				ByteCount = byteCount,
 				OutputData = new byte[byteCount],
 				ColorFrameData = new byte[byteCount],
 				FrameChangedRect = new Int32Rect(0, 0, frameDescription.Width, frameDescription.Height)
