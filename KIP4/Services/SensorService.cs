@@ -1,8 +1,6 @@
 ﻿using KIP.Helpers;
 using Microsoft.Kinect;
 using System;
-using System.Windows;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace KIP4.Services {
@@ -11,7 +9,7 @@ namespace KIP4.Services {
 
 		public event EventHandler<FrameRateEventArgs> UpdateFrameRate;
 
-		public WriteableBitmap OutputImage { get; } = new WriteableBitmap(1920, 1080, 96.0, 96.0, PixelFormats.Bgr32, null);
+		public WriteableBitmap OutputImage => ImageProcessorService.OutputImage;
 
 		public string StatusText {
 			get => _StatusText ?? (_StatusText = string.Empty);
@@ -51,14 +49,7 @@ namespace KIP4.Services {
 
 		KinectSensor Sensor;
 		ColorFrameReader ColorFrameReader;
-		FrameDescription FrameDescription;
-		Int32Rect FrameChangedRect;
-
-		int FrameWidth;
-		int FrameHeight;
-		uint PixelCount;
-		uint ByteCount;
-		byte[] OutputData;
+		ImageProcessorService ImageProcessorService;
 
 		bool _isDisposed;
 
@@ -92,18 +83,8 @@ namespace KIP4.Services {
 			using (var colorFrame = e.FrameReference.AcquireFrame()) {
 				if (colorFrame == null)
 					return;
-					
-				FrameDescription = colorFrame.FrameDescription;
-
-				if (FrameDescription.Width != OutputImage.PixelWidth || FrameDescription.Height != OutputImage.PixelHeight)
-					return;
-
-				using (var colorBuffer = colorFrame.LockRawImageBuffer()) {
-					OutputImage.Lock();
-					colorFrame.CopyConvertedFrameDataToIntPtr(OutputImage.BackBuffer, ByteCount, ColorImageFormat.Bgra);
-					OutputImage.AddDirtyRect(FrameChangedRect);
-					OutputImage.Unlock();
-				}
+				
+				ImageProcessorService.UpdateInput(colorFrame);
 			}
 
 			FrameCount++;
@@ -115,26 +96,15 @@ namespace KIP4.Services {
 		public static SensorService Create() {
 			var sensor = KinectSensor.GetDefault();
 			var colorFrameDescription = sensor.ColorFrameSource.CreateFrameDescription(ColorImageFormat.Bgra);
-			var pixels = colorFrameDescription.LengthInPixels;
-			var bytes = pixels * 4;
-
-			var reader = sensor.ColorFrameSource.OpenReader();
 
 			var sensorService = new SensorService(sensor) {
 				ColorFrameReader = sensor.ColorFrameSource.OpenReader(),
-				FrameWidth = colorFrameDescription.Width,
-				FrameHeight = colorFrameDescription.Height,
-				PixelCount = pixels,
-				ByteCount = bytes,
-				FrameChangedRect = new Int32Rect(0, 0, colorFrameDescription.Width, colorFrameDescription.Height),
-				OutputData = new byte[bytes]
 			};
 
 			sensorService.ColorFrameReader.FrameArrived += sensorService.ColorFrameArrived;
+			sensorService.ImageProcessorService = ImageProcessorService.Create(colorFrameDescription);
 
 			sensor.Open();
-
-			//sensorService.StatusText = sensor.IsAvailable ? "Running" : "Sensor not available";
 
 			return sensorService;
 		}
