@@ -1,6 +1,9 @@
 ﻿using KIP.Helpers;
 using Microsoft.Kinect;
 using System;
+using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 
 namespace KIP4.Services {
@@ -86,8 +89,27 @@ namespace KIP4.Services {
 				
 				ImageProcessorService.UpdateInput(colorFrame);
 			}
+		}
 
-			FrameCount++;
+		void KeepOutputUpdated() {
+			Task.Run(() => {
+				Stopwatch timer;
+
+				while (true) {
+					timer = Stopwatch.StartNew();
+
+					ImageProcessorService.UpdateOutput();
+
+					FrameCount++;
+
+					timer.Stop();
+
+					_FrameDuration += timer.ElapsedMilliseconds;
+
+					if (timer.ElapsedMilliseconds < 33)
+						Thread.Sleep(33 - (int) timer.ElapsedMilliseconds);
+				}
+			});
 		}
 
 		/// <summary>
@@ -105,6 +127,8 @@ namespace KIP4.Services {
 			sensorService.ImageProcessorService = ImageProcessorService.Create(colorFrameDescription);
 
 			sensor.Open();
+
+			sensorService.KeepOutputUpdated();
 
 			return sensorService;
 		}
