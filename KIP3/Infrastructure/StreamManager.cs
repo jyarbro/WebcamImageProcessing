@@ -1,21 +1,21 @@
-﻿using System;
+﻿using KIP.Helpers;
+using KIP3.Infrastructure;
+using Microsoft.Kinect;
+using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
-using KIP3.Helpers;
-using KIP3.Infrastructure;
-using Microsoft.Kinect;
 
 namespace KIP3.Models {
 	public class StreamManager : Observable {
 		public event EventHandler<FrameRateEventArgs> UpdateFrameRate;
 
 		public string StatusText {
-			get { return _StatusText ?? (_StatusText = string.Empty); }
-			set { SetProperty(ref _StatusText, value); }
+			get => _StatusText ?? (_StatusText = string.Empty);
+			set => SetProperty(ref _StatusText, value);
 		}
 		string _StatusText;
 

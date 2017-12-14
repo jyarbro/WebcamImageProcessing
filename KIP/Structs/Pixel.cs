@@ -1,4 +1,4 @@
-﻿namespace KIP3 {
+﻿namespace KIP.Structs {
 	public struct Pixel {
 		public byte R;
 		public byte G;

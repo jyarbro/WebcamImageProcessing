@@ -1,8 +1,9 @@
-﻿using System;
+﻿using KIP.Helpers;
+using KIP.Structs;
+using Microsoft.Kinect;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using KIP3.Helpers;
-using Microsoft.Kinect;
 
 namespace KIP3.Infrastructure {
 	public class ImageProcessor : Observable {

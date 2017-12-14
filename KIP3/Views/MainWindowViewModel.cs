@@ -1,8 +1,8 @@
-﻿using System.ComponentModel;
+﻿using KIP.Helpers;
+using KIP3.Models;
+using System.ComponentModel;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using KIP3.Helpers;
-using KIP3.Models;
 
 namespace KIP3.Views {
 	public class MainWindowViewModel : Observable {

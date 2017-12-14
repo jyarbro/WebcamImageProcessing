@@ -1,4 +1,4 @@
-﻿namespace KIP3 {
+﻿namespace KIP.Structs {
 	public struct Point {
 		public int X;
 		public int Y;

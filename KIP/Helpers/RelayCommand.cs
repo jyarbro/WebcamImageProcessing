@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Input;
 
-namespace KIP3.Helpers {
+namespace KIP.Helpers {
 	public class RelayCommand : ICommand {
 		public event EventHandler CanExecuteChanged {
 			add {
@@ -35,13 +35,9 @@ namespace KIP3.Helpers {
 				handler.Invoke(this, EventArgs.Empty);
 		}
 
-		public virtual bool CanExecute(object parameter) {
-			return _canExecute;
-		}
+		public virtual bool CanExecute(object parameter) => _canExecute;
 
-		public virtual void Execute(object parameter) {
-			_executeAction();
-		}
+		public virtual void Execute(object parameter) => _executeAction();
 	}
 
 
@@ -56,16 +52,10 @@ namespace KIP3.Helpers {
 			_canExecute = canExecute;
 		}
 
-		public override bool CanExecute(object parameter) {
-			return _canExecute != null && _canExecute((T)parameter);
-		}
+		public override bool CanExecute(object parameter) => _canExecute != null && _canExecute((T) parameter);
 
-		public override void Execute(object parameter) {
-			_executeAction((T)parameter);
-		}
+		public override void Execute(object parameter) => _executeAction((T) parameter);
 
-		static bool DefaultCanExecute(T parameter) {
-			return true;
-		}
+		static bool DefaultCanExecute(T parameter) => true;
 	}
 }
