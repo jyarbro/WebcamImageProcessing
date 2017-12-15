@@ -31,8 +31,8 @@
 
 		<StackPanel>
 			<Image
-				Source="{Binding ImageSource}"
-				Width="960" Height="540"
+				Source="{Binding CameraRaw}"
+				Width="480" Height="270"
 				Margin="10" />
 
 			<StackPanel Orientation="Horizontal" HorizontalAlignment="Left">

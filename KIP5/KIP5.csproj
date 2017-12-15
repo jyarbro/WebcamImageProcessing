@@ -59,7 +59,13 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Helpers\SensorDataReadyEventArgs.cs" />
+    <Compile Include="ImageProcessors\CameraRaw.cs" />
+    <Compile Include="ImageProcessors\ImageProcessor.cs" />
+    <Compile Include="Interfaces\IImageProcessor.cs" />
+    <Compile Include="Interfaces\IStatusTracker.cs" />
     <Compile Include="Services\ImageProcessorService.cs" />
+    <Compile Include="Services\SensorReader.cs" />
     <Compile Include="Services\SensorService.cs" />
     <Compile Include="ViewModels\MainWindowViewModel.cs" />
     <Page Include="MainWindow.xaml">
@@ -108,5 +114,6 @@
       <Name>KIP</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

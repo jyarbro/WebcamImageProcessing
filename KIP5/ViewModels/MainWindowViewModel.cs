@@ -1,12 +1,13 @@
 ﻿using KIP.Helpers;
+using KIP5.ImageProcessors;
+using KIP5.Interfaces;
 using KIP5.Services;
 using System.ComponentModel;
 using System.Windows.Media;
 
 namespace KIP5.ViewModels {
 	class MainWindowViewModel : Observable {
-		public SensorService SensorService { get; }
-		public ImageSource ImageSource { get; }
+		public ImageSource CameraRaw { get; }
 
 		public string StatusText {
 			get => _StatusText;
@@ -27,16 +28,16 @@ namespace KIP5.ViewModels {
 		double _FrameLag = 0;
 
 		public MainWindowViewModel() {
-			SensorService = SensorService.Create();
-			ImageSource = SensorService.OutputImage;
+			var sensorReader = new SensorReader();
+			sensorReader.StatusChanged += StatusTextChanged;
 
-			SensorService.PropertyChanged += StreamManager_PropertyChanged;
-			SensorService.UpdateFrameRate += UpdateFrameRate;
+			var cameraRaw = new CameraRaw(sensorReader);
+			CameraRaw = cameraRaw.OutputImage;
 		}
 
-		void StreamManager_PropertyChanged(object sender, PropertyChangedEventArgs e) {
-			if (e.PropertyName == nameof(SensorService.StatusText))
-				StatusText = ((SensorService) sender).StatusText;
+		void StatusTextChanged(object sender, PropertyChangedEventArgs args) {
+			if (sender is IStatusTracker && args.PropertyName == nameof(IStatusTracker.StatusText))
+				StatusText = ((IStatusTracker) sender).StatusText;
 		}
 
 		void UpdateFrameRate(object sender, FrameRateEventArgs args) {
