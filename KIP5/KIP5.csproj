@@ -65,7 +65,6 @@
     <Compile Include="Interfaces\IImageProcessor.cs" />
     <Compile Include="Interfaces\IStatusTracker.cs" />
     <Compile Include="Services\SensorReader.cs" />
-    <Compile Include="ViewModels\MainWindowViewModel.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

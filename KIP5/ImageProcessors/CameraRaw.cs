@@ -4,6 +4,8 @@ using System.Windows;
 
 namespace KIP5.ImageProcessors {
 	unsafe class CameraRaw : ImageProcessor {
+		int _i;
+
 		public CameraRaw(SensorReader sensorReader) : base(sensorReader) { }
 
 		protected override void LoadInput(Pixel[] sensorData) {

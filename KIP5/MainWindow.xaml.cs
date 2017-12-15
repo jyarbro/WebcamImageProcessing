@@ -1,25 +1,50 @@
-﻿using System;
+﻿using KIP5.ImageProcessors;
+using KIP5.Interfaces;
+using KIP5.Services;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace KIP5 {
-	/// <summary>
-	/// Interaction logic for MainWindow.xaml
-	/// </summary>
-	public partial class MainWindow : Window {
+	public partial class MainWindow : Window, INotifyPropertyChanged {
+		public event PropertyChangedEventHandler PropertyChanged;
+
+		public string StatusText {
+			get => _StatusText;
+			set => SetProperty(ref _StatusText, value);
+		}
+		string _StatusText = string.Empty;
+
 		public MainWindow() {
 			InitializeComponent();
+
+			var sensorReader = new SensorReader();
+			sensorReader.StatusChanged += StatusTextChanged;
+
+			var imageProcessors = new List<IImageProcessor> {
+				new CameraRaw(sensorReader),
+				new CameraRaw(sensorReader),
+				new CameraRaw(sensorReader),
+				new CameraRaw(sensorReader),
+				new CameraRaw(sensorReader)
+			};
+
+			ImageProcessors.ItemsSource = imageProcessors;
+		}
+
+		void StatusTextChanged(object sender, PropertyChangedEventArgs args) {
+			if (sender is IStatusTracker && args.PropertyName == nameof(IStatusTracker.StatusText))
+				StatusText = ((IStatusTracker) sender).StatusText;
+		}
+
+		void SetProperty<T>(ref T member, T val, [CallerMemberName] string propertyName = null) {
+			if (Equals(member, val))
+				return;
+
+			member = val;
+
+			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 		}
 	}
 }

@@ -3,14 +3,10 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:viewmodels="clr-namespace:KIP5.ViewModels"
         mc:Ignorable="d"
-        SizeToContent="WidthAndHeight"
+        SizeToContent="Height"
+		Width="1980"
 		Title="Kinect Image Processor">
-	
-	<Window.DataContext>
-		<viewmodels:MainWindowViewModel />
-	</Window.DataContext>
 
 	<DockPanel>
 		<StatusBar DockPanel.Dock="Bottom">
@@ -29,23 +25,33 @@
 			</StatusBarItem>
 		</StatusBar>
 
-		<StackPanel>
-			<Image
-				Source="{Binding CameraRaw}"
-				Width="480" Height="270"
-				Margin="10" />
+		<ListBox Name="ImageProcessors">
+			<ListBox.ItemsPanel>
+				<ItemsPanelTemplate>
+					<WrapPanel IsItemsHost="True" />
+				</ItemsPanelTemplate>
+			</ListBox.ItemsPanel>
+			<ListBox.ItemTemplate>
+				<DataTemplate>
+					<StackPanel>
+						<Image Source="{Binding OutputImage}"
+							Width="480" Height="270"
+							Margin="10" />
 
-			<StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-				<Label>Frames per second:</Label>
-				<TextBlock Text="{Binding FramesPerSecond}" VerticalAlignment="Center" />
-			</StackPanel>
+						<StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+							<Label>Frames per second:</Label>
+							<TextBlock Text="{Binding FramesPerSecond}" VerticalAlignment="Center" />
+						</StackPanel>
 
-			<StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-				<Label>Frame lag:</Label>
-				<TextBlock Text="{Binding FrameLag}" VerticalAlignment="Center" />
-				<Label>ms</Label>
-			</StackPanel>
-		</StackPanel>
+						<StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+							<Label>Frame lag:</Label>
+							<TextBlock Text="{Binding FrameLag}" VerticalAlignment="Center" />
+							<Label>ms</Label>
+						</StackPanel>
+					</StackPanel>
+				</DataTemplate>
+			</ListBox.ItemTemplate>
+		</ListBox>
 	</DockPanel>
 
 </Window>
