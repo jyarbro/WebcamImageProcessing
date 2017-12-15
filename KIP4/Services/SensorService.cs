@@ -40,8 +40,11 @@ namespace KIP4.Services {
 					});
 				}
 
-				if (totalSeconds > 5)
-					ResetFPS();
+				if (totalSeconds > 5) {
+					_FrameCount = 0;
+					_FrameDuration = 0;
+					_FrameRunTimer = DateTime.Now;
+				}
 			}
 		}
 		double _FrameCount;
@@ -72,12 +75,6 @@ namespace KIP4.Services {
 			Sensor = null;
 
 			_isDisposed = true;
-		}
-
-		void ResetFPS() {
-			_FrameCount = 0;
-			_FrameDuration = 0;
-			_FrameRunTimer = DateTime.Now;
 		}
 
 		void Sensor_IsAvailableChanged(object sender, IsAvailableChangedEventArgs e) => StatusText = Sensor.IsAvailable ? "Running" : "Sensor not available";
