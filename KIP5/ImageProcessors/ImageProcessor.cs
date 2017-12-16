@@ -12,7 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace KIP5.ImageProcessors {
-	abstract class ImageProcessor : Observable, IImageProcessor {
+	unsafe abstract class ImageProcessor : Observable, IImageProcessor {
 		const uint FRAMERATE_DELAY = 50;
 
 		public double FramesPerSecond {
@@ -58,29 +58,66 @@ namespace KIP5.ImageProcessors {
 		DateTime _FrameTimer = DateTime.Now.AddMilliseconds(FRAMERATE_DELAY);
 		DateTime _FrameNow;
 
-		public WriteableBitmap OutputImage { get; } = new WriteableBitmap(1920, 1080, 96.0, 96.0, PixelFormats.Bgr32, null);
+		public WriteableBitmap OutputImage { get; }
 
 		protected Int32Rect FrameRect;
+		protected int FrameWidth;
+		protected int FrameHeight;
 		protected int FrameStride;
 		protected uint PixelCount;
 		protected byte[] OutputData;
 
 		Stopwatch _timer;
 		bool _executing;
-	
-		public ImageProcessor(SensorReader sensorReader) {
-			FrameRect = new Int32Rect(0, 0, sensorReader.SensorImageWidth, sensorReader.SensorImageHeight);
-			FrameStride = sensorReader.SensorImageWidth * 4;
-			PixelCount = sensorReader.PixelCount;
 
+		public ImageProcessor(SensorReader sensorReader) {
+			FrameWidth = sensorReader.SensorImageWidth;
+			FrameHeight = sensorReader.SensorImageHeight;
+
+			OutputImage = new WriteableBitmap(FrameWidth, FrameHeight, 96.0, 96.0, PixelFormats.Bgr32, null);
+			FrameRect = new Int32Rect(0, 0, FrameWidth, FrameHeight);
+			FrameStride = FrameWidth * 4;
+			PixelCount = sensorReader.PixelCount;
 			OutputData = new byte[sensorReader.ByteCount];
 
 			sensorReader.SensorDataReady += OnSensorDataReady;
 		}
 
-		protected abstract void LoadInput(Pixel[] sensorData);
-		protected abstract void ApplyFilters();
-		protected abstract void WriteOutput();
+		/// <summary>
+		/// A universal method for calculating all of the linear offsets for a given square area
+		/// </summary>
+		/// <exception cref="ArgumentException" />
+		protected int[] CalculateOffsets(Rectangle areaBox, int area, int stride, bool byteMultiplier = true) {
+			if (area % 2 == 0)
+				throw new ArgumentException("Odd sizes only.");
+
+			var offsets = new int[area];
+
+			var offset = 0;
+
+			for (var yOffset = areaBox.Origin.Y; yOffset <= areaBox.Extent.Y; yOffset++) {
+				for (var xOffset = areaBox.Origin.X; xOffset <= areaBox.Extent.X; xOffset++) {
+					offsets[offset] = (yOffset * stride) + xOffset;
+
+					if (byteMultiplier)
+						offsets[offset] = offsets[offset] * 4;
+
+					offset++;
+				}
+			}
+
+			return offsets;
+		}
+
+		protected abstract void ApplyFilters(Pixel[] sensorData);
+
+		void WriteOutput() {
+			Application.Current?.Dispatcher.Invoke(() => {
+				OutputImage.Lock();
+				OutputImage.WritePixels(FrameRect, OutputData, FrameStride, 0);
+				OutputImage.Unlock();
+			});
+		}
 
 		void OnSensorDataReady(object sender, SensorDataReadyEventArgs args) {
 			if (_executing)
@@ -91,8 +128,7 @@ namespace KIP5.ImageProcessors {
 
 				_executing = true;
 
-				LoadInput(args.SensorData);
-				ApplyFilters();
+				ApplyFilters(args.SensorData);
 				WriteOutput();
 
 				FrameCount++;

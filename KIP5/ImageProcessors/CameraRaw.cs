@@ -1,6 +1,5 @@
 ﻿using KIP.Structs;
 using KIP5.Services;
-using System.Windows;
 
 namespace KIP5.ImageProcessors {
 	unsafe class CameraRaw : ImageProcessor {
@@ -8,7 +7,7 @@ namespace KIP5.ImageProcessors {
 
 		public CameraRaw(SensorReader sensorReader) : base(sensorReader) { }
 
-		protected override void LoadInput(Pixel[] sensorData) {
+		protected override void ApplyFilters(Pixel[] sensorData) {
 			fixed (Pixel* pixels = sensorData) {
 				fixed (byte* outputData = OutputData) {
 					var pixel = pixels;
@@ -25,16 +24,6 @@ namespace KIP5.ImageProcessors {
 					}
 				}
 			}
-		}
-
-		protected override void ApplyFilters() { }
-
-		protected override void WriteOutput() {
-			Application.Current?.Dispatcher.Invoke(() => {
-				OutputImage.Lock();
-				OutputImage.WritePixels(FrameRect, OutputData, FrameStride, 0);
-				OutputImage.Unlock();	
-			});
 		}
 	}
 }
