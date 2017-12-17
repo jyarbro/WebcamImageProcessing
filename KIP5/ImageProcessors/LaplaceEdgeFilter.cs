@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace KIP5.ImageProcessors {
 	unsafe class LaplaceEdgeFilter : ImageProcessor {
-		const int FILTER_THRESHOLD = 40 * 3; // 3 properties used in Pixel
+		const int FILTER_THRESHOLD = 128 * 3;
 
 		int[] Weights;
 		int[] Offsets;
@@ -66,8 +66,21 @@ namespace KIP5.ImageProcessors {
 				Origin = new Point { X = -1, Y = -1 },
 				Extent = new Point { X = 1, Y = 1 },
 			};
+			
+			//var weights = new List<int> {
+			//	-1,  0, -1,  0, -1,
+			//	 0,  0,  0,  0,  0,
+			//	-1,  0,  8,  0, -1,
+			//	 0,  0,  0,  0,  0,
+			//	-1,  0, -1,  0, -1,
+			//};
 
-			var offsets = CalculateOffsets(areaBox, weights.Count, FrameWidth);
+			//var areaBox = new Rectangle {
+			//	Origin = new Point { X = -2, Y = -2 },
+			//	Extent = new Point { X = 2, Y = 2 },
+			//};
+
+			var offsets = CalculateOffsets(areaBox, weights.Count, FrameWidth, 4);
 
 			var filteredPixelCount = weights.Where(f => f != 0).Count();
 
