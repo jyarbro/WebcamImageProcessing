@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace KIP5.ImageProcessors {
 	unsafe class EdgeFilter : ImageProcessor {
-		const int THRESHOLD = 128;
+		const int THRESHOLD = 128 * 3;
 
 		int[] Weights;
 		int[] Offsets;
@@ -56,7 +56,7 @@ namespace KIP5.ImageProcessors {
 		}
 
 		void CalculateOffsetsAndWeights() {
-			var edgeFilterWeights = new List<int> {
+			var weights = new List<int> {
 				-1, -1, -1,
 				-1,  8, -1,
 				-1, -1, -1,
@@ -67,21 +67,21 @@ namespace KIP5.ImageProcessors {
 				Extent = new Point { X = 1, Y = 1 },
 			};
 
-			var edgeFilterOffsets = CalculateOffsets(areaBox, edgeFilterWeights.Count, FrameWidth);
+			var offsets = CalculateOffsets(areaBox, weights.Count, FrameWidth);
 
-			var filteredPixelCount = edgeFilterWeights.Where(f => f != 0).Count();
+			var filteredPixelCount = weights.Where(f => f != 0).Count();
 
 			Offsets = new int[filteredPixelCount];
 			Weights = new int[filteredPixelCount];
 
 			var j = 0;
 
-			for (var i = 0; i < edgeFilterWeights.Count; i++) {
-				if (edgeFilterWeights[i] == 0)
+			for (var i = 0; i < weights.Count; i++) {
+				if (weights[i] == 0)
 					continue;
 
-				Weights[j] = edgeFilterWeights[i];
-				Offsets[j] = edgeFilterOffsets[i] * 4;
+				Weights[j] = weights[i];
+				Offsets[j] = offsets[i] * 4;
 
 				j++;
 			}

@@ -61,6 +61,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Helpers\SensorDataReadyEventArgs.cs" />
+    <Compile Include="ImageProcessors\Compressor.cs" />
     <Compile Include="ImageProcessors\EdgeFilter.cs" />
     <Compile Include="ImageProcessors\CameraRaw.cs" />
     <Compile Include="ImageProcessors\ImageProcessor.cs" />
