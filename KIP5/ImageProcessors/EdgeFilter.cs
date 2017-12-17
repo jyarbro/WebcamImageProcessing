@@ -16,7 +16,7 @@ namespace KIP5.ImageProcessors {
 		int _pixelValue;
 
 		public EdgeFilter(SensorReader sensorReader) : base(sensorReader) {
-			CalculateEdgeFilterOffsetsAndWeights();
+			CalculateOffsetsAndWeights();
 		}
 
 		protected override void ApplyFilters(Pixel[] sensorData) {
@@ -55,7 +55,7 @@ namespace KIP5.ImageProcessors {
 			}
 		}
 
-		void CalculateEdgeFilterOffsetsAndWeights() {
+		void CalculateOffsetsAndWeights() {
 			var edgeFilterWeights = new List<int> {
 				-1, -1, -1,
 				-1,  8, -1,
