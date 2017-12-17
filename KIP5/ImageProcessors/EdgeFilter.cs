@@ -7,8 +7,8 @@ namespace KIP5.ImageProcessors {
 	unsafe class EdgeFilter : ImageProcessor {
 		const int THRESHOLD = 128;
 
-		int[] EdgeFilterWeights;
-		int[] EdgeFilterOffsets;
+		int[] Weights;
+		int[] Offsets;
 		
 		int _i;
 		int _j;
@@ -27,14 +27,14 @@ namespace KIP5.ImageProcessors {
 				while (_i++ < PixelCount) {
 					var totalEffectiveValue = 0;
 
-					for (var edgeFilterIndex = 0; edgeFilterIndex < EdgeFilterOffsets.Length; edgeFilterIndex++) {
-						_j = _i + EdgeFilterOffsets[edgeFilterIndex];
+					for (var weightsIndex = 0; weightsIndex < Offsets.Length; weightsIndex++) {
+						_j = _i + Offsets[weightsIndex];
 
 						if (_j < 0 || _j >= PixelCount)
 							continue;
 
 						_pixel = sensorData[_j];
-						_pixelValue = (_pixel.B + _pixel.G + _pixel.R) * EdgeFilterWeights[edgeFilterIndex];
+						_pixelValue = (_pixel.B + _pixel.G + _pixel.R) * Weights[weightsIndex];
 
 						totalEffectiveValue += _pixelValue;
 					}
@@ -71,8 +71,8 @@ namespace KIP5.ImageProcessors {
 
 			var filteredPixelCount = edgeFilterWeights.Where(f => f != 0).Count();
 
-			EdgeFilterOffsets = new int[filteredPixelCount];
-			EdgeFilterWeights = new int[filteredPixelCount];
+			Offsets = new int[filteredPixelCount];
+			Weights = new int[filteredPixelCount];
 
 			var j = 0;
 
@@ -80,8 +80,8 @@ namespace KIP5.ImageProcessors {
 				if (edgeFilterWeights[i] == 0)
 					continue;
 
-				EdgeFilterWeights[j] = edgeFilterWeights[i];
-				EdgeFilterOffsets[j] = edgeFilterOffsets[i] * 4;
+				Weights[j] = edgeFilterWeights[i];
+				Offsets[j] = edgeFilterOffsets[i] * 4;
 
 				j++;
 			}
