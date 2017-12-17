@@ -3,7 +3,6 @@
 		public byte R;
 		public byte G;
 		public byte B;
-		public short Depth;
 
 		public Point Location;
 	}

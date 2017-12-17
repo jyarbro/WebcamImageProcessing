@@ -3,22 +3,21 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27205.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KIP3", "KIP3\KIP3.csproj", "{928D93BA-FD58-4FE3-8924-9C05BF1D2E4E}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KIP4", "KIP4\KIP4.csproj", "{0BDF1BF8-3A97-4286-97A5-479A25D59AB7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KIP", "KIP\KIP.csproj", "{9F843377-5F5B-4407-8E77-CCB170F4CA2D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KIP5", "KIP5\KIP5.csproj", "{4370FC53-24FE-4950-BB07-73D4AA76905D}"
+EndProject
 Global
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{928D93BA-FD58-4FE3-8924-9C05BF1D2E4E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{928D93BA-FD58-4FE3-8924-9C05BF1D2E4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{928D93BA-FD58-4FE3-8924-9C05BF1D2E4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{928D93BA-FD58-4FE3-8924-9C05BF1D2E4E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0BDF1BF8-3A97-4286-97A5-479A25D59AB7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{0BDF1BF8-3A97-4286-97A5-479A25D59AB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0BDF1BF8-3A97-4286-97A5-479A25D59AB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -27,6 +26,10 @@ Global
 		{9F843377-5F5B-4407-8E77-CCB170F4CA2D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9F843377-5F5B-4407-8E77-CCB170F4CA2D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9F843377-5F5B-4407-8E77-CCB170F4CA2D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4370FC53-24FE-4950-BB07-73D4AA76905D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4370FC53-24FE-4950-BB07-73D4AA76905D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4370FC53-24FE-4950-BB07-73D4AA76905D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4370FC53-24FE-4950-BB07-73D4AA76905D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
