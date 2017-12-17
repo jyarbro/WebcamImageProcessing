@@ -27,7 +27,7 @@
 		<ListBox Name="ImageProcessors">
 			<ListBox.ItemsPanel>
 				<ItemsPanelTemplate>
-					<WrapPanel IsItemsHost="True" MaxWidth="1980" />
+					<WrapPanel IsItemsHost="True" MaxWidth="2560" />
 				</ItemsPanelTemplate>
 			</ListBox.ItemsPanel>
 			<ListBox.ItemTemplate>
@@ -45,7 +45,7 @@
 						<Image Source="{Binding OutputImage}"
 							Grid.Row="0"
 							Grid.ColumnSpan="2"
-							Width="480" Height="270"
+							Width="640" Height="360"
 							Margin="10" />
 
 						<StackPanel 

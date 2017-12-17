@@ -62,7 +62,8 @@
     </ApplicationDefinition>
     <Compile Include="Helpers\SensorDataReadyEventArgs.cs" />
     <Compile Include="ImageProcessors\Compressor.cs" />
-    <Compile Include="ImageProcessors\EdgeFilter.cs" />
+    <Compile Include="ImageProcessors\SobelEdgeFilter.cs" />
+    <Compile Include="ImageProcessors\LaplaceEdgeFilter.cs" />
     <Compile Include="ImageProcessors\CameraRaw.cs" />
     <Compile Include="ImageProcessors\ImageProcessor.cs" />
     <Compile Include="Interfaces\IImageProcessor.cs" />

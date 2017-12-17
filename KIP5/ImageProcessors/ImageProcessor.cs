@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 
 namespace KIP5.ImageProcessors {
 	unsafe abstract class ImageProcessor : Observable, IImageProcessor {
+		protected const int CHUNK_SIZE = 4;
 		const uint FRAMERATE_DELAY = 50;
 
 		public double FramesPerSecond {
@@ -65,9 +66,10 @@ namespace KIP5.ImageProcessors {
 		protected int FrameHeight;
 		protected int FrameStride;
 		protected uint PixelCount;
-		protected byte[] OutputData;
+		protected byte[] Output;
 
 		Stopwatch _timer;
+		Pixel[] _sensorDataCopy;
 		bool _executing;
 
 		public ImageProcessor(SensorReader sensorReader) {
@@ -76,9 +78,12 @@ namespace KIP5.ImageProcessors {
 
 			OutputImage = new WriteableBitmap(FrameWidth, FrameHeight, 96.0, 96.0, PixelFormats.Bgr32, null);
 			FrameRect = new Int32Rect(0, 0, FrameWidth, FrameHeight);
-			FrameStride = FrameWidth * 4;
+			FrameStride = FrameWidth * CHUNK_SIZE;
+
 			PixelCount = sensorReader.PixelCount;
-			OutputData = new byte[sensorReader.ByteCount];
+			_sensorDataCopy = new Pixel[PixelCount];
+
+			Output = new byte[sensorReader.ByteCount];
 
 			sensorReader.SensorDataReady += OnSensorDataReady;
 		}
@@ -87,10 +92,7 @@ namespace KIP5.ImageProcessors {
 		/// A universal method for calculating all of the linear offsets for a given square area
 		/// </summary>
 		/// <exception cref="ArgumentException" />
-		protected int[] CalculateOffsets(Rectangle areaBox, int area, int stride, bool byteMultiplier = true) {
-			if (area % 2 == 0)
-				throw new ArgumentException("Odd sizes only.");
-
+		protected int[] CalculateOffsets(Rectangle areaBox, int area, int stride, int chunkSize = 1) {
 			var offsets = new int[area];
 
 			var offset = 0;
@@ -98,9 +100,7 @@ namespace KIP5.ImageProcessors {
 			for (var yOffset = areaBox.Origin.Y; yOffset <= areaBox.Extent.Y; yOffset++) {
 				for (var xOffset = areaBox.Origin.X; xOffset <= areaBox.Extent.X; xOffset++) {
 					offsets[offset] = (yOffset * stride) + xOffset;
-
-					if (byteMultiplier)
-						offsets[offset] = offsets[offset] * 4;
+					offsets[offset] = offsets[offset] * chunkSize;
 
 					offset++;
 				}
@@ -114,7 +114,7 @@ namespace KIP5.ImageProcessors {
 		void WriteOutput() {
 			Application.Current?.Dispatcher.Invoke(() => {
 				OutputImage.Lock();
-				OutputImage.WritePixels(FrameRect, OutputData, FrameStride, 0);
+				OutputImage.WritePixels(FrameRect, Output, FrameStride, 0);
 				OutputImage.Unlock();
 			});
 		}
@@ -128,7 +128,9 @@ namespace KIP5.ImageProcessors {
 
 				_executing = true;
 
-				ApplyFilters(args.SensorData);
+				Array.Copy(args.SensorData, _sensorDataCopy, PixelCount);
+
+				ApplyFilters(_sensorDataCopy);
 				WriteOutput();
 
 				FrameCount++;

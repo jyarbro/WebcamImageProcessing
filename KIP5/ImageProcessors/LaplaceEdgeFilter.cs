@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace KIP5.ImageProcessors {
-	unsafe class EdgeFilter : ImageProcessor {
-		const int THRESHOLD = 128 * 3;
+	unsafe class LaplaceEdgeFilter : ImageProcessor {
+		const int FILTER_THRESHOLD = 40 * 3; // 3 properties used in Pixel
 
 		int[] Weights;
 		int[] Offsets;
@@ -15,31 +15,31 @@ namespace KIP5.ImageProcessors {
 		Pixel _pixel;
 		int _pixelValue;
 
-		public EdgeFilter(SensorReader sensorReader) : base(sensorReader) {
+		public LaplaceEdgeFilter(SensorReader sensorReader) : base(sensorReader) {
 			CalculateOffsetsAndWeights();
 		}
 
 		protected override void ApplyFilters(Pixel[] sensorData) {
-			fixed (byte* outputData = OutputData) {
-				var outputBytePtr = outputData;
+			fixed (byte* outputPtr = Output) {
+				var outputBytePtr = outputPtr;
 				_i = 0;
 
 				while (_i++ < PixelCount) {
 					var totalEffectiveValue = 0;
 
-					for (var weightsIndex = 0; weightsIndex < Offsets.Length; weightsIndex++) {
-						_j = _i + Offsets[weightsIndex];
+					for (var filterIndex = 0; filterIndex < Offsets.Length; filterIndex++) {
+						_j = _i + Offsets[filterIndex];
 
 						if (_j < 0 || _j >= PixelCount)
 							continue;
 
 						_pixel = sensorData[_j];
-						_pixelValue = (_pixel.B + _pixel.G + _pixel.R) * Weights[weightsIndex];
+						_pixelValue = (_pixel.B + _pixel.G + _pixel.R) * Weights[filterIndex];
 
 						totalEffectiveValue += _pixelValue;
 					}
 
-					if (totalEffectiveValue > THRESHOLD) {
+					if (totalEffectiveValue > FILTER_THRESHOLD) {
 						*(outputBytePtr) = 0;
 						*(outputBytePtr + 1) = 0;
 						*(outputBytePtr + 2) = 0;
@@ -50,7 +50,7 @@ namespace KIP5.ImageProcessors {
 						*(outputBytePtr + 2) = 255;
 					}
 
-					outputBytePtr += 4;
+					outputBytePtr += CHUNK_SIZE;
 				}
 			}
 		}
@@ -81,7 +81,7 @@ namespace KIP5.ImageProcessors {
 					continue;
 
 				Weights[j] = weights[i];
-				Offsets[j] = offsets[i] * 4;
+				Offsets[j] = offsets[i];
 
 				j++;
 			}

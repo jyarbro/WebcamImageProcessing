@@ -9,10 +9,10 @@ namespace KIP5.ImageProcessors {
 
 		protected override void ApplyFilters(Pixel[] sensorData) {
 			fixed (Pixel* pixels = sensorData) {
-				fixed (byte* outputData = OutputData) {
+				fixed (byte* outputData = Output) {
 					var pixel = pixels;
 					var outputByte = outputData;
-					_i = 0;
+					_i = -1;
 
 					while (_i++ < PixelCount) {
 						*(outputByte) = pixel->B;
