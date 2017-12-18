@@ -50,7 +50,7 @@ namespace KIP5.Services {
 			SensorImageHeight = colorFrameDescription.Height;
 
 			PixelCount = colorFrameDescription.LengthInPixels;
-			ByteCount = colorFrameDescription.LengthInPixels * 4;
+			ByteCount = colorFrameDescription.LengthInPixels * colorFrameDescription.BytesPerPixel;
 
 			SensorDataReadyEventArgs = new SensorDataReadyEventArgs {
 				SensorData = new Pixel[PixelCount]
@@ -64,9 +64,7 @@ namespace KIP5.Services {
 		void LoadColorFrame(ColorFrameReference frameReference) {
 			using (var colorFrame = frameReference.AcquireFrame()) {
 				try {
-					using (var buffer = colorFrame.LockRawImageBuffer()) {
-						colorFrame.CopyConvertedFrameDataToArray(ColorFrameData, ColorImageFormat.Bgra);
-					}
+					colorFrame.CopyConvertedFrameDataToArray(ColorFrameData, ColorImageFormat.Bgra);
 				}
 				catch (NullReferenceException) { }
 			}
