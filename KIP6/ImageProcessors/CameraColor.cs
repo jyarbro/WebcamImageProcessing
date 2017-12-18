@@ -10,14 +10,14 @@ namespace KIP6.ImageProcessors {
 		public void Initialize(KinectSensor sensor, ColorFrameReader frameReader) {
 			frameReader.FrameArrived += OnFrameArrived;
 
-			var colorFrameDescription = sensor.ColorFrameSource.CreateFrameDescription(ColorImageFormat.Bgra);
+			var frameDescription = sensor.ColorFrameSource.CreateFrameDescription(ColorImageFormat.Bgra);
 
-			ByteCount = colorFrameDescription.LengthInPixels * colorFrameDescription.BytesPerPixel;
+			ByteCount = frameDescription.LengthInPixels * frameDescription.BytesPerPixel;
 			OutputData = new byte[ByteCount];
 
-			OutputWidth = colorFrameDescription.Width;
-			OutputHeight = colorFrameDescription.Height;
-			OutputStride = (int)(colorFrameDescription.Width * colorFrameDescription.BytesPerPixel);
+			OutputHeight = frameDescription.Height;
+			OutputWidth = frameDescription.Width;
+			OutputStride = (int)(OutputWidth * frameDescription.BytesPerPixel);
 			OutputUpdateRect = new Int32Rect(0, 0, OutputWidth, OutputHeight);
 
 			OutputImage = new WriteableBitmap(OutputWidth, OutputHeight, 96.0, 96.0, PixelFormats.Bgr32, null);
@@ -27,10 +27,6 @@ namespace KIP6.ImageProcessors {
 			using (var colorFrame = frameReference.AcquireFrame()) {
 				colorFrame.CopyConvertedFrameDataToArray(OutputData, ColorImageFormat.Bgra);
 			}
-		}
-
-		void OnFrameArrived(object sender, ColorFrameArrivedEventArgs e) {
-			LoadFrame(e.FrameReference);
 		}
 	}
 }

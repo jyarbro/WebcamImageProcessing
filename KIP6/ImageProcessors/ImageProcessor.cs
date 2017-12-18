@@ -67,13 +67,13 @@ namespace KIP6.ImageProcessors {
 		public void LoadFrame(ColorFrameReference frameReference) {
 			_timer = Stopwatch.StartNew();
 
+			FrameCount++;
+
 			try {
 				ProcessFrame(frameReference);
 				WriteOutput();
 			}
 			catch (NullReferenceException) { }
-
-			FrameCount++;
 
 			_timer.Stop();
 			_FrameDuration += _timer.ElapsedMilliseconds;
@@ -109,5 +109,7 @@ namespace KIP6.ImageProcessors {
 
 			return offsets;
 		}
+
+		public void OnFrameArrived(object sender, ColorFrameArrivedEventArgs e) => LoadFrame(e.FrameReference);
 	}
 }

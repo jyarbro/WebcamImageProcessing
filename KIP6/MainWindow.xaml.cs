@@ -16,8 +16,12 @@ namespace KIP6 {
 			var cameraColor = new CameraColor();
 			cameraColor.Initialize(sensor, ColorFrameReader);
 
+			var cameraMonochrome = new CameraMonochrome();
+			cameraMonochrome.Initialize(sensor, ColorFrameReader);
+
 			var imageProcessors = new List<ImageProcessor> {
-				cameraColor
+				cameraColor,
+				cameraMonochrome
 			};
 
 			ImageProcessors.ItemsSource = imageProcessors;
