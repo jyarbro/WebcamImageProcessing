@@ -30,8 +30,7 @@ namespace KIP5.Services {
 
 		KinectSensor Sensor;
 		ColorFrameReader ColorFrameReader;
-
-		Pixel[] SensorData;
+		SensorDataReadyEventArgs SensorDataReadyEventArgs;
 		byte[] ColorFrameData;
 
 		int _i;
@@ -40,55 +39,43 @@ namespace KIP5.Services {
 
 		public SensorReader() {
 			Sensor = KinectSensor.GetDefault();
-			Sensor.IsAvailableChanged += SensorAvailabilityChanged;
+			Sensor.IsAvailableChanged += OnSensorAvailabilityChanged;
 
 			ColorFrameReader = Sensor.ColorFrameSource.OpenReader();
-			ColorFrameReader.FrameArrived += ColorFrameArrived;
+			ColorFrameReader.FrameArrived += OnColorFrameArrived;
 
 			var colorFrameDescription = Sensor.ColorFrameSource.CreateFrameDescription(ColorImageFormat.Bgra);
+
 			SensorImageWidth = colorFrameDescription.Width;
 			SensorImageHeight = colorFrameDescription.Height;
 
 			PixelCount = colorFrameDescription.LengthInPixels;
-			SensorData = new Pixel[PixelCount];
-
 			ByteCount = colorFrameDescription.LengthInPixels * 4;
+
+			SensorDataReadyEventArgs = new SensorDataReadyEventArgs {
+				SensorData = new Pixel[PixelCount]
+			};
+
 			ColorFrameData = new byte[ByteCount];
 
 			Sensor.Open();
 		}
 
-		void ColorFrameArrived(object sender, ColorFrameArrivedEventArgs e) {
-			if (!TryLoadColorFrame(e.FrameReference))
-				return;
-
-			LoadPixels();
-
-			SensorDataReady?.Invoke(this, new SensorDataReadyEventArgs {
-				SensorData = SensorData
-			});
-		}
-
-		bool TryLoadColorFrame(ColorFrameReference frameReference) {
+		void LoadColorFrame(ColorFrameReference frameReference) {
 			using (var colorFrame = frameReference.AcquireFrame()) {
-				if (colorFrame == null)
-					return false;
-
-				if (colorFrame.FrameDescription.Width != SensorImageWidth || colorFrame.FrameDescription.Height != SensorImageHeight)
-					return false;
-
-				using (var buffer = colorFrame.LockRawImageBuffer()) {
-					colorFrame.CopyConvertedFrameDataToArray(ColorFrameData, ColorImageFormat.Bgra);
+				try {
+					using (var buffer = colorFrame.LockRawImageBuffer()) {
+						colorFrame.CopyConvertedFrameDataToArray(ColorFrameData, ColorImageFormat.Bgra);
+					}
 				}
-
-				return true;
+				catch (NullReferenceException) { }
 			}
 		}
 
 		void LoadPixels() {
 			_i = 0;
 
-			fixed (Pixel* pixels = SensorData) {
+			fixed (Pixel* pixels = SensorDataReadyEventArgs.SensorData) {
 				fixed (byte* inputData = ColorFrameData) {
 					_pixelPtr = pixels;
 					_colorBytePtr = inputData;
@@ -105,6 +92,12 @@ namespace KIP5.Services {
 			}
 		}
 
-		void SensorAvailabilityChanged(object sender, IsAvailableChangedEventArgs e) => StatusText = Sensor.IsAvailable ? "Running" : "Sensor not available";
+		void OnColorFrameArrived(object sender, ColorFrameArrivedEventArgs e) {
+			LoadColorFrame(e.FrameReference);
+			LoadPixels();
+			SensorDataReady.Invoke(this, SensorDataReadyEventArgs);
+		}
+
+		void OnSensorAvailabilityChanged(object sender, IsAvailableChangedEventArgs e) => StatusText = Sensor.IsAvailable ? "Running" : "Sensor not available";
 	}
 }
