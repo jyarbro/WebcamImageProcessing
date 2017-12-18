@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace KIP4.Properties {
+namespace KIP6.Properties {
 
 
 	[global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]

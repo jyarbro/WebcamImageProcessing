@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{0BDF1BF8-3A97-4286-97A5-479A25D59AB7}</ProjectGuid>
+    <ProjectGuid>{AECC02C4-DA98-452A-B566-DFE9DD900F06}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>KIP4</RootNamespace>
-    <AssemblyName>KIP4</AssemblyName>
+    <RootNamespace>KIP6</RootNamespace>
+    <AssemblyName>KIP6</AssemblyName>
     <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -33,6 +33,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Kinect, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -59,10 +60,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Services\ImageProcessorService.cs" />
-    <Compile Include="Services\SensorService.cs" />
-    <Compile Include="Views\MainWindowViewModel.cs" />
-    <Page Include="Views\MainWindow.xaml">
+    <Compile Include="ImageProcessors\CameraColor.cs" />
+    <Compile Include="Services\SensorReader.cs" />
+    <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -70,7 +70,12 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Views\MainWindow.xaml.cs">
+    <Compile Include="Helpers\SensorDataReadyEventArgs.cs" />
+    <Compile Include="ImageProcessors\CameraRaw.cs" />
+    <Compile Include="ImageProcessors\ImageProcessor.cs" />
+    <Compile Include="ImageProcessors\LaplaceEdgeFilter.cs" />
+    <Compile Include="ImageProcessors\SobelEdgeFilter.cs" />
+    <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
