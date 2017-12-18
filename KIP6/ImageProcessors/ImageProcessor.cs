@@ -3,7 +3,6 @@ using KIP.Structs;
 using Microsoft.Kinect;
 using System;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
 
@@ -19,7 +18,6 @@ namespace KIP6.ImageProcessors {
 		public Int32Rect OutputUpdateRect;
 
 		Stopwatch _timer;
-		bool _working;
 
 		public double FrameCount {
 			get => _FrameCount;
@@ -35,8 +33,8 @@ namespace KIP6.ImageProcessors {
 				if (_FrameTimer < _FrameNow) {
 					_FrameTimer = _FrameNow.AddMilliseconds(FRAMERATE_DELAY);
 
-					FramesPerSecond = Math.Round(_FrameCount / totalSeconds);
-					FrameLag = Math.Round(_FrameDuration / _FrameCount, 3);
+					FramesPerSecond = Math.Round(_FrameCount / totalSeconds, 2);
+					FrameLag = Math.Round(_FrameDuration / _FrameCount, 2);
 				}
 
 				if (totalSeconds > 5) {
@@ -67,22 +65,18 @@ namespace KIP6.ImageProcessors {
 		public WriteableBitmap OutputImage { get; set; }
 
 		public void LoadFrame(ColorFrameReference frameReference) {
-
-			_working = true;
 			_timer = Stopwatch.StartNew();
 
-			Task.Run(() => {
-				try {
-					ProcessFrame(frameReference);
-					WriteOutput();
-				}
-				catch (NullReferenceException) { }
+			try {
+				ProcessFrame(frameReference);
+				WriteOutput();
+			}
+			catch (NullReferenceException) { }
 
-				FrameCount++;
-				_timer.Stop();
-				_FrameDuration += _timer.ElapsedMilliseconds;
-				_working = false;
-			});
+			FrameCount++;
+
+			_timer.Stop();
+			_FrameDuration += _timer.ElapsedMilliseconds;
 		}
 
 		public abstract void ProcessFrame(ColorFrameReference frameReference);
