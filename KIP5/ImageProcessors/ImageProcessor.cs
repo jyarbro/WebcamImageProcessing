@@ -121,11 +121,11 @@ namespace KIP5.ImageProcessors {
 			if (_executing)
 				return;
 
+			_executing = true;
+
 			Task.Run(() => {
 				_timer = Stopwatch.StartNew();
-
-				_executing = true;
-
+				
 				ApplyFilters(args.SensorData);
 				WriteOutput();
 
