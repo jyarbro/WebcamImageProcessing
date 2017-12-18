@@ -122,10 +122,9 @@ namespace KIP5.ImageProcessors {
 				return;
 
 			_executing = true;
+			_timer = Stopwatch.StartNew();
 
 			Task.Run(() => {
-				_timer = Stopwatch.StartNew();
-				
 				ApplyFilters(args.SensorData);
 				WriteOutput();
 
@@ -134,9 +133,6 @@ namespace KIP5.ImageProcessors {
 				_timer.Stop();
 
 				_FrameDuration += _timer.ElapsedMilliseconds;
-
-				if (_timer.ElapsedMilliseconds < 33)
-					Thread.Sleep(33 - (int) _timer.ElapsedMilliseconds);
 
 				_executing = false;
 			});
