@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace KIP5.ImageProcessors {
 	unsafe class LaplaceEdgeFilter : ImageProcessor {
-		const int FILTER_THRESHOLD = 128 * 3;
+		const int FILTER_THRESHOLD = 60 * 3;
 
 		int[] Weights;
 		int[] Offsets;
@@ -67,9 +67,7 @@ namespace KIP5.ImageProcessors {
 				Extent = new Point { X = 1, Y = 1 },
 			};
 			
-			// This one gets better results but is inaccurate due to chunk size. Am I doing something wrong here?
-			var offsets = CalculateOffsets(areaBox, weights.Count, FrameWidth, 4);
-			//var offsets = CalculateOffsets(areaBox, weights.Count, FrameWidth);
+			var offsets = CalculateOffsets(areaBox, weights.Count, FrameStride);
 
 			var filteredPixelCount = weights.Where(f => f != 0).Count();
 
