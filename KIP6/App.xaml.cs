@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace KIP4 {
+namespace KIP6 {
 	/// <summary>
 	/// Interaction logic for App.xaml
 	/// </summary>

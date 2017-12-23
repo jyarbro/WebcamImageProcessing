@@ -51,9 +51,9 @@ namespace KIP5.ImageProcessors {
 			}
 
 			if (totalEffectiveValue > FILTER_THRESHOLD) {
-				*(outputBytePtr) -= 128;
-				*(outputBytePtr + 1) -= 128;
-				*(outputBytePtr + 2) -= 128;
+				*(outputBytePtr) = 0;
+				*(outputBytePtr + 1) = 0;
+				*(outputBytePtr + 2) = 0;
 			}
 		}
 

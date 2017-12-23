@@ -69,7 +69,6 @@ namespace KIP5.ImageProcessors {
 		protected byte[] Output;
 
 		Stopwatch _timer;
-		Pixel[] _sensorDataCopy;
 		bool _executing;
 
 		public ImageProcessor(SensorReader sensorReader) {
@@ -81,7 +80,6 @@ namespace KIP5.ImageProcessors {
 			FrameStride = FrameWidth * CHUNK_SIZE;
 
 			PixelCount = sensorReader.PixelCount;
-			_sensorDataCopy = new Pixel[PixelCount];
 
 			Output = new byte[sensorReader.ByteCount];
 
@@ -92,7 +90,7 @@ namespace KIP5.ImageProcessors {
 		/// A universal method for calculating all of the linear offsets for a given square area
 		/// </summary>
 		/// <exception cref="ArgumentException" />
-		protected int[] CalculateOffsets(Rectangle areaBox, int area, int stride, int chunkSize = 1) {
+		public int[] CalculateOffsets(Rectangle areaBox, int area, int stride, int chunkSize = 1) {
 			var offsets = new int[area];
 
 			var offset = 0;
@@ -123,14 +121,11 @@ namespace KIP5.ImageProcessors {
 			if (_executing)
 				return;
 
+			_executing = true;
+			_timer = Stopwatch.StartNew();
+
 			Task.Run(() => {
-				_timer = Stopwatch.StartNew();
-
-				_executing = true;
-
-				Array.Copy(args.SensorData, _sensorDataCopy, PixelCount);
-
-				ApplyFilters(_sensorDataCopy);
+				ApplyFilters(args.SensorData);
 				WriteOutput();
 
 				FrameCount++;
@@ -138,9 +133,6 @@ namespace KIP5.ImageProcessors {
 				_timer.Stop();
 
 				_FrameDuration += _timer.ElapsedMilliseconds;
-
-				if (_timer.ElapsedMilliseconds < 33)
-					Thread.Sleep(33 - (int) _timer.ElapsedMilliseconds);
 
 				_executing = false;
 			});

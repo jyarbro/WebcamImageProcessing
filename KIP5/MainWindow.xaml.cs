@@ -25,6 +25,7 @@ namespace KIP5 {
 			var imageProcessors = new List<IImageProcessor> {
 				new CameraRaw(sensorReader),
 				new LaplaceEdgeFilter(sensorReader),
+				new LaplaceWideEdgeFilter(sensorReader),
 				new SobelEdgeFilter(sensorReader)
 			};
 

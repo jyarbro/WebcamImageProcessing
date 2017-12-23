@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace KIP4.Properties {
+namespace KIP6.Properties {
 
 
 	/// <summary>
@@ -38,7 +38,7 @@ namespace KIP4.Properties {
 		internal static global::System.Resources.ResourceManager ResourceManager {
 			get {
 				if ((resourceMan == null)) {
-					global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("KIP4.Properties.Resources", typeof(Resources).Assembly);
+					global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("KIP6.Properties.Resources", typeof(Resources).Assembly);
 					resourceMan = temp;
 				}
 				return resourceMan;

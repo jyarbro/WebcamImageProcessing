@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace KIP5.ImageProcessors {
-	unsafe class LaplaceEdgeFilter : ImageProcessor {
+	unsafe class LaplaceWideEdgeFilter : ImageProcessor {
 		const int FILTER_THRESHOLD = 60 * 3;
 
 		int[] Weights;
@@ -15,7 +15,7 @@ namespace KIP5.ImageProcessors {
 		Pixel _pixel;
 		int _pixelValue;
 
-		public LaplaceEdgeFilter(SensorReader sensorReader) : base(sensorReader) {
+		public LaplaceWideEdgeFilter(SensorReader sensorReader) : base(sensorReader) {
 			CalculateOffsetsAndWeights();
 		}
 
@@ -57,16 +57,16 @@ namespace KIP5.ImageProcessors {
 
 		void CalculateOffsetsAndWeights() {
 			var weights = new List<int> {
-				-1, -1, -1,
-				-1,  8, -1,
-				-1, -1, -1,
+				-1,  0, -1,  0, -1,
+				-1,  0,  8,  0, -1,
+				-1,  0, -1,  0, -1,
 			};
 
 			var areaBox = new Rectangle {
-				Origin = new Point { X = -1, Y = -1 },
-				Extent = new Point { X = 1, Y = 1 },
+				Origin = new Point { X = -2, Y = -1 },
+				Extent = new Point { X = 2, Y = 1 },
 			};
-			
+
 			var offsets = CalculateOffsets(areaBox, weights.Count, FrameStride);
 
 			var filteredPixelCount = weights.Where(f => f != 0).Count();
