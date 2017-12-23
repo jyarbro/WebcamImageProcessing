@@ -44,6 +44,7 @@
     <Compile Include="Helpers\FrameRateEventArgs.cs" />
     <Compile Include="Helpers\Observable.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Structs\LaplaceFilter.cs" />
     <Compile Include="Structs\Pixel.cs" />
     <Compile Include="Structs\Point.cs" />
     <Compile Include="Structs\Rectangle.cs" />
