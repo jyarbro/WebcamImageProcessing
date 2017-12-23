@@ -3,12 +3,13 @@ using KIP.Structs;
 using Microsoft.Kinect;
 using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
 
 namespace KIP6.ImageProcessors {
 	public unsafe abstract class ImageProcessor : Observable {
-		const uint FRAMERATE_DELAY = 50;
+		const uint FRAMERATE_DELAY = 20;
 
 		public int OutputWidth;
 		public int OutputHeight;
@@ -16,8 +17,9 @@ namespace KIP6.ImageProcessors {
 		public uint PixelCount;
 		public byte[] OutputData;
 		public Int32Rect OutputUpdateRect;
+		public Stopwatch FrameTimer = Stopwatch.StartNew();
 
-		Stopwatch _timer;
+		public WriteableBitmap OutputImage { get; set; }
 
 		public double FrameCount {
 			get => _FrameCount;
@@ -28,16 +30,16 @@ namespace KIP6.ImageProcessors {
 				_FrameCount = value;
 
 				_FrameNow = DateTime.Now;
-				var totalSeconds = (_FrameNow - _FrameRunTimer).TotalSeconds;
+				_TotalSeconds = (_FrameNow - _FrameRunTimer).TotalSeconds;
 
 				if (_FrameTimer < _FrameNow) {
 					_FrameTimer = _FrameNow.AddMilliseconds(FRAMERATE_DELAY);
 
-					FramesPerSecond = Math.Round(_FrameCount / totalSeconds, 2);
+					FramesPerSecond = Math.Round(_FrameCount / _TotalSeconds, 2);
 					FrameLag = Math.Round(_FrameDuration / _FrameCount, 2);
 				}
 
-				if (totalSeconds > 5) {
+				if (_TotalSeconds > 5) {
 					_FrameCount = 0;
 					_FrameDuration = 0;
 					_FrameRunTimer = DateTime.Now;
@@ -46,6 +48,7 @@ namespace KIP6.ImageProcessors {
 		}
 		double _FrameCount;
 		double _FrameDuration;
+		double _TotalSeconds;
 		DateTime _FrameRunTimer = DateTime.Now;
 		DateTime _FrameTimer = DateTime.Now.AddMilliseconds(FRAMERATE_DELAY);
 		DateTime _FrameNow;
@@ -62,31 +65,27 @@ namespace KIP6.ImageProcessors {
 		}
 		double _FrameLag = 0;
 
-		public WriteableBitmap OutputImage { get; set; }
-
 		public void LoadFrame(ColorFrameReference frameReference) {
-			_timer = Stopwatch.StartNew();
+			FrameTimer.Restart();
 
 			FrameCount++;
 
 			try {
 				ProcessFrame(frameReference);
-				WriteOutput();
+				Application.Current.Dispatcher.Invoke(UpdateOutputImage);
 			}
 			catch (NullReferenceException) { }
 
-			_timer.Stop();
-			_FrameDuration += _timer.ElapsedMilliseconds;
+			FrameTimer.Stop();
+			_FrameDuration += FrameTimer.ElapsedMilliseconds;
 		}
 
 		public abstract void ProcessFrame(ColorFrameReference frameReference);
 
-		public void WriteOutput() {
-			Application.Current?.Dispatcher.Invoke(() => {
-				OutputImage.Lock();
-				OutputImage.WritePixels(OutputUpdateRect, OutputData, OutputStride, 0);
-				OutputImage.Unlock();
-			});
+		public void UpdateOutputImage() {
+			OutputImage.Lock();
+			OutputImage.WritePixels(OutputUpdateRect, OutputData, OutputStride, 0);
+			OutputImage.Unlock();
 		}
 
 		/// <summary>
