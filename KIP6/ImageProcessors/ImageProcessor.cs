@@ -34,7 +34,7 @@ namespace KIP6.ImageProcessors {
 				if (_FrameTimer < _FrameNow) {
 					_FrameTimer = _FrameNow.AddMilliseconds(FRAMERATE_DELAY);
 
-					FramesPerSecond = Math.Round(_FrameCount / _TotalSeconds, 2);
+					FramesPerSecond = Math.Round(_FrameCount / _TotalSeconds);
 					FrameLag = Math.Round(_FrameDuration / _FrameCount, 2);
 				}
 
