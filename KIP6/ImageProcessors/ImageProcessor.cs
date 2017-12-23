@@ -3,13 +3,12 @@ using KIP.Structs;
 using Microsoft.Kinect;
 using System;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
 
 namespace KIP6.ImageProcessors {
 	public unsafe abstract class ImageProcessor : Observable {
-		const uint FRAMERATE_DELAY = 20;
+		const uint FRAMERATE_DELAY = 50;
 
 		public int OutputWidth;
 		public int OutputHeight;
