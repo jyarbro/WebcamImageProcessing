@@ -18,9 +18,6 @@ namespace KIP6.ImageProcessors {
 		public LaplaceFilter Filter;
 
 		int _i;
-		int _j;
-		byte _pixel;
-		int _pixelValue;
 
 		byte* _inputBytePtr;
 		byte* _outputBytePtr;

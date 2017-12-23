@@ -3,6 +3,7 @@ using KIP.Structs;
 using Microsoft.Kinect;
 using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
 
@@ -14,6 +15,7 @@ namespace KIP6.ImageProcessors {
 		public int OutputHeight;
 		public int OutputStride;
 		public uint PixelCount;
+		public bool Working;
 		public byte[] OutputData;
 		public Int32Rect OutputUpdateRect;
 		public Stopwatch FrameTimer = Stopwatch.StartNew();
@@ -65,18 +67,27 @@ namespace KIP6.ImageProcessors {
 		double _FrameLag = 0;
 
 		public void LoadFrame(ColorFrameReference frameReference) {
-			FrameTimer.Restart();
+			if (Working)
+				return;
 
-			FrameCount++;
+			Working = true;
 
-			try {
-				ProcessFrame(frameReference);
-				Application.Current.Dispatcher.Invoke(UpdateOutputImage);
-			}
-			catch (NullReferenceException) { }
+			Task.Run(() => {
+				FrameTimer.Restart();
 
-			FrameTimer.Stop();
-			_FrameDuration += FrameTimer.ElapsedMilliseconds;
+				FrameCount++;
+
+				try {
+					ProcessFrame(frameReference);
+					Application.Current.Dispatcher.Invoke(UpdateOutputImage);
+				}
+				catch (NullReferenceException) { }
+
+				FrameTimer.Stop();
+				_FrameDuration += FrameTimer.ElapsedMilliseconds;
+
+				Working = false;
+			});
 		}
 
 		public abstract void ProcessFrame(ColorFrameReference frameReference);

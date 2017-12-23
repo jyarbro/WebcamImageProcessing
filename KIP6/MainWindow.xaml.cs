@@ -16,12 +16,15 @@ namespace KIP6 {
 			var cameraColor = new CameraColor();
 			cameraColor.Initialize(sensor, ColorFrameReader);
 
-			var cameraMonochrome = new CameraMonochrome();
-			cameraMonochrome.Initialize(sensor, ColorFrameReader);
+			//var cameraMonochrome = new CameraMonochrome();
+			//cameraMonochrome.Initialize(sensor, ColorFrameReader);
+
+			var laplaceFilter = new LaplacianEdgeFilter();
+			laplaceFilter.Initialize(sensor, ColorFrameReader);
 
 			var imageProcessors = new List<ImageProcessor> {
 				cameraColor,
-				cameraMonochrome
+				laplaceFilter
 			};
 
 			ImageProcessors.ItemsSource = imageProcessors;
