@@ -1,10 +1,13 @@
 ﻿using Microsoft.Kinect;
+using System;
+using System.Runtime.ExceptionServices;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace KIP6.ImageProcessors {
 	public unsafe class CameraMonochrome : ImageProcessor {
+		const int INPUT_CHUNK_SIZE = 2; // YUY2
 		const int OUTPUT_CHUNK_SIZE = 4; // BGRA
 
 		public uint InputByteCount;
@@ -13,6 +16,8 @@ namespace KIP6.ImageProcessors {
 		public byte[] InputData;
 
 		int _i;
+		byte* _inputBytePtr;
+		byte* _outputBytePtr;
 
 		public void Initialize(KinectSensor sensor, ColorFrameReader frameReader) {
 			frameReader.FrameArrived += OnFrameArrived;
@@ -44,26 +49,27 @@ namespace KIP6.ImageProcessors {
 			}
 		}
 
+		[HandleProcessCorruptedStateExceptions]
 		public void LoadOutputData() {
 			fixed (byte* inputData = InputData) {
 				fixed (byte* outputData = OutputData) {
-					var inputByte = inputData;
-					var outputByte = outputData;
+					_inputBytePtr = inputData;
+					_outputBytePtr = outputData;
 
-					_i = -1;
+					_i = 0;
 
-					while (_i++ < InputByteCount) {
-						if (_i % 2 == 0) {
-							*(outputByte) = *(inputByte);
-							*(outputByte + 1) = *(inputByte);
+					while (_i < InputByteCount) {
+						try {
+							*(_outputBytePtr) = *(_inputBytePtr);
+							*(_outputBytePtr + 1) = *(_inputBytePtr);
+							*(_outputBytePtr + 2) = *(_inputBytePtr + 2);
+							*(_outputBytePtr + 3) = *(_inputBytePtr + 2);
 						}
-						else {
-							*(outputByte) = *(inputByte + 1);
-							*(outputByte + 1) = *(inputByte + 1);
-						}
+						catch (AccessViolationException) { }
 
-						inputByte++;
-						outputByte += 2;
+						_inputBytePtr += INPUT_CHUNK_SIZE;
+						_outputBytePtr += OUTPUT_CHUNK_SIZE;
+						_i += INPUT_CHUNK_SIZE;
 					}
 				}
 			}

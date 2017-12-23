@@ -1,6 +1,8 @@
 ﻿using KIP.Structs;
 using Microsoft.Kinect;
+using System;
 using System.Collections.Generic;
+using System.Runtime.ExceptionServices;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
@@ -25,7 +27,7 @@ namespace KIP6.ImageProcessors {
 		public void Initialize(KinectSensor sensor, ColorFrameReader frameReader) {
 			frameReader.FrameArrived += OnFrameArrived;
 
-			var frameDescription = sensor.ColorFrameSource.FrameDescription;
+			var frameDescription = sensor.ColorFrameSource.CreateFrameDescription(ColorImageFormat.Bgra);
 
 			InputByteCount = frameDescription.LengthInPixels * frameDescription.BytesPerPixel;
 			InputData = new byte[InputByteCount];
@@ -52,30 +54,31 @@ namespace KIP6.ImageProcessors {
 
 		public void LoadInputData(ColorFrameReference frameReference) {
 			using (var colorFrame = frameReference.AcquireFrame()) {
-				colorFrame.CopyRawFrameDataToArray(InputData);
+				colorFrame.CopyConvertedFrameDataToArray(InputData, ColorImageFormat.Bgra);
 			}
 		}
 
+		[HandleProcessCorruptedStateExceptions]
 		public void LoadOutputData() {
 			fixed (byte* inputDataPtr = InputData) {
 				fixed (byte* outputDataPtr = OutputData) {
 					_inputBytePtr = inputDataPtr;
 					_outputBytePtr = outputDataPtr;
 
-					_i = -1;
+					_i = 0;
 
-					while (_i++ < InputByteCount) {
-						if (_i % 2 == 0) {
+					while (_i < InputByteCount) {
+						try {
 							*(_outputBytePtr) = *(_inputBytePtr);
-							*(_outputBytePtr + 1) = *(_inputBytePtr);
-						}
-						else {
-							*(_outputBytePtr) = *(_inputBytePtr + 1);
 							*(_outputBytePtr + 1) = *(_inputBytePtr + 1);
+							*(_outputBytePtr + 2) = *(_inputBytePtr + 2);
+							*(_outputBytePtr + 3) = *(_inputBytePtr + 3);
 						}
+						catch (AccessViolationException) { }
 
-						_inputBytePtr++;
-						_outputBytePtr += 2;
+						_inputBytePtr += OUTPUT_CHUNK_SIZE;
+						_outputBytePtr += OUTPUT_CHUNK_SIZE;
+						_i += OUTPUT_CHUNK_SIZE;
 					}
 				}
 			}

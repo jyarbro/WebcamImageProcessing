@@ -24,6 +24,7 @@ namespace KIP6 {
 
 			var imageProcessors = new List<ImageProcessor> {
 				cameraColor,
+				//cameraMonochrome,
 				laplaceFilter
 			};
 
