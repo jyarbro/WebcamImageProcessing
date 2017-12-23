@@ -1,7 +1,6 @@
 ﻿using KIP.Structs;
 using Microsoft.Kinect;
 using System;
-using System.Collections.Generic;
 using System.Runtime.ExceptionServices;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -9,7 +8,7 @@ using System.Windows.Media.Imaging;
 namespace KIP6.ImageProcessors {
 	public unsafe class LaplacianEdgeFilter : ImageProcessor {
 		const int OUTPUT_CHUNK_SIZE = 4;
-		const int FILTER_THRESHOLD = 128 * 3;
+		const int FILTER_THRESHOLD = 60 * 3;
 
 		public uint InputByteCount;
 		public uint OutputByteCount;
@@ -20,6 +19,7 @@ namespace KIP6.ImageProcessors {
 		public LaplaceFilter Filter;
 
 		int _i;
+		int _totalEffectiveValue;
 
 		byte* _inputBytePtr;
 		byte* _outputBytePtr;
@@ -69,10 +69,27 @@ namespace KIP6.ImageProcessors {
 
 					while (_i < InputByteCount) {
 						try {
-							*(_outputBytePtr) = *(_inputBytePtr);
-							*(_outputBytePtr + 1) = *(_inputBytePtr + 1);
-							*(_outputBytePtr + 2) = *(_inputBytePtr + 2);
-							*(_outputBytePtr + 3) = *(_inputBytePtr + 3);
+							_totalEffectiveValue = 8 * (*(_inputBytePtr) + *(_inputBytePtr + 1) + *(_inputBytePtr + 2));
+
+							_totalEffectiveValue -= *(_inputBytePtr + Filter.Offset1) + *(_inputBytePtr + Filter.Offset1 + 1) + *(_inputBytePtr + Filter.Offset1 + 2);
+							_totalEffectiveValue -= *(_inputBytePtr + Filter.Offset2) + *(_inputBytePtr + Filter.Offset2 + 1) + *(_inputBytePtr + Filter.Offset2 + 2);
+							_totalEffectiveValue -= *(_inputBytePtr + Filter.Offset3) + *(_inputBytePtr + Filter.Offset3 + 1) + *(_inputBytePtr + Filter.Offset3 + 2);
+							_totalEffectiveValue -= *(_inputBytePtr + Filter.Offset4) + *(_inputBytePtr + Filter.Offset4 + 1) + *(_inputBytePtr + Filter.Offset4 + 2);
+							_totalEffectiveValue -= *(_inputBytePtr + Filter.Offset5) + *(_inputBytePtr + Filter.Offset5 + 1) + *(_inputBytePtr + Filter.Offset5 + 2);
+							_totalEffectiveValue -= *(_inputBytePtr + Filter.Offset6) + *(_inputBytePtr + Filter.Offset6 + 1) + *(_inputBytePtr + Filter.Offset6 + 2);
+							_totalEffectiveValue -= *(_inputBytePtr + Filter.Offset7) + *(_inputBytePtr + Filter.Offset7 + 1) + *(_inputBytePtr + Filter.Offset7 + 2);
+							_totalEffectiveValue -= *(_inputBytePtr + Filter.Offset8) + *(_inputBytePtr + Filter.Offset8 + 1) + *(_inputBytePtr + Filter.Offset8 + 2);
+
+							if (_totalEffectiveValue >= FILTER_THRESHOLD) {
+								*(_outputBytePtr) = 0;
+								*(_outputBytePtr + 1) = 0;
+								*(_outputBytePtr + 2) = 0;
+							}
+							else {
+								*(_outputBytePtr) = 255;
+								*(_outputBytePtr + 1) = 255;
+								*(_outputBytePtr + 2) = 255;
+							}
 						}
 						catch (AccessViolationException) { }
 
@@ -86,39 +103,22 @@ namespace KIP6.ImageProcessors {
 
 		public void CalculateOffsetsAndWeights() {
 			// A wider sample seems more accurate. This is probably due to horizontal compression from the Kinect.
-
-			var weights = new List<int> {
-				-1,  0, -1,  0, -1,
-				-1,  0,  8,  0, -1,
-				-1,  0, -1,  0, -1,
-			};
-
 			var areaBox = new Rectangle {
 				Origin = new Point { X = -2, Y = -1 },
 				Extent = new Point { X = 2, Y = 1 },
 			};
 
-			var offsets = CalculateOffsets(areaBox, weights.Count, InputStride);
+			var offsets = CalculateOffsets(areaBox, 15, InputStride, 4);
 
 			Filter = new LaplaceFilter {
-				Weight1 = -1,
 				Offset1 = offsets[0],
-				Weight2 = -1,
-				Offset2 = offsets[1],
-				Weight3 = -1,
-				Offset3 = offsets[2],
-				Weight4 = -1,
-				Offset4 = offsets[3],
-				Weight5 = 8,
-				Offset5 = offsets[4],
-				Weight6 = -1,
-				Offset6 = offsets[5],
-				Weight7 = -1,
-				Offset7 = offsets[6],
-				Weight8 = -1,
-				Offset8 = offsets[7],
-				Weight9 = -1,
-				Offset9 = offsets[8],
+				Offset2 = offsets[2],
+				Offset3 = offsets[4],
+				Offset4 = offsets[5],
+				Offset5 = offsets[9],
+				Offset6 = offsets[10],
+				Offset7 = offsets[12],
+				Offset8 = offsets[14]
 			};
 		}
 	}
