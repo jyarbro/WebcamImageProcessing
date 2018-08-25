@@ -48,6 +48,7 @@
     <Compile Include="Structs\Pixel.cs" />
     <Compile Include="Structs\Point.cs" />
     <Compile Include="Structs\Rectangle.cs" />
+    <Compile Include="Structs\LayerOffsets.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
