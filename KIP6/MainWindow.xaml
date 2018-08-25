@@ -7,67 +7,14 @@
         SizeToContent="WidthAndHeight"
 		Title="Kinect Image Processor">
 
-	<DockPanel>
-		<WrapPanel MaxWidth="2560">
-			<ItemsControl Name="ImageProcessors">
-				<ItemsControl.ItemsPanel>
-					<ItemsPanelTemplate>
-						<StackPanel Orientation="Horizontal"/>
-					</ItemsPanelTemplate>
-				</ItemsControl.ItemsPanel>
-				<ItemsControl.ItemTemplate>
-					<DataTemplate>
-						<Grid>
-							<Grid.RowDefinitions>
-								<RowDefinition Height="*" />
-								<RowDefinition Height="20" />
-							</Grid.RowDefinitions>
-							<Grid.ColumnDefinitions>
-								<ColumnDefinition Width="*" />
-								<ColumnDefinition Width="*" />
-							</Grid.ColumnDefinitions>
-
-							<Image Source="{Binding OutputImage}"
-							Grid.Row="0"
-							Grid.ColumnSpan="2"
-							Width="640" Height="360"
-							Margin="10" />
-
-							<StackPanel 
-							Grid.Row="1"
-							Grid.Column="0"
-							Orientation="Horizontal" 
-							HorizontalAlignment="Center">
-
-								<TextBlock VerticalAlignment="Center" Margin="0,0,5,0">FPS:</TextBlock>
-								<TextBlock Text="{Binding FramesPerSecond}" VerticalAlignment="Center" />
-
-							</StackPanel>
-
-							<StackPanel 
-							Grid.Row="1"
-							Grid.Column="1"
-							Orientation="Horizontal" 
-							HorizontalAlignment="Left">
-
-								<TextBlock VerticalAlignment="Center" Margin="0,0,5,0">Frame lag:</TextBlock>
-								<TextBlock Text="{Binding FrameLag}" VerticalAlignment="Center" />
-								<TextBlock VerticalAlignment="Center" Margin="5,0,0,0">ms</TextBlock>
-
-							</StackPanel>
-						</Grid>
-					</DataTemplate>
-				</ItemsControl.ItemTemplate>
-			</ItemsControl>
-		</WrapPanel>
-
-		<!--<ListBox Name="ImageProcessors">
-			<ListBox.ItemsPanel>
+	<WrapPanel MaxWidth="2560">
+		<ItemsControl Name="ImageProcessors">
+			<ItemsControl.ItemsPanel>
 				<ItemsPanelTemplate>
-					<WrapPanel IsItemsHost="True" MaxWidth="2560" />
+					<StackPanel Orientation="Horizontal"/>
 				</ItemsPanelTemplate>
-			</ListBox.ItemsPanel>
-			<ListBox.ItemTemplate>
+			</ItemsControl.ItemsPanel>
+			<ItemsControl.ItemTemplate>
 				<DataTemplate>
 					<Grid>
 						<Grid.RowDefinitions>
@@ -78,39 +25,38 @@
 							<ColumnDefinition Width="*" />
 							<ColumnDefinition Width="*" />
 						</Grid.ColumnDefinitions>
-												
+
 						<Image Source="{Binding OutputImage}"
-							Grid.Row="0"
-							Grid.ColumnSpan="2"
-							Width="640" Height="360"
-							Margin="10" />
+						Grid.Row="0"
+						Grid.ColumnSpan="2"
+						Width="640" Height="360"
+						Margin="10" />
 
 						<StackPanel 
-							Grid.Row="1"
-							Grid.Column="0"
-							Orientation="Horizontal" 
-							HorizontalAlignment="Center">
+						Grid.Row="1"
+						Grid.Column="0"
+						Orientation="Horizontal" 
+						HorizontalAlignment="Center">
 
 							<TextBlock VerticalAlignment="Center" Margin="0,0,5,0">FPS:</TextBlock>
 							<TextBlock Text="{Binding FramesPerSecond}" VerticalAlignment="Center" />
-							
+
 						</StackPanel>
 
 						<StackPanel 
-							Grid.Row="1"
-							Grid.Column="1"
-							Orientation="Horizontal" 
-							HorizontalAlignment="Left">
+						Grid.Row="1"
+						Grid.Column="1"
+						Orientation="Horizontal" 
+						HorizontalAlignment="Left">
 
 							<TextBlock VerticalAlignment="Center" Margin="0,0,5,0">Frame lag:</TextBlock>
 							<TextBlock Text="{Binding FrameLag}" VerticalAlignment="Center" />
 							<TextBlock VerticalAlignment="Center" Margin="5,0,0,0">ms</TextBlock>
-							
+
 						</StackPanel>
 					</Grid>
 				</DataTemplate>
-			</ListBox.ItemTemplate>
-		</ListBox>-->
-	</DockPanel>
-
+			</ItemsControl.ItemTemplate>
+		</ItemsControl>
+	</WrapPanel>
 </Window>

@@ -19,6 +19,7 @@ namespace KIP6.ImageProcessors {
 		public byte[] OutputData;
 		public Int32Rect OutputUpdateRect;
 		public Stopwatch FrameTimer = Stopwatch.StartNew();
+		public Action FrameTask;
 
 		public WriteableBitmap OutputImage { get; set; }
 
@@ -67,27 +68,20 @@ namespace KIP6.ImageProcessors {
 		double _FrameLag = 0;
 
 		public void LoadFrame(ColorFrameReference frameReference) {
-			if (Working)
-				return;
+			FrameTimer.Restart();
 
-			Working = true;
+			FrameCount++;
 
-			Task.Run(() => {
-				FrameTimer.Restart();
+			try {
+				ProcessFrame(frameReference);
+				Application.Current.Dispatcher.Invoke(UpdateOutputImage);
+			}
+			catch (NullReferenceException) { }
 
-				FrameCount++;
+			FrameTimer.Stop();
+			_FrameDuration += FrameTimer.ElapsedMilliseconds;
 
-				try {
-					ProcessFrame(frameReference);
-					Application.Current.Dispatcher.Invoke(UpdateOutputImage);
-				}
-				catch (NullReferenceException) { }
-
-				FrameTimer.Stop();
-				_FrameDuration += FrameTimer.ElapsedMilliseconds;
-
-				Working = false;
-			});
+			Working = false;
 		}
 
 		public abstract void ProcessFrame(ColorFrameReference frameReference);
@@ -119,6 +113,17 @@ namespace KIP6.ImageProcessors {
 			return offsets;
 		}
 
-		public void OnFrameArrived(object sender, ColorFrameArrivedEventArgs e) => LoadFrame(e.FrameReference);
+		public void OnFrameArrived(object sender, ColorFrameArrivedEventArgs e) {
+			if (Working)
+				return;
+
+			Working = true;
+
+			FrameTask = () => {
+				LoadFrame(e.FrameReference);
+			};
+
+			Task.Run(FrameTask);
+		}
 	}
 }
