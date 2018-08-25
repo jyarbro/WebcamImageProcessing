@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KIP5", "KIP5\KIP5.csproj", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KIP6", "KIP6\KIP6.csproj", "{AECC02C4-DA98-452A-B566-DFE9DD900F06}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KIP7", "KIP7\KIP7.csproj", "{35B73F8D-0B19-4A5E-ADA3-092D2163D041}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{AECC02C4-DA98-452A-B566-DFE9DD900F06}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AECC02C4-DA98-452A-B566-DFE9DD900F06}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AECC02C4-DA98-452A-B566-DFE9DD900F06}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35B73F8D-0B19-4A5E-ADA3-092D2163D041}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35B73F8D-0B19-4A5E-ADA3-092D2163D041}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35B73F8D-0B19-4A5E-ADA3-092D2163D041}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35B73F8D-0B19-4A5E-ADA3-092D2163D041}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
