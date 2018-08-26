@@ -7,16 +7,15 @@ using System.Windows.Media.Imaging;
 
 namespace KIP6.ImageProcessors {
 	public unsafe class LaplacianEdgeFilter : ImageProcessor {
-		const int OUTPUT_CHUNK_SIZE = 4;
-		const int FILTER_THRESHOLD = 60 * 3;
+		const int FILTER_THRESHOLD = 25 * 3;
 
-		public uint InputByteCount;
-		public uint OutputByteCount;
+		public int InputByteCount;
+		public int OutputByteCount;
 		public int InputStride;
 
 		public byte[] InputData;
 
-		public LaplaceFilter Filter;
+		public FilterOffsets Filter;
 
 		int _i;
 		int _totalEffectiveValue;
@@ -28,18 +27,20 @@ namespace KIP6.ImageProcessors {
 			frameReader.FrameArrived += OnFrameArrived;
 
 			var frameDescription = sensor.ColorFrameSource.CreateFrameDescription(ColorImageFormat.Bgra);
+			Chunk = Convert.ToInt32(frameDescription.BytesPerPixel);
+			var pixelCount = Convert.ToInt32(frameDescription.LengthInPixels);
 
-			InputByteCount = frameDescription.LengthInPixels * frameDescription.BytesPerPixel;
+			InputByteCount = pixelCount * Chunk;
 			InputData = new byte[InputByteCount];
 
 			InputStride = frameDescription.Width * (int) frameDescription.BytesPerPixel;
 
-			OutputByteCount = frameDescription.LengthInPixels * OUTPUT_CHUNK_SIZE;
+			OutputByteCount = pixelCount * Chunk;
 			OutputData = new byte[OutputByteCount];
 
 			OutputHeight = frameDescription.Height;
 			OutputWidth = frameDescription.Width;
-			OutputStride = frameDescription.Width * OUTPUT_CHUNK_SIZE;
+			OutputStride = frameDescription.Width * Chunk;
 
 			OutputUpdateRect = new System.Windows.Int32Rect(0, 0, OutputWidth, OutputHeight);
 			OutputImage = new WriteableBitmap(OutputWidth, OutputHeight, 96.0, 96.0, PixelFormats.Bgr32, null);
@@ -71,14 +72,14 @@ namespace KIP6.ImageProcessors {
 						try {
 							_totalEffectiveValue = 8 * (*(_inputBytePtr) + *(_inputBytePtr + 1) + *(_inputBytePtr + 2));
 
-							_totalEffectiveValue -= *(_inputBytePtr + Filter.Offset1) + *(_inputBytePtr + Filter.Offset1 + 1) + *(_inputBytePtr + Filter.Offset1 + 2);
-							_totalEffectiveValue -= *(_inputBytePtr + Filter.Offset2) + *(_inputBytePtr + Filter.Offset2 + 1) + *(_inputBytePtr + Filter.Offset2 + 2);
-							_totalEffectiveValue -= *(_inputBytePtr + Filter.Offset3) + *(_inputBytePtr + Filter.Offset3 + 1) + *(_inputBytePtr + Filter.Offset3 + 2);
-							_totalEffectiveValue -= *(_inputBytePtr + Filter.Offset4) + *(_inputBytePtr + Filter.Offset4 + 1) + *(_inputBytePtr + Filter.Offset4 + 2);
-							_totalEffectiveValue -= *(_inputBytePtr + Filter.Offset5) + *(_inputBytePtr + Filter.Offset5 + 1) + *(_inputBytePtr + Filter.Offset5 + 2);
-							_totalEffectiveValue -= *(_inputBytePtr + Filter.Offset6) + *(_inputBytePtr + Filter.Offset6 + 1) + *(_inputBytePtr + Filter.Offset6 + 2);
-							_totalEffectiveValue -= *(_inputBytePtr + Filter.Offset7) + *(_inputBytePtr + Filter.Offset7 + 1) + *(_inputBytePtr + Filter.Offset7 + 2);
-							_totalEffectiveValue -= *(_inputBytePtr + Filter.Offset8) + *(_inputBytePtr + Filter.Offset8 + 1) + *(_inputBytePtr + Filter.Offset8 + 2);
+							_totalEffectiveValue -= *(_inputBytePtr + Filter.TL) + *(_inputBytePtr + Filter.TL + 1) + *(_inputBytePtr + Filter.TL + 2);
+							_totalEffectiveValue -= *(_inputBytePtr + Filter.TC) + *(_inputBytePtr + Filter.TC + 1) + *(_inputBytePtr + Filter.TC + 2);
+							_totalEffectiveValue -= *(_inputBytePtr + Filter.TR) + *(_inputBytePtr + Filter.TR + 1) + *(_inputBytePtr + Filter.TR + 2);
+							_totalEffectiveValue -= *(_inputBytePtr + Filter.CL) + *(_inputBytePtr + Filter.CL + 1) + *(_inputBytePtr + Filter.CL + 2);
+							_totalEffectiveValue -= *(_inputBytePtr + Filter.CR) + *(_inputBytePtr + Filter.CR + 1) + *(_inputBytePtr + Filter.CR + 2);
+							_totalEffectiveValue -= *(_inputBytePtr + Filter.BL) + *(_inputBytePtr + Filter.BL + 1) + *(_inputBytePtr + Filter.BL + 2);
+							_totalEffectiveValue -= *(_inputBytePtr + Filter.BC) + *(_inputBytePtr + Filter.BC + 1) + *(_inputBytePtr + Filter.BC + 2);
+							_totalEffectiveValue -= *(_inputBytePtr + Filter.BR) + *(_inputBytePtr + Filter.BR + 1) + *(_inputBytePtr + Filter.BR + 2);
 
 							if (_totalEffectiveValue >= FILTER_THRESHOLD) {
 								*(_outputBytePtr) = 0;
@@ -93,33 +94,30 @@ namespace KIP6.ImageProcessors {
 						}
 						catch (AccessViolationException) { }
 
-						_inputBytePtr += OUTPUT_CHUNK_SIZE;
-						_outputBytePtr += OUTPUT_CHUNK_SIZE;
-						_i += OUTPUT_CHUNK_SIZE;
+						_inputBytePtr += Chunk;
+						_outputBytePtr += Chunk;
+						_i += Chunk;
 					}
 				}
 			}
 		}
 
 		public void CalculateOffsetsAndWeights() {
-			// A wider sample seems more accurate. This is probably due to horizontal compression from the Kinect.
-			var areaBox = new Rectangle {
-				Origin = new Point { X = -2, Y = -1 },
-				Extent = new Point { X = 2, Y = 1 },
+			int offset(int row, int col) => ((OutputWidth * row) + col) * Chunk;
+
+			FilterOffsets filterOffsets(int layer) => new FilterOffsets {
+				TL = offset(-layer, -layer),
+				TC = offset(-layer, 0),
+				TR = offset(-layer, layer),
+				CL = offset(0, -layer),
+				CC = offset(0, 0),
+				CR = offset(0, layer),
+				BL = offset(layer, -layer),
+				BC = offset(layer, 0),
+				BR = offset(layer, layer),
 			};
 
-			var offsets = CalculateOffsets(areaBox, 15, InputStride, 4);
-
-			Filter = new LaplaceFilter {
-				Offset1 = offsets[0],
-				Offset2 = offsets[2],
-				Offset3 = offsets[4],
-				Offset4 = offsets[5],
-				Offset5 = offsets[9],
-				Offset6 = offsets[10],
-				Offset7 = offsets[12],
-				Offset8 = offsets[14]
-			};
+			Filter = filterOffsets(3);
 		}
 	}
 }

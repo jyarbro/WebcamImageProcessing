@@ -11,6 +11,7 @@ namespace KIP6.ImageProcessors {
 	public unsafe abstract class ImageProcessor : Observable {
 		const uint FRAMERATE_DELAY = 50;
 
+		public int Chunk;
 		public int OutputWidth;
 		public int OutputHeight;
 		public int OutputStride;
@@ -90,27 +91,6 @@ namespace KIP6.ImageProcessors {
 			OutputImage.Lock();
 			OutputImage.WritePixels(OutputUpdateRect, OutputData, OutputStride, 0);
 			OutputImage.Unlock();
-		}
-
-		/// <summary>
-		/// A universal method for calculating all of the linear offsets for a given square area
-		/// </summary>
-		/// <exception cref="ArgumentException" />
-		public int[] CalculateOffsets(Rectangle areaBox, int area, int stride, int chunkSize = 1) {
-			var offsets = new int[area];
-
-			var offset = 0;
-
-			for (var yOffset = areaBox.Origin.Y; yOffset <= areaBox.Extent.Y; yOffset++) {
-				for (var xOffset = areaBox.Origin.X; xOffset <= areaBox.Extent.X; xOffset++) {
-					offsets[offset] = (yOffset * stride) + xOffset;
-					offsets[offset] = offsets[offset] * chunkSize;
-
-					offset++;
-				}
-			}
-
-			return offsets;
 		}
 
 		public void OnFrameArrived(object sender, ColorFrameArrivedEventArgs e) {

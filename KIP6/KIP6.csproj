@@ -61,7 +61,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="ImageProcessors\LaplacianEdgeFilter.cs" />
-    <Compile Include="ImageProcessors\CameraMonochrome.cs" />
+    <Compile Include="ImageProcessors\YUY2CameraMonochrome.cs" />
     <Compile Include="ImageProcessors\CameraColor.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

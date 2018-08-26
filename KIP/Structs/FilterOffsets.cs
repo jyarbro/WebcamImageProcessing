@@ -1,5 +1,5 @@
 ﻿namespace KIP.Structs {
-	public struct LayerOffsets {
+	public struct FilterOffsets {
 		public int TL;
 		public int TC;
 		public int TR;

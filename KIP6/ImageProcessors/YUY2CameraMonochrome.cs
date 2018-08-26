@@ -6,7 +6,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace KIP6.ImageProcessors {
-	public unsafe class CameraMonochrome : ImageProcessor {
+	public unsafe class YUY2CameraMonochrome : ImageProcessor {
 		const int INPUT_CHUNK_SIZE = 2; // YUY2
 		const int OUTPUT_CHUNK_SIZE = 4; // BGRA
 
