@@ -1,26 +1,26 @@
 ﻿using KIP7.Helpers;
 using KIP7.ImageProcessors;
-using System;
+using KIP7.ImageProcessors.ColorCamera;
 using System.Collections.Generic;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
-using Windows.UI.Xaml.Automation.Peers;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
 namespace KIP7 {
-	/// <summary>
-	/// An empty page that can be used on its own or navigated to within a Frame.
-	/// </summary>
 	public sealed partial class MainPage : Page {
 		/// <summary>
 		/// Used by converters to get a handle to the current MainPage instance.
 		/// </summary>
 		public static MainPage Current;
 
-		public List<ImageProcessorSelector> ImageProcessors { get; set; }
+		public List<ImageProcessorSelector> ImageProcessors { get; set; } = new List<ImageProcessorSelector> {
+			new ImageProcessorSelector {
+				Title = "Color Camera",
+				Type = typeof(ColorCameraScene)
+			}
+		};
 
 		public MainPage() {
 			Current = this;

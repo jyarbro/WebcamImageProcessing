@@ -29,6 +29,7 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>true</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <OutputPath>bin\x86\Release\</OutputPath>
@@ -122,10 +123,14 @@
     </Compile>
     <Compile Include="Helpers\ENotifyType.cs" />
     <Compile Include="Helpers\ImageProcessorConverter.cs" />
+    <Compile Include="Helpers\PseudoColorHelper.cs" />
+    <Compile Include="Helpers\SimpleLogger.cs" />
+    <Compile Include="ImageProcessors\ColorCamera\ColorCameraProcessor.cs" />
     <Compile Include="ImageProcessors\ColorCamera\ColorCameraScene.xaml.cs">
       <DependentUpon>ColorCameraScene.xaml</DependentUpon>
     </Compile>
     <Compile Include="Helpers\ImageProcessorSelector.cs" />
+    <Compile Include="IMemoryBufferByteAccess.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
@@ -146,7 +151,6 @@
     <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
     <Content Include="Assets\StoreLogo.png" />
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
-    <Content Include="TODO.txt" />
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">

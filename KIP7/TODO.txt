@@ -1,5 +1,0 @@
-﻿Create a ColorCamera image processor.
-Look at FrameRenderer for an example.
-Output image to ColorCameraScene.
-Load ColorCamera into image processors.
-Make sure the view loads.
