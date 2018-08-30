@@ -20,7 +20,9 @@ namespace KIP7.ImageProcessors.ColorCamera {
 			ImageElement.Source = new SoftwareBitmapSource();
 		}
 
-		// Function delegate that transforms a scanline from an input image to an output image.
+		/// <summary>
+		/// Function delegate that transforms a scanline from an input image to an output image. Cannot be an Action<> parameter because byte* isn't allowed.
+		/// </summary>
 		unsafe delegate void TransformScanline(int pixelWidth, byte* inputRowBytes, byte* outputRowBytes);
 
 		public void ProcessFrame(MediaFrameReference frame) {
@@ -56,36 +58,6 @@ namespace KIP7.ImageProcessors.ColorCamera {
 
 					TaskIsRunning = false;
 				});
-		}
-
-		/// <summary>
-		/// Determines the subtype to request from the MediaFrameReader that will result in
-		/// a frame that can be rendered by ConvertToDisplayableImage.
-		/// </summary>
-		/// <returns>Subtype string to request, or null if subtype is not renderable.</returns>
-		public static string GetSubtypeForFrameReader(MediaFrameSourceKind kind, MediaFrameFormat format) {
-			// Note that media encoding subtypes may differ in case.
-			// https://docs.microsoft.com/en-us/uwp/api/Windows.Media.MediaProperties.MediaEncodingSubtypes
-			var subtype = format.Subtype;
-
-			switch (kind) {
-				// For color sources, we accept anything and request that it be converted to Bgra8.
-				case MediaFrameSourceKind.Color:
-					return MediaEncodingSubtypes.Bgra8;
-
-				// The only depth format we can render is D16.
-				case MediaFrameSourceKind.Depth:
-					return string.Equals(subtype, MediaEncodingSubtypes.D16, StringComparison.OrdinalIgnoreCase) ? subtype : null;
-
-				// The only infrared formats we can render are L8 and L16.
-				case MediaFrameSourceKind.Infrared:
-					return (string.Equals(subtype, MediaEncodingSubtypes.L8, StringComparison.OrdinalIgnoreCase) ||
-						string.Equals(subtype, MediaEncodingSubtypes.L16, StringComparison.OrdinalIgnoreCase)) ? subtype : null;
-
-				// No other source kinds are supported by this class.
-				default:
-					return null;
-			}
 		}
 
 		/// <summary>
@@ -157,7 +129,7 @@ namespace KIP7.ImageProcessors.ColorCamera {
 		}
 
 		/// <summary>
-		/// Transform image into Bgra8 image using given transform method.
+		/// Transform image into Bgra8 image
 		/// </summary>
 		/// <param name="softwareBitmap">Input image to transform.</param>
 		/// <param name="transformScanline">Method to map pixels in a scanline.</param>
