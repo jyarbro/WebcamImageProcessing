@@ -22,14 +22,14 @@ namespace KIP7.ImageProcessors.ColorCamera {
 
 		MediaCapture MediaCapture;
 		List<MediaFrameReader> SourceReaders;
-		Stopwatch InputFrameTimer;
+		Stopwatch FrameStopWatch;
 
-		double _InputFrameCount;
-		double _InputFrameDuration;
-		double _InputTotalSeconds;
-		DateTime _InputFrameRunTimer;
-		DateTime _InputFrameTimer;
-		DateTime _InputFrameNow;
+		double FrameCount;
+		double FrameDuration;
+		double TotalSeconds;
+		DateTime FrameRunTimer;
+		DateTime FrameTimer;
+		DateTime FrameNow;
 		string FramesPerSecondText;
 		string FrameLagText;
 
@@ -37,7 +37,7 @@ namespace KIP7.ImageProcessors.ColorCamera {
 			InitializeComponent();
 
 			SourceReaders = new List<MediaFrameReader>();
-			InputFrameTimer = new Stopwatch();
+			FrameStopWatch = new Stopwatch();
 
 			Logger = new SimpleLogger(Log);
 			ColorCameraProcessor = new ColorCameraProcessor(OutputImage);
@@ -53,8 +53,8 @@ namespace KIP7.ImageProcessors.ColorCamera {
 				return;
 			}
 
-			_InputFrameRunTimer = DateTime.Now;
-			_InputFrameTimer = DateTime.Now.AddMilliseconds(FRAMERATE_DELAY);
+			FrameRunTimer = DateTime.Now;
+			FrameTimer = DateTime.Now.AddMilliseconds(FRAMERATE_DELAY);
 
 			var frameReader = await FrameReaderLoader.GetFrameReaderAsync(MediaCapture, MediaFrameSourceKind.Color);
 
@@ -71,7 +71,7 @@ namespace KIP7.ImageProcessors.ColorCamera {
 
 		protected override async void OnNavigatedFrom(NavigationEventArgs e) {
 			Logger.Log($"Shutting down scene {nameof(ColorCameraScene)}");
-			InputFrameTimer.Stop();
+			FrameStopWatch.Stop();
 			await CleanupMediaCaptureAsync();
 		}
 
@@ -110,15 +110,15 @@ namespace KIP7.ImageProcessors.ColorCamera {
 		}
 
 		void UpdateFrameRateStatus() {
-			_InputFrameCount++;
-			_InputFrameNow = DateTime.Now;
+			FrameCount++;
+			var now = DateTime.Now;
 
-			if (_InputFrameTimer < _InputFrameNow) {
-				_InputFrameTimer = _InputFrameNow.AddMilliseconds(FRAMERATE_DELAY);
-				_InputTotalSeconds = (_InputFrameNow - _InputFrameRunTimer).TotalSeconds;
+			if (FrameTimer < now) {
+				FrameTimer = now.AddMilliseconds(FRAMERATE_DELAY);
+				TotalSeconds = (now - FrameRunTimer).TotalSeconds;
 
-				var framesPerSecondText = Math.Round(_InputFrameCount / _InputTotalSeconds).ToString();
-				var frameLagText = Math.Round(_InputFrameDuration / _InputFrameCount, 2).ToString();
+				var framesPerSecondText = Math.Round(FrameCount / TotalSeconds).ToString();
+				var frameLagText = Math.Round(FrameDuration / FrameCount, 2).ToString();
 
 				Interlocked.Exchange(ref FramesPerSecondText, framesPerSecondText);
 				Interlocked.Exchange(ref FrameLagText, frameLagText);
@@ -128,10 +128,10 @@ namespace KIP7.ImageProcessors.ColorCamera {
 					FrameLag.Text = FrameLagText;
 				});
 
-				if (_InputTotalSeconds > 5) {
-					_InputFrameCount = 0;
-					_InputFrameDuration = 0;
-					_InputFrameRunTimer = DateTime.Now;
+				if (TotalSeconds > 5) {
+					FrameCount = 0;
+					FrameDuration = 0;
+					FrameRunTimer = DateTime.Now;
 				}
 			}
 		}
@@ -142,14 +142,14 @@ namespace KIP7.ImageProcessors.ColorCamera {
 
 			AcquiringFrame = true;
 
-			InputFrameTimer.Restart();
+			FrameStopWatch.Restart();
 
 			using (var frame = sender.TryAcquireLatestFrame()) {
 				ColorCameraProcessor.ProcessFrame(frame);
 			}
-
-			_InputFrameDuration += InputFrameTimer.ElapsedMilliseconds;
-			InputFrameTimer.Stop();
+			 
+			FrameDuration += FrameStopWatch.ElapsedMilliseconds;
+			FrameStopWatch.Stop();
 
 			UpdateFrameRateStatus();
 
