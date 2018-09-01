@@ -24,33 +24,37 @@ namespace KIP7.ImageProcessors.ColorCamera {
 			if (frame is null)
 				return;
 
-			var softwareBitmap = FrameConverter.ConvertToDisplayableImage(frame.VideoMediaFrame);
+			SwapBuffer(frame.VideoMediaFrame);
+
+			var task = ImageElement.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, SwapActiveImage);
+		}
+
+		public void SwapBuffer(VideoMediaFrame videoMediaFrame) {
+			var softwareBitmap = FrameConverter.ConvertToDisplayableImage(videoMediaFrame);
 
 			if (softwareBitmap is null)
 				return;
 
 			softwareBitmap = Interlocked.Exchange(ref BackBuffer, softwareBitmap);
 
-			// UI thread always reset BackBuffer before using it.  Unused bitmap should be disposed.
 			softwareBitmap?.Dispose();
+		}
 
-			var task = ImageElement.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-				async () => {
-					if (TaskIsRunning)
-						return;
+		public async void SwapActiveImage() {
+			if (TaskIsRunning)
+				return;
 
-					TaskIsRunning = true;
+			TaskIsRunning = true;
 
-					// Keep draining frames from the backbuffer until the backbuffer is empty.
-					SoftwareBitmap latestBitmap;
+			// Keep draining frames from the backbuffer until the backbuffer is empty.
+			SoftwareBitmap latestBitmap;
 
-					while ((latestBitmap = Interlocked.Exchange(ref BackBuffer, null)) != null) {
-						await ImageSource.SetBitmapAsync(latestBitmap);
-						latestBitmap.Dispose();
-					}
+			while ((latestBitmap = Interlocked.Exchange(ref BackBuffer, null)) != null) {
+				await ImageSource.SetBitmapAsync(latestBitmap);
+				latestBitmap.Dispose();
+			}
 
-					TaskIsRunning = false;
-				});
+			TaskIsRunning = false;
 		}
 	}
 }
