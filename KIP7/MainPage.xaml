@@ -1,5 +1,5 @@
 ﻿<Page x:Class="KIP7.MainPage"
-	  xmlns:helpers="using:KIP7.Helpers"
+	  xmlns:imageProcessors="using:KIP7.ImageProcessors"
 	  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
 	  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 	  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -7,7 +7,7 @@
 	  mc:Ignorable="d">
 
 	<Page.Resources>
-		<helpers:ImageProcessorConverter x:Key="ImageProcessorConverter"></helpers:ImageProcessorConverter>
+		<imageProcessors:ImageProcessorConverter x:Key="ImageProcessorConverter"></imageProcessors:ImageProcessorConverter>
 	</Page.Resources>
 
 	<Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">

@@ -1,9 +1,8 @@
-﻿using KIP7.ImageProcessors;
-using System;
+﻿using System;
 using System.Linq;
 using Windows.UI.Xaml.Data;
 
-namespace KIP7.Helpers {
+namespace KIP7.ImageProcessors {
 	public class ImageProcessorConverter : IValueConverter {
 		public object Convert(object value, Type targetType, object parameter, string language) {
 			var imageProcessor = value as ImageProcessorSelector;

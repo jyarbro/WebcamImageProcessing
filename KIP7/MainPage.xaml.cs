@@ -1,6 +1,4 @@
 ﻿using KIP7.ImageProcessors;
-using KIP7.ImageProcessors.ColorCamera;
-using System;
 using System.Collections.Generic;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;

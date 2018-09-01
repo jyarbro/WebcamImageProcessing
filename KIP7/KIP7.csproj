@@ -121,18 +121,23 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Helpers\ENotifyType.cs" />
+    <Compile Include="FrameRate\FrameRateEventArgs.cs" />
+    <Compile Include="FrameRate\IFrameRateManager.cs" />
     <Compile Include="Helpers\FrameConverter.cs" />
+    <Compile Include="FrameRate\FrameRateManager.cs" />
     <Compile Include="Helpers\FrameReaderLoader.cs" />
-    <Compile Include="Helpers\ImageProcessorConverter.cs" />
+    <Compile Include="Logger\ILogger.cs" />
+    <Compile Include="ImageProcessors\ImageProcessorConverter.cs" />
+    <Compile Include="Logger\LogEventArgs.cs" />
     <Compile Include="Helpers\PseudoColorHelper.cs" />
-    <Compile Include="Helpers\SimpleLogger.cs" />
+    <Compile Include="Logger\SimpleLogger.cs" />
     <Compile Include="ImageProcessors\ImageProcessor.cs" />
-    <Compile Include="ImageProcessors\ColorCamera\ColorCameraProcessor.cs" />
+    <Compile Include="ImageProcessors\ColorCameraProcessor.cs" />
     <Compile Include="ImageScene.xaml.cs">
       <DependentUpon>ImageScene.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Helpers\ImageProcessorSelector.cs" />
+    <Compile Include="ImageProcessors\ImageProcessorSelector.cs" />
+    <Compile Include="ImageSceneViewModel.cs" />
     <Compile Include="IMemoryBufferByteAccess.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
@@ -176,6 +181,9 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
       <Version>6.2.0-Preview1-26502-02</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Threading">
+      <Version>15.8.145</Version>
     </PackageReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
