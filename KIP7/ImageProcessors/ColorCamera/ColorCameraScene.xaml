@@ -7,6 +7,7 @@
 
 	<Grid x:Name="SceneGrid"
 		  Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
 		<Grid.RowDefinitions>
 			<RowDefinition Height="25" />
 			<RowDefinition Height="25" />
@@ -68,13 +69,14 @@
 			<Image x:Name="OutputImage"
 				   MaxWidth="{Binding ElementName=SceneGrid, Path=ActualWidth}" />
 
-			<Border x:Name="StatusPanel">
+			<Border x:Name="StatusPanel"
+					Margin="0,20,0,0">
 
 				<ScrollViewer VerticalScrollMode="Auto"
 							  VerticalScrollBarVisibility="Auto"
 							  MaxHeight="200">
 
-					<TextBlock x:Name="OutputTextBlock"
+					<TextBlock x:Name="Log"
 							   FontWeight="Bold"
 							   TextWrapping="Wrap"
 							   MaxWidth="{Binding ElementName=Splitter, Path=ActualWidth}" />

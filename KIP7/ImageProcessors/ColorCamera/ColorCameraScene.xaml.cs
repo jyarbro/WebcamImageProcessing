@@ -1,10 +1,13 @@
 ﻿using KIP7.Helpers;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Media.Capture;
 using Windows.Media.Capture.Frames;
+using Windows.UI.Core;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 
@@ -15,13 +18,28 @@ namespace KIP7.ImageProcessors.ColorCamera {
 		readonly SimpleLogger Logger;
 		readonly ColorCameraProcessor ColorCameraProcessor;
 
+		bool AcquiringFrame;
+
 		MediaCapture MediaCapture;
-		List<MediaFrameReader> SourceReaders = new List<MediaFrameReader>();
+		List<MediaFrameReader> SourceReaders;
+		Stopwatch InputFrameTimer;
+
+		double _InputFrameCount;
+		double _InputFrameDuration;
+		double _InputTotalSeconds;
+		DateTime _InputFrameRunTimer;
+		DateTime _InputFrameTimer;
+		DateTime _InputFrameNow;
+		string FramesPerSecondText;
+		string FrameLagText;
 
 		public ColorCameraScene() {
 			InitializeComponent();
 
-            Logger = new SimpleLogger(OutputTextBlock);
+			SourceReaders = new List<MediaFrameReader>();
+			InputFrameTimer = new Stopwatch();
+
+			Logger = new SimpleLogger(Log);
 			ColorCameraProcessor = new ColorCameraProcessor(OutputImage);
 		}
 
@@ -35,9 +53,12 @@ namespace KIP7.ImageProcessors.ColorCamera {
 				return;
 			}
 
+			_InputFrameRunTimer = DateTime.Now;
+			_InputFrameTimer = DateTime.Now.AddMilliseconds(FRAMERATE_DELAY);
+
 			var frameReader = await FrameReaderLoader.GetFrameReaderAsync(MediaCapture, MediaFrameSourceKind.Color);
 
-			frameReader.FrameArrived += FrameReader_FrameArrived;
+			frameReader.FrameArrived += FrameArrived;
 			SourceReaders.Add(frameReader);
 
 			var status = await frameReader.StartAsync();
@@ -46,6 +67,12 @@ namespace KIP7.ImageProcessors.ColorCamera {
 				Logger.Log($"Started MediaFrameReader.");
 			else
 				Logger.Log($"Unable to start MediaFrameReader. Error: {status}");
+		}
+
+		protected override async void OnNavigatedFrom(NavigationEventArgs e) {
+			Logger.Log($"Shutting down scene {nameof(ColorCameraScene)}");
+			InputFrameTimer.Stop();
+			await CleanupMediaCaptureAsync();
 		}
 
 		async Task InitializeMediaCaptureAsync() {
@@ -72,20 +99,61 @@ namespace KIP7.ImageProcessors.ColorCamera {
 				return;
 
 			foreach (var reader in SourceReaders.Where(r => r != null)) {
-				reader.FrameArrived -= FrameReader_FrameArrived;
+				reader.FrameArrived -= FrameArrived;
 				await reader.StopAsync();
 				reader.Dispose();
+				Logger.Log($"Disposed of MediaFrameReader.");
 			}
 
 			SourceReaders.Clear();
 			MediaCapture.Dispose();
 		}
 
-		void FrameReader_FrameArrived(MediaFrameReader sender, MediaFrameArrivedEventArgs args) {
+		void UpdateFrameRateStatus() {
+			_InputFrameCount++;
+			_InputFrameNow = DateTime.Now;
+
+			if (_InputFrameTimer < _InputFrameNow) {
+				_InputFrameTimer = _InputFrameNow.AddMilliseconds(FRAMERATE_DELAY);
+				_InputTotalSeconds = (_InputFrameNow - _InputFrameRunTimer).TotalSeconds;
+
+				var framesPerSecondText = Math.Round(_InputFrameCount / _InputTotalSeconds).ToString();
+				var frameLagText = Math.Round(_InputFrameDuration / _InputFrameCount, 2).ToString();
+
+				Interlocked.Exchange(ref FramesPerSecondText, framesPerSecondText);
+				Interlocked.Exchange(ref FrameLagText, frameLagText);
+
+				var task = Dispatcher.RunAsync(CoreDispatcherPriority.Low, () => {
+					FramesPerSecond.Text = FramesPerSecondText;
+					FrameLag.Text = FrameLagText;
+				});
+
+				if (_InputTotalSeconds > 5) {
+					_InputFrameCount = 0;
+					_InputFrameDuration = 0;
+					_InputFrameRunTimer = DateTime.Now;
+				}
+			}
+		}
+
+		void FrameArrived(MediaFrameReader sender, MediaFrameArrivedEventArgs args) {
+			if (AcquiringFrame)
+				return;
+
+			AcquiringFrame = true;
+
+			InputFrameTimer.Restart();
+
 			using (var frame = sender.TryAcquireLatestFrame()) {
-				// Add NRE catch instead of conditional
 				ColorCameraProcessor.ProcessFrame(frame);
 			}
+
+			_InputFrameDuration += InputFrameTimer.ElapsedMilliseconds;
+			InputFrameTimer.Stop();
+
+			UpdateFrameRateStatus();
+
+			AcquiringFrame = false;
 		}
 	}
 }

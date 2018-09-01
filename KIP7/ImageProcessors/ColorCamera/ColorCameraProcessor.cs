@@ -46,9 +46,9 @@ namespace KIP7.ImageProcessors.ColorCamera {
 
 			TaskIsRunning = true;
 
-			// Keep draining frames from the backbuffer until the backbuffer is empty.
 			SoftwareBitmap latestBitmap;
 
+			// Keep draining frames from the backbuffer until the backbuffer is empty.
 			while ((latestBitmap = Interlocked.Exchange(ref BackBuffer, null)) != null) {
 				await ImageSource.SetBitmapAsync(latestBitmap);
 				latestBitmap.Dispose();
