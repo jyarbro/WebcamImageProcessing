@@ -10,6 +10,8 @@ using Windows.UI.Xaml.Navigation;
 
 namespace KIP7.ImageProcessors.ColorCamera {
 	public sealed partial class ColorCameraScene : Page {
+		const int FRAMERATE_DELAY = 50;
+
 		readonly SimpleLogger Logger;
 		readonly ColorCameraProcessor ColorCameraProcessor;
 
