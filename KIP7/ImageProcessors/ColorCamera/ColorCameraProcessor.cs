@@ -5,22 +5,15 @@ using Windows.Graphics.Imaging;
 using Windows.Media.Capture.Frames;
 using Windows.UI.Core;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Media.Imaging;
 
 namespace KIP7.ImageProcessors.ColorCamera {
-	public class ColorCameraProcessor {
-		Image ImageElement;
-		SoftwareBitmapSource ImageSource;
+	public class ColorCameraProcessor : ImageProcessor {
 		SoftwareBitmap BackBuffer;
 		bool TaskIsRunning = false;
 
-		public ColorCameraProcessor(Image imageElement) {
-			ImageElement = imageElement;
-			ImageSource = new SoftwareBitmapSource();
-			ImageElement.Source = ImageSource;
-		}
+		public ColorCameraProcessor(Image imageElement) : base(imageElement) { }
 
-		public void ProcessFrame(MediaFrameReference frame) {
+		public override void ProcessFrame(MediaFrameReference frame) {
 			if (frame is null)
 				return;
 

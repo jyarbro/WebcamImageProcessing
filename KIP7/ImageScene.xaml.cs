@@ -1,9 +1,9 @@
 ﻿using KIP7.Helpers;
+using KIP7.ImageProcessors;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Windows.Media.Capture;
 using Windows.Media.Capture.Frames;
@@ -11,39 +11,43 @@ using Windows.UI.Core;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 
-namespace KIP7.ImageProcessors.ColorCamera {
-	public sealed partial class ColorCameraScene : Page {
+namespace KIP7 {
+	public sealed partial class ImageScene : Page {
 		const int FRAMERATE_DELAY = 50;
 
 		readonly SimpleLogger Logger;
-		readonly ColorCameraProcessor ColorCameraProcessor;
 
 		bool AcquiringFrame;
 
+		ImageProcessor ImageProcessor;
 		MediaCapture MediaCapture;
 		List<MediaFrameReader> SourceReaders;
-		Stopwatch FrameStopWatch;
 
 		double FrameCount;
 		double FrameDuration;
-		double TotalSeconds;
 		DateTime FrameRunTimer;
 		DateTime FrameTimer;
-		DateTime FrameNow;
-		string FramesPerSecondText;
-		string FrameLagText;
 
-		public ColorCameraScene() {
+		public ImageScene() {
 			InitializeComponent();
 
 			SourceReaders = new List<MediaFrameReader>();
-			FrameStopWatch = new Stopwatch();
-
 			Logger = new SimpleLogger(Log);
-			ColorCameraProcessor = new ColorCameraProcessor(OutputImage);
 		}
 
 		protected override async void OnNavigatedTo(NavigationEventArgs e) {
+			var imageProcessorSelector = e.Parameter as ImageProcessorSelector;
+
+			if (imageProcessorSelector is null)
+				Logger.Log($"Error with scene parameter {nameof(ImageProcessorSelector)}");
+
+			Logger.Log($"Loading scene '{imageProcessorSelector.Title}'");
+
+			ImageProcessor = Activator.CreateInstance(imageProcessorSelector.ImageProcessor, OutputImage) as ImageProcessor;
+
+			if (ImageProcessor is null)
+				Logger.Log($"Error creating instance of {imageProcessorSelector.ImageProcessor.FullName} as {nameof(ImageProcessor)}");
+
 			try {
 				await InitializeMediaCaptureAsync();
 			}
@@ -70,8 +74,7 @@ namespace KIP7.ImageProcessors.ColorCamera {
 		}
 
 		protected override async void OnNavigatedFrom(NavigationEventArgs e) {
-			Logger.Log($"Shutting down scene {nameof(ColorCameraScene)}");
-			FrameStopWatch.Stop();
+			Logger.Log($"Shutting down scene {nameof(ImageScene)}");
 			await CleanupMediaCaptureAsync();
 		}
 
@@ -83,9 +86,9 @@ namespace KIP7.ImageProcessors.ColorCamera {
 
 			var settings = new MediaCaptureInitializationSettings {
 				SourceGroup = sourceGroups[0],
-				SharingMode = MediaCaptureSharingMode.SharedReadOnly,	// This media capture can share streaming with other apps.
-				StreamingCaptureMode = StreamingCaptureMode.Video,		// Only stream video and don't initialize audio capture devices.
-				MemoryPreference = MediaCaptureMemoryPreference.Cpu		// Set to CPU to ensure frames always contain CPU SoftwareBitmap images instead of preferring GPU D3DSurface images.
+				SharingMode = MediaCaptureSharingMode.SharedReadOnly,   // This media capture can share streaming with other apps.
+				StreamingCaptureMode = StreamingCaptureMode.Video,      // Only stream video and don't initialize audio capture devices.
+				MemoryPreference = MediaCaptureMemoryPreference.Cpu     // Set to CPU to ensure frames always contain CPU SoftwareBitmap images instead of preferring GPU D3DSurface images.
 			};
 
 			MediaCapture = new MediaCapture();
@@ -109,26 +112,25 @@ namespace KIP7.ImageProcessors.ColorCamera {
 			MediaCapture.Dispose();
 		}
 
-		void UpdateFrameRateStatus() {
+		void UpdateFrameRate() {
 			FrameCount++;
+
 			var now = DateTime.Now;
 
 			if (FrameTimer < now) {
 				FrameTimer = now.AddMilliseconds(FRAMERATE_DELAY);
-				TotalSeconds = (now - FrameRunTimer).TotalSeconds;
 
-				var framesPerSecondText = Math.Round(FrameCount / TotalSeconds).ToString();
+				var totalSeconds = (now - FrameRunTimer).TotalSeconds;
+
+				var framesPerSecondText = Math.Round(FrameCount / totalSeconds).ToString();
 				var frameLagText = Math.Round(FrameDuration / FrameCount, 2).ToString();
 
-				Interlocked.Exchange(ref FramesPerSecondText, framesPerSecondText);
-				Interlocked.Exchange(ref FrameLagText, frameLagText);
-
 				var task = Dispatcher.RunAsync(CoreDispatcherPriority.Low, () => {
-					FramesPerSecond.Text = FramesPerSecondText;
-					FrameLag.Text = FrameLagText;
+					FramesPerSecond.Text = framesPerSecondText;
+					FrameLag.Text = frameLagText;
 				});
 
-				if (TotalSeconds > 5) {
+				if (totalSeconds > 5) {
 					FrameCount = 0;
 					FrameDuration = 0;
 					FrameRunTimer = DateTime.Now;
@@ -142,16 +144,16 @@ namespace KIP7.ImageProcessors.ColorCamera {
 
 			AcquiringFrame = true;
 
-			FrameStopWatch.Restart();
+			var frameStopWatch = Stopwatch.StartNew();
 
 			using (var frame = sender.TryAcquireLatestFrame()) {
-				ColorCameraProcessor.ProcessFrame(frame);
+				ImageProcessor.ProcessFrame(frame);
 			}
-			 
-			FrameDuration += FrameStopWatch.ElapsedMilliseconds;
-			FrameStopWatch.Stop();
 
-			UpdateFrameRateStatus();
+			FrameDuration += frameStopWatch.ElapsedMilliseconds;
+			frameStopWatch.Stop();
+
+			UpdateFrameRate();
 
 			AcquiringFrame = false;
 		}

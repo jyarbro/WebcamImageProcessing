@@ -127,9 +127,10 @@
     <Compile Include="Helpers\ImageProcessorConverter.cs" />
     <Compile Include="Helpers\PseudoColorHelper.cs" />
     <Compile Include="Helpers\SimpleLogger.cs" />
+    <Compile Include="ImageProcessors\ImageProcessor.cs" />
     <Compile Include="ImageProcessors\ColorCamera\ColorCameraProcessor.cs" />
-    <Compile Include="ImageProcessors\ColorCamera\ColorCameraScene.xaml.cs">
-      <DependentUpon>ColorCameraScene.xaml</DependentUpon>
+    <Compile Include="ImageScene.xaml.cs">
+      <DependentUpon>ImageScene.xaml</DependentUpon>
     </Compile>
     <Compile Include="Helpers\ImageProcessorSelector.cs" />
     <Compile Include="IMemoryBufferByteAccess.cs" />
@@ -159,7 +160,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Page Include="ImageProcessors\ColorCamera\ColorCameraScene.xaml">
+    <Page Include="ImageScene.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

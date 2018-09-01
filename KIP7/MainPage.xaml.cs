@@ -1,5 +1,6 @@
 ﻿using KIP7.ImageProcessors;
 using KIP7.ImageProcessors.ColorCamera;
+using System;
 using System.Collections.Generic;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
@@ -14,7 +15,7 @@ namespace KIP7 {
 		public List<ImageProcessorSelector> ImageProcessors { get; set; } = new List<ImageProcessorSelector> {
 			new ImageProcessorSelector {
 				Title = "Color Camera",
-				Type = typeof(ColorCameraScene)
+				ImageProcessor = typeof(ColorCameraProcessor)
 			}
 		};
 
@@ -30,8 +31,9 @@ namespace KIP7 {
 		}
 
 		void ImageProcessorSelectorControl_SelectionChanged(object sender, SelectionChangedEventArgs e) {
-			if (sender is ListBox listBox && listBox.SelectedItem is ImageProcessorSelector selector)
-				ImageProcessorFrame.Navigate(selector.Type);
+			if (sender is ListBox listBox && listBox.SelectedItem is ImageProcessorSelector selector) {
+				ImageProcessorFrame.Navigate(typeof(ImageScene), selector);
+			}
 		}
 	}
 }
