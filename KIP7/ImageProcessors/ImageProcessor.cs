@@ -12,6 +12,8 @@ using Windows.UI.Xaml.Media.Imaging;
 
 namespace KIP7.ImageProcessors {
 	public abstract class ImageProcessor : IAsyncDisposable {
+		protected const int CHUNK = 4;
+
 		public SoftwareBitmapSource ImageSource = new SoftwareBitmapSource();
 
 		protected readonly ILogger Logger;
@@ -60,7 +62,11 @@ namespace KIP7.ImageProcessors {
 
 				// Keep draining frames from the backbuffer until the backbuffer is empty.
 				while ((latestBitmap = Interlocked.Exchange(ref BackBuffer, null)) != null) {
-					await ImageSource.SetBitmapAsync(latestBitmap);
+					try {
+						await ImageSource.SetBitmapAsync(latestBitmap);
+					}
+					catch (TaskCanceledException) { }
+
 					latestBitmap.Dispose();
 				}
 			});

@@ -127,6 +127,7 @@
     <Compile Include="Helpers\FrameConverter.cs" />
     <Compile Include="FrameRate\FrameRateManager.cs" />
     <Compile Include="Helpers\FrameReaderLoader.cs" />
+    <Compile Include="ImageProcessors\BoostGreenProcessor.cs" />
     <Compile Include="Logger\ILogger.cs" />
     <Compile Include="ImageProcessors\ImageProcessorConverter.cs" />
     <Compile Include="Logger\LogEventArgs.cs" />
@@ -139,7 +140,7 @@
     </Compile>
     <Compile Include="ImageProcessors\ImageProcessorSelector.cs" />
     <Compile Include="ImageSceneViewModel.cs" />
-    <Compile Include="IMemoryBufferByteAccess.cs" />
+    <Compile Include="Helpers\IMemoryBufferByteAccess.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
