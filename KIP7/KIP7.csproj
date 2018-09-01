@@ -123,6 +123,7 @@
     </Compile>
     <Compile Include="FrameRate\FrameRateEventArgs.cs" />
     <Compile Include="FrameRate\IFrameRateManager.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Helpers\FrameConverter.cs" />
     <Compile Include="FrameRate\FrameRateManager.cs" />
     <Compile Include="Helpers\FrameReaderLoader.cs" />

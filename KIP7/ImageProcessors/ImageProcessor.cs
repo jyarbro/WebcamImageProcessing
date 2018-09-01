@@ -55,12 +55,12 @@ namespace KIP7.ImageProcessors {
 
 			SwappingActiveImage = true;
 
-			await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
+			await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () => {
 				SoftwareBitmap latestBitmap;
 
 				// Keep draining frames from the backbuffer until the backbuffer is empty.
 				while ((latestBitmap = Interlocked.Exchange(ref BackBuffer, null)) != null) {
-					var task = ImageSource.SetBitmapAsync(latestBitmap);
+					await ImageSource.SetBitmapAsync(latestBitmap);
 					latestBitmap.Dispose();
 				}
 			});

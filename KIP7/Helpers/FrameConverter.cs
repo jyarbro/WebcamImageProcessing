@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
 using Windows.Media.Capture.Frames;
@@ -23,19 +24,22 @@ namespace KIP7.Helpers {
 			SoftwareBitmap result = null;
 
 			await Task.Run(() => {
-				switch (inputFrame.FrameReference.SourceKind) {
-					case MediaFrameSourceKind.Color:
-						result = ConvertColorFrame(inputBitmap);
-						break;
+				try {
+					switch (inputFrame.FrameReference.SourceKind) {
+						case MediaFrameSourceKind.Color:
+							result = ConvertColorFrame(inputBitmap);
+							break;
 
-					case MediaFrameSourceKind.Depth:
-						result = ConvertDepthFrame(inputFrame, inputBitmap);
-						break;
+						case MediaFrameSourceKind.Depth:
+							result = ConvertDepthFrame(inputFrame, inputBitmap);
+							break;
 
-					case MediaFrameSourceKind.Infrared:
-						result = ConvertInfraredFrame(inputBitmap);
-						break;
+						case MediaFrameSourceKind.Infrared:
+							result = ConvertInfraredFrame(inputBitmap);
+							break;
+					}
 				}
+				catch (ObjectDisposedException) { }
 
 				inputBitmap.Dispose();
 			});
