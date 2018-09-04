@@ -18,6 +18,10 @@ namespace KIP7 {
 			new ImageProcessorSelector {
 				Title = "Boost Green",
 				ImageProcessor = typeof(BoostGreenProcessor)
+			},
+			new ImageProcessorSelector {
+				Title = "Edge Detection",
+				ImageProcessor = typeof(EdgeDetectionProcessor)
 			}
 		};
 

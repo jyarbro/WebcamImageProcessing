@@ -38,16 +38,14 @@ namespace KIP7.ImageProcessors {
 				Logger.Log($"Unable to start MediaFrameReader. Error: {status}");
 		}
 
-		public override async Task<SoftwareBitmap> ConvertFrameAsync(VideoMediaFrame frame) {
-			return await Task.Run(() => {
-				try {
-					// XAML requires Bgra8 with premultiplied alpha.
-					return SoftwareBitmap.Convert(frame.SoftwareBitmap, BitmapPixelFormat.Bgra8, BitmapAlphaMode.Premultiplied);
-				}
-				catch (ObjectDisposedException) { }
+		public override SoftwareBitmap ConvertFrame(VideoMediaFrame frame) {
+			try {
+				// XAML requires Bgra8 with premultiplied alpha.
+				return SoftwareBitmap.Convert(frame.SoftwareBitmap, BitmapPixelFormat.Bgra8, BitmapAlphaMode.Premultiplied);
+			}
+			catch (ObjectDisposedException) { }
 
-				return null;
-			});
+			return null;
 		}
 
 		public override async Task DisposeAsync() {

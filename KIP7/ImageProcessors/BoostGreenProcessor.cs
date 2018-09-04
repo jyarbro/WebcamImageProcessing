@@ -19,17 +19,15 @@ namespace KIP7.ImageProcessors {
 			dispatcher
 		) { }
 
-		public override async Task<SoftwareBitmap> ConvertFrameAsync(VideoMediaFrame frame) {
-			return await Task.Run(() => {
-				try {
-					var bitmap = SoftwareBitmap.Convert(frame.SoftwareBitmap, BitmapPixelFormat.Bgra8, BitmapAlphaMode.Premultiplied);
-					BoostGreen(bitmap);
-					return bitmap;
-				}
-				catch (ObjectDisposedException) { }
+		public override SoftwareBitmap ConvertFrame(VideoMediaFrame frame) {
+			try {
+				var bitmap = SoftwareBitmap.Convert(frame.SoftwareBitmap, BitmapPixelFormat.Bgra8, BitmapAlphaMode.Premultiplied);
+				BoostGreen(bitmap);
+				return bitmap;
+			}
+			catch (ObjectDisposedException) { }
 
-				return null;
-			});
+			return null;
 		}
 
 		public unsafe SoftwareBitmap BoostGreen(SoftwareBitmap bitmap) {

@@ -1,5 +1,6 @@
 ﻿using KIP7.FrameRate;
 using KIP7.Logger;
+using KIP7.Structs;
 using Microsoft.VisualStudio.Threading;
 using System;
 using System.Threading;
@@ -20,6 +21,9 @@ namespace KIP7.ImageProcessors {
 		protected readonly IFrameRateManager FrameRateManager;
 		protected readonly CoreDispatcher Dispatcher;
 
+		protected int OutputWidth;
+		protected int OutputHeight;
+
 		SoftwareBitmap BackBuffer;
 		bool SwappingActiveImage = false;
 
@@ -37,7 +41,7 @@ namespace KIP7.ImageProcessors {
 			if (frame is null)
 				return;
 
-			var softwareBitmap = await ConvertFrameAsync(frame.VideoMediaFrame);
+			var softwareBitmap = ConvertFrame(frame.VideoMediaFrame);
 
 			if (softwareBitmap is null)
 				return;
@@ -75,7 +79,28 @@ namespace KIP7.ImageProcessors {
 		}
 
 		public abstract Task InitializeAsync(MediaCapture mediaCapture);
-		public abstract Task<SoftwareBitmap> ConvertFrameAsync(VideoMediaFrame videoMediaFrame);
+		public abstract SoftwareBitmap ConvertFrame(VideoMediaFrame videoMediaFrame);
 		public abstract Task DisposeAsync();
+
+		protected FilterOffsets PrecalculateFilterOffsets(int layer) {
+			int offset(int row, int col) => ((OutputWidth * row) + col) * CHUNK;
+
+			var result = new FilterOffsets {
+				TL = offset(-layer, -layer),
+				TC = offset(-layer, 0),
+				TR = offset(-layer, layer),
+				CL = offset(0, -layer),
+				CC = offset(0, 0),
+				CR = offset(0, layer),
+				BL = offset(layer, -layer),
+				BC = offset(layer, 0),
+				BR = offset(layer, layer),
+			};
+
+			result.Min = result.TL * -1;
+			result.Max = (OutputWidth * OutputHeight * CHUNK) - result.BR - CHUNK;
+
+			return result;
+		}
 	}
 }
