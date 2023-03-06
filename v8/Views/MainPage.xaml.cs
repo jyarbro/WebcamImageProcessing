@@ -1,4 +1,5 @@
 ﻿using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Navigation;
 using v8.Helpers;
 using v8.ViewModels;
 
@@ -17,6 +18,11 @@ public sealed partial class MainPage : Page {
 
 		ViewModel = App.GetService<MainViewModel>();
 		InitializeComponent();
+	}
+
+	protected override void OnNavigatedTo(NavigationEventArgs e) {
+		ImageProcessorSelectorControl.ItemsSource = ViewModel.ImageProcessors;
+		ImageProcessorSelectorControl.SelectedIndex = 0;
 	}
 
 	void ImageProcessorSelectorControl_SelectionChanged(object sender, SelectionChangedEventArgs e) {

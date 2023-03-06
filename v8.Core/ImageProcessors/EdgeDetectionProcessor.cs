@@ -1,4 +1,6 @@
-﻿using v8.Core.Helpers;
+﻿using System.Runtime.InteropServices.WindowsRuntime;
+using Microsoft.UI.Dispatching;
+using v8.Core.Helpers;
 using v8.Core.Services.FrameRate;
 using v8.Core.Services.Logger;
 using Windows.Graphics.Imaging;
@@ -15,19 +17,21 @@ public class EdgeDetectionProcessor : ColorCameraProcessor {
 	int _i;
 	int _totalEffectiveValue;
 
+	byte[] inputData = new byte[PIXELS];
+	byte[] outputData = new byte[PIXELS];
+
 	public EdgeDetectionProcessor(
 		ILogger logger,
-		IFrameRateManager frameRateManager
+		IFrameRateManager frameRateManager,
+		DispatcherQueue dispatcherQueue
 	) : base(
 		logger,
-		frameRateManager
+		frameRateManager,
+		dispatcherQueue
 	) { }
 
 	public async override Task InitializeAsync(MediaCapture mediaCapture) {
 		await base.InitializeAsync(mediaCapture);
-
-		OutputWidth = 1920;
-		OutputHeight = 1080;
 
 		FilterLayer = PrecalculateFilterOffsets(1);
 	}
@@ -42,8 +46,9 @@ public class EdgeDetectionProcessor : ColorCameraProcessor {
 		return null;
 	}
 
-	public unsafe SoftwareBitmap ApplyFilter(SoftwareBitmap input) {
-		var output = new SoftwareBitmap(BitmapPixelFormat.Bgra8, 1920, 1080, BitmapAlphaMode.Premultiplied);
+	public unsafe SoftwareBitmap ApplyFilter(SoftwareBitmap bitmap) {
+		bitmap.CopyToBuffer(inputData.AsBuffer());
+		bitmap.CopyToBuffer(outputData.AsBuffer());
 
 		Threshold += ThresholdModifier;
 
@@ -51,50 +56,47 @@ public class EdgeDetectionProcessor : ColorCameraProcessor {
 			ThresholdModifier *= -1;
 		}
 
-		using (var inputBuffer = input.LockBuffer(BitmapBufferAccessMode.ReadWrite))
-		using (var outputBuffer = output.LockBuffer(BitmapBufferAccessMode.ReadWrite))
-		using (var inputReference = inputBuffer.CreateReference())
-		using (var outputReference = outputBuffer.CreateReference()) {
-			((IMemoryBufferByteAccess) inputReference).GetBuffer(out var inputDataPtr, out var inputCapacity);
-			((IMemoryBufferByteAccess) outputReference).GetBuffer(out var outputDataPtr, out var outputCapacity);
+		fixed (byte* _inputBytePtr = inputData)
+		fixed (byte* _outputBytePtr = outputData) {
+			byte* currentInput = _inputBytePtr;
+			byte* currentOutput = _outputBytePtr;
 
-			var _inputBytePtr = inputDataPtr;
-			var _outputBytePtr = outputDataPtr;
-
-			_inputBytePtr += FilterLayer.Min;
-			_outputBytePtr += FilterLayer.Min;
+			currentInput += FilterLayer.Min;
+			currentOutput += FilterLayer.Min;
 
 			_i = FilterLayer.Min;
 
 			while (_i < FilterLayer.Max) {
-				_totalEffectiveValue = 8 * (*_inputBytePtr + *(_inputBytePtr + 1) + *(_inputBytePtr + 2));
+				_totalEffectiveValue = 8 * (*currentInput + *(currentInput + 1) + *(currentInput + 2));
 
-				_totalEffectiveValue -= *(_inputBytePtr + FilterLayer.TL) + *(_inputBytePtr + FilterLayer.TL + 1) + *(_inputBytePtr + FilterLayer.TL + 2);
-				_totalEffectiveValue -= *(_inputBytePtr + FilterLayer.TC) + *(_inputBytePtr + FilterLayer.TC + 1) + *(_inputBytePtr + FilterLayer.TC + 2);
-				_totalEffectiveValue -= *(_inputBytePtr + FilterLayer.TR) + *(_inputBytePtr + FilterLayer.TR + 1) + *(_inputBytePtr + FilterLayer.TR + 2);
-				_totalEffectiveValue -= *(_inputBytePtr + FilterLayer.CL) + *(_inputBytePtr + FilterLayer.CL + 1) + *(_inputBytePtr + FilterLayer.CL + 2);
-				_totalEffectiveValue -= *(_inputBytePtr + FilterLayer.CR) + *(_inputBytePtr + FilterLayer.CR + 1) + *(_inputBytePtr + FilterLayer.CR + 2);
-				_totalEffectiveValue -= *(_inputBytePtr + FilterLayer.BL) + *(_inputBytePtr + FilterLayer.BL + 1) + *(_inputBytePtr + FilterLayer.BL + 2);
-				_totalEffectiveValue -= *(_inputBytePtr + FilterLayer.BC) + *(_inputBytePtr + FilterLayer.BC + 1) + *(_inputBytePtr + FilterLayer.BC + 2);
-				_totalEffectiveValue -= *(_inputBytePtr + FilterLayer.BR) + *(_inputBytePtr + FilterLayer.BR + 1) + *(_inputBytePtr + FilterLayer.BR + 2);
+				_totalEffectiveValue -= *(currentInput + FilterLayer.TL) + *(currentInput + FilterLayer.TL + 1) + *(currentInput + FilterLayer.TL + 2);
+				_totalEffectiveValue -= *(currentInput + FilterLayer.TC) + *(currentInput + FilterLayer.TC + 1) + *(currentInput + FilterLayer.TC + 2);
+				_totalEffectiveValue -= *(currentInput + FilterLayer.TR) + *(currentInput + FilterLayer.TR + 1) + *(currentInput + FilterLayer.TR + 2);
+				_totalEffectiveValue -= *(currentInput + FilterLayer.CL) + *(currentInput + FilterLayer.CL + 1) + *(currentInput + FilterLayer.CL + 2);
+				_totalEffectiveValue -= *(currentInput + FilterLayer.CR) + *(currentInput + FilterLayer.CR + 1) + *(currentInput + FilterLayer.CR + 2);
+				_totalEffectiveValue -= *(currentInput + FilterLayer.BL) + *(currentInput + FilterLayer.BL + 1) + *(currentInput + FilterLayer.BL + 2);
+				_totalEffectiveValue -= *(currentInput + FilterLayer.BC) + *(currentInput + FilterLayer.BC + 1) + *(currentInput + FilterLayer.BC + 2);
+				_totalEffectiveValue -= *(currentInput + FilterLayer.BR) + *(currentInput + FilterLayer.BR + 1) + *(currentInput + FilterLayer.BR + 2);
 
 				if (_totalEffectiveValue >= Threshold) {
-					*_outputBytePtr = 0;
-					*(_outputBytePtr + 1) = 0;
-					*(_outputBytePtr + 2) = 0;
+					*currentOutput = 0;
+					*(currentOutput + 1) = 0;
+					*(currentOutput + 2) = 0;
 				}
 				else {
-					*_outputBytePtr = 255;
-					*(_outputBytePtr + 1) = 255;
-					*(_outputBytePtr + 2) = 255;
+					*currentOutput = 255;
+					*(currentOutput + 1) = 255;
+					*(currentOutput + 2) = 255;
 				}
 
-				_inputBytePtr += CHUNK;
-				_outputBytePtr += CHUNK;
+				currentInput += CHUNK;
+				currentOutput += CHUNK;
 				_i += CHUNK;
 			}
 		}
 
-		return output;
+		bitmap.CopyFromBuffer(outputData.AsBuffer());
+
+		return bitmap;
 	}
 }

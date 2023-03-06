@@ -9,7 +9,7 @@ public class ImageProcessorConverter : IValueConverter {
 			return "Invalid ImageProcessor";
 		}
 
-		if (!MainPage.Current.ViewModel.ImageProcessors.Any()) {
+		if (MainPage.Current is null || !MainPage.Current.ViewModel.ImageProcessors.Any()) {
 			return "Invalid State";
 		}
 

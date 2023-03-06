@@ -41,7 +41,7 @@ public sealed partial class ImageScene : Page {
 
 		Logger.Log($"Loading scene '{imageProcessorSelector.Title}'");
 
-		var imageProcessor = Activator.CreateInstance(imageProcessorSelector.ImageProcessor, new object[] { Logger, FrameRateManager, OutputImage.Dispatcher }) as ImageProcessor;
+		var imageProcessor = Activator.CreateInstance(imageProcessorSelector.ImageProcessor, new object[] { Logger, FrameRateManager, DispatcherQueue }) as ImageProcessor;
 
 		if (imageProcessor is null) {
 			Logger.Log($"Error creating instance of {imageProcessorSelector.ImageProcessor.FullName} as {nameof(ImageProcessor)}");
@@ -56,13 +56,13 @@ public sealed partial class ImageScene : Page {
 	protected override void OnNavigatedFrom(NavigationEventArgs e) => ViewModel.Shutdown();
 
 	void UpdateLog(object sender, LogEventArgs e) {
-		var task = Log.Dispatcher.RunAsync(CoreDispatcherPriority.Low, () => {
+		DispatcherQueue.TryEnqueue(() => {
 			Log.Text = e.Message + Log.Text;
 		});
 	}
 
 	void UpdateFrameRate(object sender, FrameRateEventArgs e) {
-		var task = Dispatcher.RunAsync(CoreDispatcherPriority.Low, () => {
+		DispatcherQueue.TryEnqueue(() => {
 			FramesPerSecond.Text = e.FramesPerSecond.ToString();
 			FrameLag.Text = e.FrameLag.ToString();
 		});

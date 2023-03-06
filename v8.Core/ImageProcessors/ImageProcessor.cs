@@ -1,34 +1,40 @@
-﻿using Microsoft.UI.Xaml.Media.Imaging;
+﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
+using Microsoft.UI.Dispatching;
+using Microsoft.UI.Xaml.Media.Imaging;
 using v8.Core.Helpers;
 using v8.Core.Services.FrameRate;
 using v8.Core.Services.Logger;
 using Windows.Graphics.Imaging;
 using Windows.Media.Capture;
 using Windows.Media.Capture.Frames;
-using Windows.System;
 
 namespace v8.Core.ImageProcessors;
 
 public abstract class ImageProcessor : IAsyncDisposable {
 	protected const int CHUNK = 4;
+	protected const int WIDTH = 640;
+	protected const int HEIGHT = 480;
+	protected const int STRIDE = WIDTH * CHUNK;
+	protected const int PIXELS = WIDTH * HEIGHT * CHUNK;
 
-	public SoftwareBitmapSource ImageSource = new SoftwareBitmapSource();
+	public SoftwareBitmapSource ImageSource = new();
 
 	protected readonly ILogger Logger;
 	protected readonly IFrameRateManager FrameRateManager;
-
-	protected int OutputWidth;
-	protected int OutputHeight;
+	protected readonly DispatcherQueue DispatcherQueue;
 
 	SoftwareBitmap BackBuffer;
 	bool SwappingActiveImage = false;
 
 	public ImageProcessor(
 		ILogger logger,
-		IFrameRateManager frameRateManager
+		IFrameRateManager frameRateManager,
+		DispatcherQueue dispatcherQueue
 	) {
 		Logger = logger;
 		FrameRateManager = frameRateManager;
+		DispatcherQueue = dispatcherQueue;
 	}
 
 	public void ProcessFrame(MediaFrameReference frame) {
@@ -38,9 +44,7 @@ public abstract class ImageProcessor : IAsyncDisposable {
 
 		var softwareBitmap = ConvertFrame(frame.VideoMediaFrame);
 
-		if (softwareBitmap is null) {
-			return;
-		}
+		Debug.Assert(softwareBitmap is not null);
 
 		// Swap out the existing BackBuffer reference with the new one.
 		softwareBitmap = Interlocked.Exchange(ref BackBuffer, softwareBitmap);
@@ -58,19 +62,20 @@ public abstract class ImageProcessor : IAsyncDisposable {
 
 		SwappingActiveImage = true;
 
-		//DispatcherQueue.TryEnqueue(() => {
+		DispatcherQueue.TryEnqueue(async () => {
 			SoftwareBitmap latestBitmap;
 
 			// Keep draining frames from the backbuffer until the backbuffer is empty.
 			while ((latestBitmap = Interlocked.Exchange(ref BackBuffer, null)) != null) {
 				try {
-					//await ImageSource.SetBitmapAsync(latestBitmap);
+					await ImageSource.SetBitmapAsync(latestBitmap);
 				}
 				catch (TaskCanceledException) { }
+				catch (COMException) { }
 
 				latestBitmap.Dispose();
 			}
-		//});
+		});
 
 		SwappingActiveImage = false;
 	}
@@ -80,7 +85,7 @@ public abstract class ImageProcessor : IAsyncDisposable {
 	public abstract Task DisposeAsync();
 
 	protected FilterOffsets PrecalculateFilterOffsets(int layer) {
-		int offset(int row, int col) => (OutputWidth * row + col) * CHUNK;
+		int offset(int row, int col) => (WIDTH * row + col) * CHUNK;
 
 		var result = new FilterOffsets {
 			TL = offset(-layer, -layer),
@@ -95,7 +100,7 @@ public abstract class ImageProcessor : IAsyncDisposable {
 		};
 
 		result.Min = result.TL * -1;
-		result.Max = OutputWidth * OutputHeight * CHUNK - result.BR - CHUNK;
+		result.Max = WIDTH * HEIGHT * CHUNK - result.BR - CHUNK;
 
 		return result;
 	}

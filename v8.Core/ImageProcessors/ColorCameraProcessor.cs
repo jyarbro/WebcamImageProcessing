@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Microsoft.UI.Dispatching;
 using v8.Core.Helpers;
 using v8.Core.Services.FrameRate;
 using v8.Core.Services.Logger;
@@ -15,10 +16,12 @@ public class ColorCameraProcessor : ImageProcessor {
 
 	public ColorCameraProcessor(
 		ILogger logger,
-		IFrameRateManager frameRateManager
+		IFrameRateManager frameRateManager,
+		DispatcherQueue dispatcherQueue
 	) : base(
 		logger,
-		frameRateManager
+		frameRateManager,
+		dispatcherQueue
 	) { }
 
 	public async override Task InitializeAsync(MediaCapture mediaCapture) {
