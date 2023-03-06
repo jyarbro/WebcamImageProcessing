@@ -1,0 +1,1 @@
+v8 targets WinUI3, and gets away from the Kinect-focused architecture of v7. If you are looking for code to work with a Kinect, look at previous version branches.
