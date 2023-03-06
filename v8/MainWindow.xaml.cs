@@ -1,6 +1,4 @@
-﻿using v8.Helpers;
-
-namespace v8;
+﻿namespace v8;
 
 public sealed partial class MainWindow : WindowEx
 {

@@ -1,10 +1,8 @@
 ﻿using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
-using Microsoft.Windows.AppNotifications;
 
 using v8.Contracts.Services;
-using v8.ViewModels;
 
 namespace v8.Activation;
 

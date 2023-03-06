@@ -1,7 +1,6 @@
 ﻿using Microsoft.UI.Xaml;
 
 using v8.Contracts.Services;
-using v8.Helpers;
 
 namespace v8.Services;
 

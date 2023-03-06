@@ -5,7 +5,6 @@ using v8.Core.Services.FrameRate;
 using v8.Core.Services.Logger;
 using v8.Helpers;
 using v8.ViewModels;
-using Windows.UI.Core;
 
 namespace v8.Views;
 

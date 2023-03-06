@@ -1,9 +1,7 @@
 ﻿using System.Runtime.InteropServices.WindowsRuntime;
 using Microsoft.UI.Dispatching;
-using v8.Core.Helpers;
 using v8.Core.Services.FrameRate;
 using v8.Core.Services.Logger;
-using Windows.Foundation;
 using Windows.Graphics.Imaging;
 using Windows.Media.Capture.Frames;
 

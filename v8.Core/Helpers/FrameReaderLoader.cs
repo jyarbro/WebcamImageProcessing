@@ -1,11 +1,8 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Windows.Media.Capture;
+﻿using Windows.Media.Capture;
 using Windows.Media.Capture.Frames;
 using Windows.Media.MediaProperties;
 
-namespace v8.Core.Helpers; 
+namespace v8.Core.Helpers;
 
 public static class FrameReaderLoader {
 	public static async Task<MediaFrameReader> GetFrameReaderAsync(MediaCapture mediaCapture, MediaFrameSourceKind kind) {

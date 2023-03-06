@@ -5,8 +5,6 @@ using v8.Core.Contracts.Services;
 using v8.Core.Helpers;
 using v8.Helpers;
 using v8.Models;
-
-using Windows.ApplicationModel;
 using Windows.Storage;
 
 namespace v8.Services;

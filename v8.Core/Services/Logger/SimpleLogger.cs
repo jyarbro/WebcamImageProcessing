@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace v8.Core.Services.Logger;
+﻿namespace v8.Core.Services.Logger;
 
 /// <summary>
 /// A simple logger to display text to TextBlock asynchronisely.

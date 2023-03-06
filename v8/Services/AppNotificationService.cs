@@ -4,7 +4,6 @@ using System.Web;
 using Microsoft.Windows.AppNotifications;
 
 using v8.Contracts.Services;
-using v8.ViewModels;
 
 namespace v8.Notifications;
 
