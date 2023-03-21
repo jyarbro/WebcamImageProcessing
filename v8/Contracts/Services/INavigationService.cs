@@ -1,5 +1,4 @@
-﻿using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Navigation;
+﻿using Microsoft.UI.Xaml.Navigation;
 
 namespace v8.Contracts.Services;
 

@@ -1,5 +1,4 @@
-﻿using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Navigation;
+﻿using Microsoft.UI.Xaml.Navigation;
 using v8.Core.ImageProcessors;
 using v8.Core.Services.FrameRate;
 using v8.Core.Services.Logger;

@@ -30,10 +30,12 @@
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.2.230118.102" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="2.0.9" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
-    <PackageReference Include="WinUIEx" Version="2.1" />
+    <PackageReference Include="PInvoke.User32" Version="0.7.124" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Nrrdio.Utilities\Nrrdio.Utilities.WinUI\Nrrdio.Utilities.WinUI.csproj" />
+    <ProjectReference Include="..\Nrrdio.Utilities\Nrrdio.Utilities\Nrrdio.Utilities.csproj" />
     <ProjectReference Include="..\v8.Core\v8.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
@@ -50,6 +52,11 @@
     <Page Update="Views\ImageScene.xaml">
       <SubType>Designer</SubType>
     </Page>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.UI.Xaml" />
+    <Using Include="Microsoft.UI.Xaml.Controls" />
   </ItemGroup>
   
   <PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">

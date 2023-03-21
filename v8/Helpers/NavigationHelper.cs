@@ -1,7 +1,4 @@
-﻿using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-
-namespace v8.Helpers;
+﻿namespace v8.Helpers;
 
 // Helper class to set the navigation target for a NavigationViewItem.
 //
@@ -10,12 +7,11 @@ namespace v8.Helpers;
 //
 // Usage in code:
 // NavigationHelper.SetNavigateTo(navigationViewItem, typeof(MainViewModel).FullName);
-public class NavigationHelper
-{
-    public static string GetNavigateTo(NavigationViewItem item) => (string)item.GetValue(NavigateToProperty);
+public class NavigationHelper {
+	public static string GetNavigateTo(NavigationViewItem item) => (string) item.GetValue(NavigateToProperty);
 
-    public static void SetNavigateTo(NavigationViewItem item, string value) => item.SetValue(NavigateToProperty, value);
+	public static void SetNavigateTo(NavigationViewItem item, string value) => item.SetValue(NavigateToProperty, value);
 
-    public static readonly DependencyProperty NavigateToProperty =
-        DependencyProperty.RegisterAttached("NavigateTo", typeof(string), typeof(NavigationHelper), new PropertyMetadata(null));
+	public static readonly DependencyProperty NavigateToProperty =
+		DependencyProperty.RegisterAttached("NavigateTo", typeof(string), typeof(NavigationHelper), new PropertyMetadata(null));
 }

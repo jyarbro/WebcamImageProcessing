@@ -1,6 +1,4 @@
-﻿using Microsoft.UI.Xaml.Controls;
-
-namespace v8.Contracts.Services;
+﻿namespace v8.Contracts.Services;
 
 public interface INavigationViewService {
 	IList<object>? MenuItems {

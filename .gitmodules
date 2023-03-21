@@ -1,0 +1,3 @@
+[submodule "Nrrdio.Utilities"]
+	path = Nrrdio.Utilities
+	url = https://github.com/jyarbro/Nrrdio.Utilities.git

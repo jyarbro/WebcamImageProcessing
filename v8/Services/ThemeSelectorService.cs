@@ -1,60 +1,92 @@
-﻿using Microsoft.UI.Xaml;
-
+﻿using Microsoft.Extensions.Options;
+using Microsoft.UI.Composition.SystemBackdrops;
+using Nrrdio.Utilities.WinUI;
+using WinRT;
 using v8.Contracts.Services;
+using v8.Models;
 
 namespace v8.Services;
 
-public class ThemeSelectorService : IThemeSelectorService
-{
-    private const string SettingsKey = "AppBackgroundRequestedTheme";
+public class ThemeSelectorService : IThemeSelectorService {
+	Settings Settings { get; init; }
 
-    public ElementTheme Theme { get; set; } = ElementTheme.Default;
+	DispatcherQueueHelper? DispatcherQueueHelper;
+	MicaController? BackdropController;
+	SystemBackdropConfiguration? ConfigurationSource;
 
-    private readonly ILocalSettingsService _localSettingsService;
+	public ElementTheme Theme {
+		get {
+			if (Enum.TryParse(Settings.Theme, out ElementTheme cacheTheme)) {
+				return cacheTheme;
+			}
 
-    public ThemeSelectorService(ILocalSettingsService localSettingsService)
-    {
-        _localSettingsService = localSettingsService;
-    }
+			return ElementTheme.Default;
+		}
+	}
 
-    public async Task InitializeAsync()
-    {
-        Theme = await LoadThemeFromSettingsAsync();
-        await Task.CompletedTask;
-    }
+	public ThemeSelectorService(
+		IOptionsMonitor<Settings> settings
+	) {
+		Settings = settings.CurrentValue;
+	}
 
-    public async Task SetThemeAsync(ElementTheme theme)
-    {
-        Theme = theme;
+	public void LoadTheme() {
+		SetTheme(Theme);
+		SetSystemBackdrop();
+	}
 
-        await SetRequestedThemeAsync();
-        await SaveThemeInSettingsAsync(Theme);
-    }
+	public void SetTheme(ElementTheme theme) {
+		Settings.Theme = theme.ToString();
+		((FrameworkElement) App.MainWindow.Content).RequestedTheme = theme;
+	}
 
-    public async Task SetRequestedThemeAsync()
-    {
-        if (App.MainWindow.Content is FrameworkElement rootElement)
-        {
-            rootElement.RequestedTheme = Theme;
-        }
+	void SetSystemBackdrop() {
+		if (MicaController.IsSupported()) {
+			DispatcherQueueHelper = new DispatcherQueueHelper();
+			DispatcherQueueHelper.EnsureWindowsSystemDispatcherQueueController();
 
-        await Task.CompletedTask;
-    }
+			ConfigurationSource = new SystemBackdropConfiguration();
 
-    private async Task<ElementTheme> LoadThemeFromSettingsAsync()
-    {
-        var themeName = await _localSettingsService.ReadSettingAsync<string>(SettingsKey);
+			App.MainWindow.Activated += Window_Activated;
+			App.MainWindow.Closed += Window_Closed;
 
-        if (Enum.TryParse(themeName, out ElementTheme cacheTheme))
-        {
-            return cacheTheme;
-        }
+			((FrameworkElement) App.MainWindow.Content).ActualThemeChanged += Window_ThemeChanged;
 
-        return ElementTheme.Default;
-    }
+			ConfigurationSource.IsInputActive = true;
+			SetConfigurationSourceTheme();
 
-    private async Task SaveThemeInSettingsAsync(ElementTheme theme)
-    {
-        await _localSettingsService.SaveSettingAsync(SettingsKey, theme.ToString());
-    }
+			BackdropController = new MicaController {
+				Kind = MicaKind.BaseAlt
+			};
+
+			BackdropController.AddSystemBackdropTarget(App.MainWindow.As<Microsoft.UI.Composition.ICompositionSupportsSystemBackdrop>());
+			BackdropController.SetSystemBackdropConfiguration(ConfigurationSource);
+		}
+	}
+
+	void SetConfigurationSourceTheme() {
+		if (ConfigurationSource is not null) {
+			ConfigurationSource.Theme = ((FrameworkElement) App.MainWindow.Content).ActualTheme switch {
+				ElementTheme.Dark => SystemBackdropTheme.Dark,
+				ElementTheme.Light => SystemBackdropTheme.Light,
+				ElementTheme.Default => SystemBackdropTheme.Default,
+				_ => throw new ArgumentException("Unsupported theme")
+			};
+		}
+	}
+
+	void Window_Activated(object sender, WindowActivatedEventArgs args) {
+		if (ConfigurationSource is not null) {
+			ConfigurationSource.IsInputActive = args.WindowActivationState != WindowActivationState.Deactivated;
+		}
+	}
+
+	void Window_Closed(object sender, WindowEventArgs args) {
+		BackdropController?.Dispose();
+		App.MainWindow.Activated -= Window_Activated;
+	}
+
+	void Window_ThemeChanged(FrameworkElement sender, object args) {
+		SetConfigurationSourceTheme();
+	}
 }

@@ -1,110 +1,88 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.UI.Xaml;
-
-using v8.Activation;
 using v8.Contracts.Services;
 using v8.Core.Contracts.Services;
 using v8.Core.Services;
-using v8.Helpers;
-using v8.Models;
-using v8.Notifications;
 using v8.Services;
 using v8.ViewModels;
 using v8.Views;
 
 namespace v8;
 
-// To learn more about WinUI 3, see https://docs.microsoft.com/windows/apps/winui/winui3/.
-public partial class App : Application
-{
-    // The .NET Generic Host provides dependency injection, configuration, logging, and other services.
-    // https://docs.microsoft.com/dotnet/core/extensions/generic-host
-    // https://docs.microsoft.com/dotnet/core/extensions/dependency-injection
-    // https://docs.microsoft.com/dotnet/core/extensions/configuration
-    // https://docs.microsoft.com/dotnet/core/extensions/logging
-    public IHost Host
-    {
-        get;
-    }
+public partial class App : Application {
+	public static Window MainWindow { get; } = new MainWindow();
 
-    public static T GetService<T>()
-        where T : class
-    {
-        if ((App.Current as App)!.Host.Services.GetService(typeof(T)) is not T service)
-        {
-            throw new ArgumentException($"{typeof(T)} needs to be registered in ConfigureServices within App.xaml.cs.");
-        }
+	public IHost Host { get; }
 
-        return service;
-    }
+	public App() {
+		InitializeComponent();
 
-    public static WindowEx MainWindow { get; } = new MainWindow();
+		Host = Microsoft.Extensions.Hosting.Host.
+			CreateDefaultBuilder().
+			UseContentRoot(AppContext.BaseDirectory).
+			ConfigureAppConfiguration((context, builder) => {
+				builder.Sources.Clear();
+				StateManager.EnsureSettings();
+				builder.AddJsonFile(StateManager.SettingsPath, false, true);
+				builder.AddEnvironmentVariables();
+			}).
+			ConfigureServices(ConfigureServices).
+			Build();
 
-    public App()
-    {
-        InitializeComponent();
+		InitializeServices();
 
-        Host = Microsoft.Extensions.Hosting.Host.
-        CreateDefaultBuilder().
-        UseContentRoot(AppContext.BaseDirectory).
-        ConfigureServices((context, services) =>
-        {
-            // Default Activation Handler
-            services.AddTransient<ActivationHandler<LaunchActivatedEventArgs>, DefaultActivationHandler>();
+		UnhandledException += UnhandledExceptionEventHandler;
+	}
 
-            // Other Activation Handlers
-            services.AddTransient<IActivationHandler, AppNotificationActivationHandler>();
+	public static T GetService<T>()
+		where T : class {
 
-            // Services
-            services.AddSingleton<IAppNotificationService, AppNotificationService>();
-            services.AddSingleton<ILocalSettingsService, LocalSettingsService>();
-            services.AddSingleton<IThemeSelectorService, ThemeSelectorService>();
-            services.AddTransient<INavigationViewService, NavigationViewService>();
+		if ((Current as App)!.Host.Services.GetService(typeof(T)) is not T service) {
+			throw new ArgumentException($"{typeof(T)} needs to be registered in ConfigureServices within App.xaml.cs.");
+		}
 
-            services.AddSingleton<IActivationService, ActivationService>();
-            services.AddSingleton<IPageService, PageService>();
-            services.AddSingleton<INavigationService, NavigationService>();
+		return service;
+	}
 
-            // Core Services
-            services.AddSingleton<ISampleDataService, SampleDataService>();
-            services.AddSingleton<IFileService, FileService>();
+	protected override void OnLaunched(LaunchActivatedEventArgs args) {
+		base.OnLaunched(args);
 
-            // Views and ViewModels
-            services.AddTransient<SettingsViewModel>();
-            services.AddTransient<SettingsPage>();
-            services.AddTransient<ListDetailsViewModel>();
-            services.AddTransient<ListDetailsPage>();
-            services.AddTransient<MainViewModel>();
-            services.AddTransient<MainPage>();
-            services.AddTransient<ShellPage>();
-            services.AddTransient<ShellViewModel>();
+		GetService<IThemeSelectorService>().LoadTheme();
 
-			services.AddTransient<ImageScene>();
-            services.AddTransient<ImageSceneViewModel>();
+		MainWindow.Activate();
 
-			// Configuration
-			services.Configure<LocalSettingsOptions>(context.Configuration.GetSection(nameof(LocalSettingsOptions)));
-        }).
-        Build();
+		GetService<INavigationService>().NavigateTo(typeof(MainViewModel).FullName!, args.Arguments);
+	}
 
-        App.GetService<IAppNotificationService>().Initialize();
+	void InitializeServices() {
+	}
 
-        UnhandledException += App_UnhandledException;
-    }
+	void ConfigureServices(HostBuilderContext context, IServiceCollection services) {
+		// Services
+		services.AddSingleton<IThemeSelectorService, ThemeSelectorService>();
+		services.AddTransient<INavigationViewService, NavigationViewService>();
 
-    private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
-    {
-        // TODO: Log and handle exceptions as appropriate.
-        // https://docs.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.application.unhandledexception.
-    }
+		services.AddSingleton<IPageService, PageService>();
+		services.AddSingleton<INavigationService, NavigationService>();
 
-    protected async override void OnLaunched(LaunchActivatedEventArgs args)
-    {
-        base.OnLaunched(args);
+		// Core Services
+		services.AddSingleton<ISampleDataService, SampleDataService>();
+		services.AddSingleton<IFileService, FileService>();
 
-        App.GetService<IAppNotificationService>().Show(string.Format("AppNotificationSamplePayload".GetLocalized(), AppContext.BaseDirectory));
+		// Views and ViewModels
+		services.AddTransient<SettingsViewModel>();
+		services.AddTransient<SettingsPage>();
+		services.AddTransient<MainViewModel>();
+		services.AddTransient<MainWindowViewModel>();
+		services.AddTransient<MainPage>();
 
-        await App.GetService<IActivationService>().ActivateAsync(args);
-    }
+		// Mine
+		services.AddTransient<ImageScene>();
+		services.AddTransient<ImageSceneViewModel>();
+	}
+
+	void UnhandledExceptionEventHandler(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e) {
+		// TODO: Log and handle exceptions as appropriate.
+	}
 }

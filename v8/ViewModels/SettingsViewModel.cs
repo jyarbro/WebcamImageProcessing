@@ -1,73 +1,72 @@
 ﻿using System.Reflection;
 using System.Windows.Input;
-
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-
-using Microsoft.UI.Xaml;
-
+using Microsoft.Extensions.Options;
+using Nrrdio.Utilities.WinUI;
 using v8.Contracts.Services;
-using v8.Helpers;
-
-using Windows.ApplicationModel;
+using v8.Models;
+using Windows.ApplicationModel.DataTransfer;
+using Windows.Storage;
 
 namespace v8.ViewModels;
 
-public class SettingsViewModel : ObservableRecipient
-{
-    private readonly IThemeSelectorService _themeSelectorService;
-    private ElementTheme _elementTheme;
-    private string _versionDescription;
+public class SettingsViewModel : ObservableRecipient {
+	public ElementTheme Theme => ThemeSelectorService.Theme;
 
-    public ElementTheme ElementTheme
-    {
-        get => _elementTheme;
-        set => SetProperty(ref _elementTheme, value);
-    }
+	public string VersionDescription {
+		get => _versionDescription;
+		set => SetProperty(ref _versionDescription, value);
+	}
+	string _versionDescription;
 
-    public string VersionDescription
-    {
-        get => _versionDescription;
-        set => SetProperty(ref _versionDescription, value);
-    }
+	public string LocalSettingsFolder {
+		get => GetLocalSettingsFolderShort();
+	}
 
-    public ICommand SwitchThemeCommand
-    {
-        get;
-    }
+	public ICommand SwitchThemeCommand { get; init; }
+	public Settings Settings { get; init; }
 
-    public SettingsViewModel(IThemeSelectorService themeSelectorService)
-    {
-        _themeSelectorService = themeSelectorService;
-        _elementTheme = _themeSelectorService.Theme;
-        _versionDescription = GetVersionDescription();
+	IThemeSelectorService ThemeSelectorService { get; init; }
 
-        SwitchThemeCommand = new RelayCommand<ElementTheme>(
-            async (param) =>
-            {
-                if (ElementTheme != param)
-                {
-                    ElementTheme = param;
-                    await _themeSelectorService.SetThemeAsync(param);
-                }
-            });
-    }
+	public SettingsViewModel(
+		IThemeSelectorService themeSelectorService,
+		IOptionsMonitor<Settings> settings
+	) {
+		ThemeSelectorService = themeSelectorService;
+		Settings = settings.CurrentValue;
 
-    private static string GetVersionDescription()
-    {
-        Version version;
+		_versionDescription = GetVersionDescription();
 
-        if (RuntimeHelper.IsMSIX)
-        {
-            var packageVersion = Package.Current.Id.Version;
+		SwitchThemeCommand = new RelayCommand<ElementTheme>(
+			(param) => {
+				ThemeSelectorService.SetTheme(param);
+			});
+	}
 
-            version = new(packageVersion.Major, packageVersion.Minor, packageVersion.Build, packageVersion.Revision);
-        }
-        else
-        {
-            version = Assembly.GetExecutingAssembly().GetName().Version!;
-        }
+	public void CopySettingsPathToClipboard() {
+		var dataPackage = new DataPackage();
+		dataPackage.SetText(ApplicationData.Current.LocalFolder.Path);
+		Clipboard.SetContent(dataPackage);
+	}
 
-        return $"{"AppDisplayName".GetLocalized()} - {version.Major}.{version.Minor}.{version.Build}.{version.Revision}";
-    }
+	public void UpdateOpenAIApiKey(string value) => Settings.OpenAIApiKey = value;
+
+	static string GetVersionDescription() {
+		var version = Assembly.GetExecutingAssembly().GetName().Version!;
+		return $"{"AppDisplayName".GetLocalized()} - {version.Major}.{version.Minor}.{version.Build}.{version.Revision}";
+	}
+
+	static string GetLocalSettingsFolderShort() {
+		var path = ApplicationData.Current.LocalFolder.Path;
+
+		if (path.Length > 48) {
+			var front = path.Substring(0, 24);
+			var back = path.Substring(path.Length - 24, 24);
+
+			return $"{front}...{back}";
+		}
+
+		return path;
+	}
 }

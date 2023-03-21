@@ -5,15 +5,39 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:helpers="using:v8.Helpers"
+    xmlns:nrrdio="using:Nrrdio.Utilities.WinUI"
     xmlns:xaml="using:Microsoft.UI.Xaml"
     mc:Ignorable="d">
     <Page.Resources>
-        <helpers:EnumToBooleanConverter x:Key="EnumToBooleanConverter" />
+        <nrrdio:EnumToBooleanConverter x:Key="EnumToBooleanConverter" />
     </Page.Resources>
     <Grid>
         <StackPanel
             x:Name="ContentArea">
+
+            <StackPanel 
+                    Margin="{StaticResource SmallTopMargin}"
+                    Orientation="Horizontal">
+
+                <TextBlock
+                        x:Uid="SettingsPage_LocalSettingsFolder"
+                        Style="{ThemeResource BodyTextBlockStyle}"
+                        VerticalAlignment="Center" />
+
+                <Button
+                        Content="{x:Bind ViewModel.LocalSettingsFolder, Mode=OneWay}"
+                        Click="CopySettingsPathToClipboard_ButtonClick"
+                        Style="{StaticResource SubduedButtonStyle}">
+                    <Button.Flyout>
+                        <Flyout>
+                            <TextBlock>Copied!</TextBlock>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+            </StackPanel>
+
             <TextBlock x:Uid="Settings_Personalization" Style="{ThemeResource SubtitleTextBlockStyle}" />
+
             <StackPanel Margin="{StaticResource SmallTopBottomMargin}">
                 <TextBlock x:Uid="Settings_Theme" />
 
@@ -21,7 +45,7 @@
                     <RadioButton
                         x:Uid="Settings_Theme_Light"
                         Command="{x:Bind ViewModel.SwitchThemeCommand}"
-                        IsChecked="{x:Bind ViewModel.ElementTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Light, Mode=OneWay}"
+                        IsChecked="{x:Bind ViewModel.Theme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Light, Mode=OneWay}"
                         FontSize="15"
                         GroupName="AppTheme">
                         <RadioButton.CommandParameter>
@@ -31,7 +55,7 @@
                     <RadioButton
                         x:Uid="Settings_Theme_Dark"
                         Command="{x:Bind ViewModel.SwitchThemeCommand}"
-                        IsChecked="{x:Bind ViewModel.ElementTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Dark, Mode=OneWay}"
+                        IsChecked="{x:Bind ViewModel.Theme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Dark, Mode=OneWay}"
                         FontSize="15"
                         GroupName="AppTheme">
                         <RadioButton.CommandParameter>
@@ -41,7 +65,7 @@
                     <RadioButton
                         x:Uid="Settings_Theme_Default"
                         Command="{x:Bind ViewModel.SwitchThemeCommand}"
-                        IsChecked="{x:Bind ViewModel.ElementTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Default, Mode=OneWay}"
+                        IsChecked="{x:Bind ViewModel.Theme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Default, Mode=OneWay}"
                         FontSize="15"
                         GroupName="AppTheme">
                         <RadioButton.CommandParameter>
