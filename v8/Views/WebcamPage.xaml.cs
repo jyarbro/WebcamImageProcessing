@@ -10,7 +10,7 @@ public sealed partial class MainPage : Page {
 	/// </summary>
 	public static MainPage? Current { get; private set; }
 
-	public MainViewModel ViewModel { get; }
+	public MainViewModel ViewModel { get; private init; }
 
 	public MainPage() {
 		Current = this;
@@ -20,11 +20,11 @@ public sealed partial class MainPage : Page {
 	}
 
 	protected override void OnNavigatedTo(NavigationEventArgs e) {
-		ImageProcessorSelectorControl.ItemsSource = ViewModel.ImageProcessors;
-		ImageProcessorSelectorControl.SelectedIndex = 0;
+		WebcamProcessorSelectorControl.ItemsSource = ViewModel.ImageProcessors;
+		WebcamProcessorSelectorControl.SelectedIndex = 0;
 	}
 
-	void ImageProcessorSelectorControl_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+	void WebcamProcessorSelectorControl_SelectionChanged(object sender, SelectionChangedEventArgs e) {
 		if (sender is ListBox listBox && listBox.SelectedItem is ImageProcessorSelector selector) {
 			ImageProcessorFrame.Navigate(typeof(ImageScene), selector);
 		}

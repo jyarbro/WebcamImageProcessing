@@ -4,8 +4,8 @@ using v8.ViewModels;
 namespace v8;
 
 public sealed partial class MainWindow : Window {
-	const int DEFAULT_WIDTH = 800;
-	const int DEFAULT_HEIGHT = 600;
+	const int DEFAULT_WIDTH = 1000;
+	const int DEFAULT_HEIGHT = 800;
 	readonly nint windowHandle;
 
 	MainWindowViewModel ViewModel { get; init; }
