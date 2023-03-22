@@ -9,7 +9,7 @@ public class PageService : IPageService {
 	private readonly Dictionary<string, Type> _pages = new();
 
 	public PageService() {
-		Configure<MainViewModel, MainPage>();
+		Configure<WebcamPageViewModel, WebcamPage>();
 		Configure<SettingsViewModel, SettingsPage>();
 	}
 

@@ -7,12 +7,12 @@ using v8.ViewModels;
 
 namespace v8.Views;
 
-public sealed partial class ImageScene : Page {
+public sealed partial class ProcessedWebcamFrame : Page {
 	public ImageSceneViewModel ViewModel { get; }
 	ILogger Logger { get; }
 	FrameRateManager FrameRateManager { get; }
 
-	public ImageScene() {
+	public ProcessedWebcamFrame() {
 		InitializeComponent();
 
 		Logger = new SimpleLogger();
@@ -25,24 +25,24 @@ public sealed partial class ImageScene : Page {
 	}
 
 	protected override void OnNavigatedTo(NavigationEventArgs e) {
-		var imageProcessorSelector = e.Parameter as ImageProcessorSelector;
+		var imageProcessorSelector = e.Parameter as WebcamProcessorSelector;
 
 		if (imageProcessorSelector is null) {
-			Logger.Log($"Error with scene parameter {nameof(ImageProcessorSelector)}");
+			Logger.Log($"Error with scene parameter {nameof(WebcamProcessorSelector)}");
 			return;
 		}
 
-		if (imageProcessorSelector.ImageProcessor is null) {
-			Logger.Log($"Error with scene parameter {nameof(ImageProcessorSelector.ImageProcessor)}");
+		if (imageProcessorSelector.Processor is null) {
+			Logger.Log($"Error with scene parameter {nameof(WebcamProcessorSelector.Processor)}");
 			return;
 		}
 
 		Logger.Log($"Loading scene '{imageProcessorSelector.Title}'");
 
-		var imageProcessor = Activator.CreateInstance(imageProcessorSelector.ImageProcessor, new object[] { Logger, FrameRateManager, DispatcherQueue }) as ImageProcessor;
+		var imageProcessor = Activator.CreateInstance(imageProcessorSelector.Processor, new object[] { Logger, FrameRateManager, DispatcherQueue }) as ImageProcessor;
 
 		if (imageProcessor is null) {
-			Logger.Log($"Error creating instance of {imageProcessorSelector.ImageProcessor.FullName} as {nameof(ImageProcessor)}");
+			Logger.Log($"Error creating instance of {imageProcessorSelector.Processor.FullName} as {nameof(ImageProcessor)}");
 			return;
 		}
 

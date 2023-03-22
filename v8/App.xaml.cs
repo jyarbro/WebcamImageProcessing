@@ -52,7 +52,7 @@ public partial class App : Application {
 
 		MainWindow.Activate();
 
-		GetService<INavigationService>().NavigateTo(typeof(MainViewModel).FullName!, args.Arguments);
+		GetService<INavigationService>().NavigateTo(typeof(WebcamPageViewModel).FullName!, args.Arguments);
 	}
 
 	void InitializeServices() {
@@ -73,12 +73,10 @@ public partial class App : Application {
 		// Views and ViewModels
 		services.AddTransient<SettingsViewModel>();
 		services.AddTransient<SettingsPage>();
-		services.AddTransient<MainViewModel>();
+		services.AddTransient<WebcamPageViewModel>();
 		services.AddTransient<MainWindowViewModel>();
-		services.AddTransient<MainPage>();
-
-		// Mine
-		services.AddTransient<ImageScene>();
+		services.AddTransient<WebcamPage>();
+		services.AddTransient<ProcessedWebcamFrame>();
 		services.AddTransient<ImageSceneViewModel>();
 	}
 

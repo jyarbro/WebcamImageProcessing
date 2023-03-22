@@ -35,7 +35,7 @@
             <NavigationView.MenuItems>
                 <NavigationViewItem
                     x:Uid="Shell_Main"
-                    helpers:NavigationHelper.NavigateTo="v8.ViewModels.MainViewModel">
+                    helpers:NavigationHelper.NavigateTo="v8.ViewModels.WebcamPageViewModel">
 
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe90a;"/>
