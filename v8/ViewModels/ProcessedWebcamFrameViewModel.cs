@@ -1,5 +1,5 @@
-﻿using v8.Core.ImageProcessors;
-using v8.Core.Services.FrameRate;
+﻿using v8.Core.Contracts.Services;
+using v8.Core.ImageProcessors;
 using v8.Core.Services.Logger;
 using Windows.Media.Capture;
 using Windows.Media.Capture.Frames;

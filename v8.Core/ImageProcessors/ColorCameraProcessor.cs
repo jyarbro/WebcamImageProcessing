@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using Microsoft.UI.Dispatching;
+using v8.Core.Contracts.Services;
 using v8.Core.Helpers;
-using v8.Core.Services.FrameRate;
 using v8.Core.Services.Logger;
 using Windows.Graphics.Imaging;
 using Windows.Media.Capture;
@@ -41,7 +41,7 @@ public class ColorCameraProcessor : ImageProcessor {
 
 	public override SoftwareBitmap ConvertFrame(VideoMediaFrame frame) {
 		try {
-			// XAML requires Bgra8 with premultiplied alpha.
+			// XAML requires Bgra8 with premultiplied alpha. The frame was sending BitmapAlphaMode.Straight
 			return SoftwareBitmap.Convert(frame.SoftwareBitmap, BitmapPixelFormat.Bgra8, BitmapAlphaMode.Premultiplied);
 		}
 		catch (ObjectDisposedException) { }

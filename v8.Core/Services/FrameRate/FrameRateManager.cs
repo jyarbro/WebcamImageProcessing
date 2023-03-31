@@ -1,4 +1,6 @@
-﻿namespace v8.Core.Services.FrameRate;
+﻿using v8.Core.Contracts.Services;
+
+namespace v8.Core.Services.FrameRate;
 
 public class FrameRateManager : IFrameRateManager {
 	// Too low will calculate framerate too often.

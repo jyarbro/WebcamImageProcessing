@@ -1,12 +1,12 @@
 ﻿using System.Runtime.InteropServices.WindowsRuntime;
 using Microsoft.UI.Dispatching;
 using v8.Core.ImageFilters;
-using v8.Core.Services.FrameRate;
 using v8.Core.Services.Logger;
 using Windows.Graphics.Imaging;
 using Windows.Media.Capture.Frames;
 using v8.Core.Helpers;
 using Windows.Media.Capture;
+using v8.Core.Contracts.Services;
 
 namespace v8.Core.ImageProcessors;
 

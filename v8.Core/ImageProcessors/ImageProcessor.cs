@@ -2,8 +2,8 @@
 using System.Runtime.InteropServices;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Media.Imaging;
+using v8.Core.Contracts.Services;
 using v8.Core.Helpers;
-using v8.Core.Services.FrameRate;
 using v8.Core.Services.Logger;
 using Windows.Graphics.Imaging;
 using Windows.Media.Capture;
