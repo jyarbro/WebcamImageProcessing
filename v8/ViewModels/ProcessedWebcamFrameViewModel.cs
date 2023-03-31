@@ -6,14 +6,14 @@ using Windows.Media.Capture.Frames;
 
 namespace v8.ViewModels;
 
-public class ImageSceneViewModel {
+public class ProcessedWebcamFrameViewModel {
 	readonly ILogger Logger;
 	readonly IFrameRateManager FrameRateManager;
 
 	ImageProcessor? ImageProcessor;
 	MediaCapture? MediaCapture;
 
-	public ImageSceneViewModel(
+	public ProcessedWebcamFrameViewModel(
 		ILogger logger,
 		IFrameRateManager frameRateManager
 	) {

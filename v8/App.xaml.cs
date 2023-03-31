@@ -1,9 +1,13 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using v8.Contracts.Services;
 using v8.Core.Contracts.Services;
+using v8.Core.ImageFilters;
 using v8.Core.Services;
+using v8.Core.Services.FrameRate;
+using v8.Core.Services.Logger;
 using v8.Services;
 using v8.ViewModels;
 using v8.Views;
@@ -60,24 +64,28 @@ public partial class App : Application {
 
 	void ConfigureServices(HostBuilderContext context, IServiceCollection services) {
 		// Services
-		services.AddSingleton<IThemeSelectorService, ThemeSelectorService>();
-		services.AddTransient<INavigationViewService, NavigationViewService>();
+		services.AddScoped<IPageService, PageService>();
+		services.AddScoped<IThemeSelectorService, ThemeSelectorService>();
+		services.AddScoped<INavigationViewService, NavigationViewService>();
+		services.AddScoped<INavigationService, NavigationService>();
+		services.AddScoped<IFileService, FileService>();
+		services.AddScoped<Core.Services.Logger.ILogger, SimpleLogger>(); // TODO JY Replace this logger with nrrdio.utils
+		services.AddTransient<IFrameRateManager, FrameRateManager>();
 
-		services.AddSingleton<IPageService, PageService>();
-		services.AddSingleton<INavigationService, NavigationService>();
-
-		// Core Services
-		services.AddSingleton<ISampleDataService, SampleDataService>();
-		services.AddSingleton<IFileService, FileService>();
-
-		// Views and ViewModels
-		services.AddTransient<SettingsViewModel>();
-		services.AddTransient<SettingsPage>();
-		services.AddTransient<WebcamPageViewModel>();
+		// Pages, Frames & ViewModels
 		services.AddTransient<MainWindowViewModel>();
+
+		services.AddTransient<SettingsPage>();
+		services.AddTransient<SettingsViewModel>();
+
 		services.AddTransient<WebcamPage>();
+		services.AddTransient<WebcamPageViewModel>();
+
 		services.AddTransient<ProcessedWebcamFrame>();
-		services.AddTransient<ImageSceneViewModel>();
+		services.AddTransient<ProcessedWebcamFrameViewModel>();
+
+		// Filters
+		services.AddTransient<GreenBooster>();
 	}
 
 	void UnhandledExceptionEventHandler(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e) {

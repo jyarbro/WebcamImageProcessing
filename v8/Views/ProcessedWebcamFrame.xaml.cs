@@ -8,20 +8,20 @@ using v8.ViewModels;
 namespace v8.Views;
 
 public sealed partial class ProcessedWebcamFrame : Page {
-	public ImageSceneViewModel ViewModel { get; }
+	public ProcessedWebcamFrameViewModel ViewModel { get; }
+
 	ILogger Logger { get; }
-	FrameRateManager FrameRateManager { get; }
+	IFrameRateManager FrameRateManager { get; }
 
 	public ProcessedWebcamFrame() {
+		Logger = App.GetService<ILogger>();
+		FrameRateManager = App.GetService<IFrameRateManager>();
+		ViewModel = App.GetService<ProcessedWebcamFrameViewModel>();
+
 		InitializeComponent();
 
-		Logger = new SimpleLogger();
 		Logger.MessageLoggedEvent += UpdateLog;
-
-		FrameRateManager = new FrameRateManager();
 		FrameRateManager.FrameRateUpdated += UpdateFrameRate;
-
-		ViewModel = new ImageSceneViewModel(Logger, FrameRateManager);
 	}
 
 	protected override void OnNavigatedTo(NavigationEventArgs e) {
@@ -53,14 +53,14 @@ public sealed partial class ProcessedWebcamFrame : Page {
 
 	protected override void OnNavigatedFrom(NavigationEventArgs e) => ViewModel.Shutdown();
 
-	void UpdateLog(object sender, LogEventArgs e) {
-		DispatcherQueue.TryEnqueue(() => {
+	void UpdateLog(object? sender, LogEventArgs e) {
+		DispatcherQueue?.TryEnqueue(() => {
 			Log.Text = e.Message + Log.Text;
 		});
 	}
 
-	void UpdateFrameRate(object sender, FrameRateEventArgs e) {
-		DispatcherQueue.TryEnqueue(() => {
+	void UpdateFrameRate(object? sender, FrameRateEventArgs e) {
+		DispatcherQueue?.TryEnqueue(() => {
 			FramesPerSecond.Text = e.FramesPerSecond.ToString();
 			FrameLag.Text = e.FrameLag.ToString();
 		});
