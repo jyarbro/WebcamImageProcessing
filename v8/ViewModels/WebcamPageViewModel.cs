@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using v8.Core.ImageProcessors;
-using v8.Helpers;
 
 namespace v8.ViewModels;
 
@@ -19,9 +18,6 @@ public class WebcamPageViewModel : ObservableRecipient {
 				Processor = typeof(EdgeDetectionProcessor)
 			}
 		};
-
-	public WebcamPageViewModel() {
-	}
 }
 
 public class WebcamProcessorSelector {

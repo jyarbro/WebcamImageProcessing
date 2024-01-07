@@ -34,11 +34,19 @@
 
             <NavigationView.MenuItems>
                 <NavigationViewItem
-                    x:Uid="Shell_Main"
+                    x:Uid="Shell_Webcam"
                     helpers:NavigationHelper.NavigateTo="v8.ViewModels.WebcamPageViewModel">
 
                     <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe90a;"/>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe8b8;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem
+                    x:Uid="Shell_File"
+                    helpers:NavigationHelper.NavigateTo="v8.ViewModels.FilePageViewModel">
+
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe8b9;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
             </NavigationView.MenuItems>

@@ -10,6 +10,7 @@ public class PageService : IPageService {
 
 	public PageService() {
 		Configure<WebcamPageViewModel, WebcamPage>();
+		Configure<FilePageViewModel, FilePage>();
 		Configure<SettingsViewModel, SettingsPage>();
 	}
 

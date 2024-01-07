@@ -61,17 +61,14 @@
   <data name="AppDisplayName" xml:space="preserve">
     <value>v8</value>
   </data>
-	<data name="AppDescription" xml:space="preserve">
-		<value>v8</value>
-  	</data>
-  <data name="Shell_Main.Content" xml:space="preserve">
-    <value>Main</value>
+  <data name="AppDescription" xml:space="preserve">
+    <value>v8</value>
+  </data>
+  <data name="Shell_Webcam.Content" xml:space="preserve">
+    <value>Webcam</value>
   </data>
   <data name="ListDetails_NoSelection.Text" xml:space="preserve">
     <value>Select an item from the list.</value>
-  </data>
-  <data name="Shell_ListDetails.Content" xml:space="preserve">
-    <value>ListDetails</value>
   </data>
   <data name="Settings_Personalization.Text" xml:space="preserve">
     <value>Personalization</value>

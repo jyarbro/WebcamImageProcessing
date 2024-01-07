@@ -43,7 +43,7 @@ public partial class App : Application {
 		where T : class {
 
 		if ((Current as App)!.Host.Services.GetService(typeof(T)) is not T service) {
-			throw new ArgumentException($"{typeof(T)} needs to be registered in ConfigureServices within App.xaml.cs.");
+			throw new ArgumentException($"{typeof(T)} needs to be registered in {nameof(ConfigureServices)} within App.xaml.cs.");
 		}
 
 		return service;
@@ -74,6 +74,9 @@ public partial class App : Application {
 
 		// Pages, Frames & ViewModels
 		services.AddTransient<MainWindowViewModel>();
+
+		services.AddTransient<FilePage>();
+		services.AddTransient<FilePageViewModel>();
 
 		services.AddTransient<SettingsPage>();
 		services.AddTransient<SettingsViewModel>();

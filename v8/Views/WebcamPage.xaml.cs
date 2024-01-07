@@ -1,6 +1,5 @@
 ﻿using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Navigation;
-using v8.Helpers;
 using v8.ViewModels;
 
 namespace v8.Views;
