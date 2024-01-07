@@ -17,7 +17,7 @@ public class PageService : IPageService {
 		Type? pageType;
 		lock (_pages) {
 			if (!_pages.TryGetValue(key, out pageType)) {
-				throw new ArgumentException($"Page not found: {key}. Did you forget to call PageService.Configure?");
+				throw new ArgumentException($"Page not found: {key}. Did you forget to call {nameof(PageService)}.{nameof(Configure)}?");
 			}
 		}
 
@@ -30,7 +30,7 @@ public class PageService : IPageService {
 		lock (_pages) {
 			var key = typeof(VM).FullName!;
 			if (_pages.ContainsKey(key)) {
-				throw new ArgumentException($"The key {key} is already configured in PageService");
+				throw new ArgumentException($"The key {key} is already configured in {nameof(PageService)}");
 			}
 
 			var type = typeof(V);
