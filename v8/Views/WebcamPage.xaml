@@ -1,6 +1,6 @@
 ﻿<Page
     x:Class="v8.Views.WebcamPage"
-	xmlns:views="using:v8.Views"
+	xmlns:viewmodels="using:v8.ViewModels"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -8,7 +8,7 @@
     mc:Ignorable="d">
 
     <Page.Resources>
-        <views:WebcamProcessorConverter x:Key="ProcessorConverter"></views:WebcamProcessorConverter>
+        <viewmodels:WebcamSelectionConverter x:Key="WebcamSelectionConverter"></viewmodels:WebcamSelectionConverter>
     </Page.Resources>
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
@@ -29,7 +29,7 @@
 					Margin="10,10,0,0">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Text="{Binding Converter={StaticResource ProcessorConverter}}" />
+                        <TextBlock Text="{Binding Converter={StaticResource WebcamSelectionConverter}}" />
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>

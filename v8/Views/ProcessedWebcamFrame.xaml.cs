@@ -26,15 +26,15 @@ public sealed partial class ProcessedWebcamFrame : Page {
 	}
 
 	protected override void OnNavigatedTo(NavigationEventArgs e) {
-		var imageProcessorSelector = e.Parameter as WebcamProcessorSelector;
+		var imageProcessorSelector = e.Parameter as WebcamPageViewModel.Selection;
 
 		if (imageProcessorSelector is null) {
-			Logger.Log($"Error with scene parameter {nameof(WebcamProcessorSelector)}");
+			Logger.Log($"Error with scene parameter {nameof(WebcamPageViewModel.Selection)}");
 			return;
 		}
 
 		if (imageProcessorSelector.Processor is null) {
-			Logger.Log($"Error with scene parameter {nameof(WebcamProcessorSelector.Processor)}");
+			Logger.Log($"Error with scene parameter {nameof(WebcamPageViewModel.Selection.Processor)}");
 			return;
 		}
 
