@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using v8.Contracts.Services;
 using v8.Core.Contracts.Services;
 using v8.Core.ImageFilters;
@@ -69,7 +68,7 @@ public partial class App : Application {
 		services.AddScoped<INavigationViewService, NavigationViewService>();
 		services.AddScoped<INavigationService, NavigationService>();
 		services.AddScoped<IFileService, FileService>();
-		services.AddScoped<Core.Services.Logger.ILogger, SimpleLogger>(); // TODO JY Replace this logger with nrrdio.utils
+		services.AddScoped<ILogger, SimpleLogger>(); // TODO JY Replace this logger with nrrdio.utils
 		services.AddTransient<IFrameRateManager, FrameRateManager>();
 
 		// Pages, Frames & ViewModels

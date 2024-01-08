@@ -3,7 +3,6 @@ using v8.Core.Contracts.Services;
 using v8.Core.ImageProcessors;
 using v8.Core.Services.FrameRate;
 using v8.Core.Services.Logger;
-using v8.Helpers;
 using v8.ViewModels;
 
 namespace v8.Views;
