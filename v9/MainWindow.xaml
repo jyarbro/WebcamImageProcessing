@@ -35,7 +35,7 @@
             <NavigationView.MenuItems>
                 <NavigationViewItem
                     x:Uid="Shell_Webcam"
-                    coreHelpers:NavigationHelper.NavigateTo="v8.ViewModels.WebcamPageViewModel">
+                    coreHelpers:NavigationHelper.NavigateTo="v9.Core.ViewModels.WebcamPageViewModel">
 
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe8b8;"/>
@@ -43,7 +43,7 @@
                 </NavigationViewItem>
                 <NavigationViewItem
                     x:Uid="Shell_File"
-                    coreHelpers:NavigationHelper.NavigateTo="v8.ViewModels.FilePageViewModel">
+                    coreHelpers:NavigationHelper.NavigateTo="v9.Core.ViewModels.FilePageViewModel">
 
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe8b9;"/>

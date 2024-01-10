@@ -6,6 +6,7 @@ using Nrrdio.Utilities.Loggers;
 using Nrrdio.Utilities.WinUI.FrameRate;
 using v9.Core.Contracts.Services;
 using v9.Core.ImageFilters;
+using v9.Core.ImageProcessors;
 using v9.Core.Services;
 using v9.Core.ViewModels;
 using v9.Helpers;
@@ -30,6 +31,7 @@ public partial class App : Application {
 				builder.AddJsonFile(StateManager.SettingsPath, false, true);
 				builder.AddEnvironmentVariables();
 			}).
+			ConfigureServices(ConfigureServices).
 			ConfigureLogging(builder =>
 				builder.
 					ClearProviders().
@@ -39,7 +41,6 @@ public partial class App : Application {
 						}
 					)
 			).
-			ConfigureServices(ConfigureServices).
 			Build();
 
 		InitializeServices();
@@ -52,6 +53,16 @@ public partial class App : Application {
 
 		if ((Current as App)!.Host.Services.GetService(typeof(T)) is not T service) {
 			throw new ArgumentException($"{typeof(T)} needs to be registered in {nameof(ConfigureServices)} within App.xaml.cs.");
+		}
+
+		return service;
+	}
+
+	public static object GetService(Type t) {
+		var service = (Current as App)!.Host.Services.GetService(t);
+
+		if (service is null) {
+			throw new ArgumentException($"{t} needs to be registered in {nameof(ConfigureServices)} within App.xaml.cs.");
 		}
 
 		return service;
@@ -104,6 +115,12 @@ public partial class App : Application {
 		services.AddTransient<ProcessedWebcamFrameViewModel>();
 
 		// Filters
+		services.AddTransient<ColorCameraProcessor>();
+		services.AddTransient<EdgeDetectionProcessor>();
+		services.AddTransient<BoostGreenProcessor>();
+
+		// v9 stuff
+		services.AddTransient<WebcamProcessor>();
 		services.AddTransient<GreenBooster>();
 	}
 

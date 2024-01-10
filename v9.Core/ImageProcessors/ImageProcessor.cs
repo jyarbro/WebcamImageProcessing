@@ -11,7 +11,11 @@ using Windows.Media.Capture.Frames;
 
 namespace v9.Core.ImageProcessors;
 
-public abstract class ImageProcessor : IAsyncDisposable {
+public abstract class ImageProcessor(
+		ILogger<ImageProcessor> logger,
+		IFrameRateHandler frameRateHandler
+	) : IAsyncDisposable {
+
 	protected const int CHUNK = 4;
 	protected const int WIDTH = 640;
 	protected const int HEIGHT = 480;
@@ -20,22 +24,13 @@ public abstract class ImageProcessor : IAsyncDisposable {
 
 	public SoftwareBitmapSource ImageSource = new();
 
-	protected ILogger Logger { get; init; }
-	protected IFrameRateHandler FrameRateHandler { get; init; }
-	protected DispatcherQueue DispatcherQueue { get; init; }
+	public DispatcherQueue? DispatcherQueue { protected get; set; }
 
-	SoftwareBitmap BackBuffer;
+	protected ILogger Logger { get; init; } = logger;
+	protected IFrameRateHandler FrameRateHandler { get; init; } = frameRateHandler;
+
+	SoftwareBitmap? BackBuffer;
 	bool SwappingActiveImage = false;
-
-	public ImageProcessor(
-		ILogger logger,
-		IFrameRateHandler frameRateHandler,
-		DispatcherQueue dispatcherQueue
-	) {
-		Logger = logger;
-		FrameRateHandler = frameRateHandler;
-		DispatcherQueue = dispatcherQueue;
-	}
 
 	public void ProcessFrame(MediaFrameReference frame) {
 		if (frame is null) {
@@ -62,11 +57,11 @@ public abstract class ImageProcessor : IAsyncDisposable {
 
 		SwappingActiveImage = true;
 
-		DispatcherQueue.TryEnqueue(async () => {
-			SoftwareBitmap latestBitmap;
+		DispatcherQueue?.TryEnqueue(async () => {
+			SoftwareBitmap? latestBitmap;
 
 			// Keep draining frames from the backbuffer until the backbuffer is empty.
-			while ((latestBitmap = Interlocked.Exchange(ref BackBuffer, null)) != null) {
+			while ((latestBitmap = Interlocked.Exchange(ref BackBuffer, null)) is not null) {
 				try {
 					await ImageSource.SetBitmapAsync(latestBitmap);
 				}
@@ -81,7 +76,7 @@ public abstract class ImageProcessor : IAsyncDisposable {
 	}
 
 	public abstract Task InitializeAsync(MediaCapture mediaCapture);
-	public abstract SoftwareBitmap ConvertFrame(VideoMediaFrame videoMediaFrame);
+	public abstract SoftwareBitmap? ConvertFrame(VideoMediaFrame videoMediaFrame);
 	public abstract Task DisposeAsync();
 
 	protected FilterOffsets PrecalculateFilterOffsets(int layer) {

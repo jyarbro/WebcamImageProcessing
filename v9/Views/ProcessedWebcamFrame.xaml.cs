@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml.Navigation;
 using Nrrdio.Utilities.Loggers;
-using Nrrdio.Utilities.Loggers.Contracts;
 using Nrrdio.Utilities.WinUI.FrameRate;
 using v9.Core.ImageProcessors;
 using v9.Core.ViewModels;
@@ -15,42 +14,39 @@ public sealed partial class ProcessedWebcamFrame : Page {
 	IFrameRateHandler FrameRateHandler { get; }
 
 	public ProcessedWebcamFrame() {
-		Logger = App.GetService<ILogger>();
+		Logger = App.GetService<ILogger<ProcessedWebcamFrame>>();
 		FrameRateHandler = App.GetService<IFrameRateHandler>();
 		ViewModel = App.GetService<ProcessedWebcamFrameViewModel>();
 
 		InitializeComponent();
 
-		((IHandlerLogger)Logger).EntryAddedEvent += ProcessedWebcamFrame_EntryAddedEvent;
+		HandlerLoggerProvider.Current!.GetLogger(typeof(ProcessedWebcamFrame).FullName!).EntryAddedEvent += ProcessedWebcamFrame_EntryAddedEvent;
+
 		FrameRateHandler.FrameRateUpdated += UpdateFrameRate;
 	}
 
-	private void ProcessedWebcamFrame_EntryAddedEvent(object? sender, Nrrdio.Utilities.Loggers.LogEntryEventArgs e) {
+	private void ProcessedWebcamFrame_EntryAddedEvent(object? sender, LogEntryEventArgs e) {
 		throw new NotImplementedException();
 	}
 
 	protected override void OnNavigatedTo(NavigationEventArgs e) {
 		var imageProcessorSelector = e.Parameter as WebcamPageViewModel.Selection;
 
-		if (imageProcessorSelector is null) {
+		if (imageProcessorSelector?.Processor is null) {
 			Logger.LogError($"Error with scene parameter {nameof(WebcamPageViewModel.Selection)}");
-			return;
-		}
-
-		if (imageProcessorSelector.Processor is null) {
-			Logger.LogError($"Error with scene parameter {nameof(WebcamPageViewModel.Selection.Processor)}");
 			return;
 		}
 
 		Logger.LogTrace($"Loading scene '{imageProcessorSelector.Title}'");
 
-		var imageProcessor = Activator.CreateInstance(imageProcessorSelector.Processor, new object[] { Logger, FrameRateHandler, DispatcherQueue }) as ImageProcessor;
+		var imageProcessor = App.GetService(imageProcessorSelector.Processor) as ImageProcessor;
 
 		if (imageProcessor is null) {
 			Logger.LogError($"Error creating instance of {imageProcessorSelector.Processor.FullName} as {nameof(ImageProcessor)}");
 			return;
 		}
 
+		imageProcessor.DispatcherQueue = DispatcherQueue;
 		OutputImage.Source = imageProcessor.ImageSource;
 
 		ViewModel.Initialize(imageProcessor);
@@ -60,7 +56,7 @@ public sealed partial class ProcessedWebcamFrame : Page {
 
 	void UpdateLog(object? sender, LogEntryEventArgs e) {
 		DispatcherQueue?.TryEnqueue(() => {
-			Log.Text = e.LogEntry.Message + Log.Text;
+			Log.Text = e.LogEntry?.Message + Log.Text;
 		});
 	}
 

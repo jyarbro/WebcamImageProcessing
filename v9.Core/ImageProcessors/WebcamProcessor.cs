@@ -11,7 +11,11 @@ using Windows.Media.Capture.Frames;
 
 namespace v9.Core.ImageProcessors;
 
-public class WebcamProcessor : IAsyncDisposable {
+public class WebcamProcessor(
+		ILogger<WebcamProcessor> logger,
+		IFrameRateHandler frameRateHandler
+	) : IAsyncDisposable {
+
 	const int CHUNK = 4;
 	const int WIDTH = 640;
 	const int HEIGHT = 480;
@@ -19,10 +23,10 @@ public class WebcamProcessor : IAsyncDisposable {
 	const int PIXELS = WIDTH * HEIGHT * CHUNK;
 
 	public SoftwareBitmapSource ImageSource = new();
+	public DispatcherQueue? DispatcherQueue { protected get; set; }
 
-	protected readonly ILogger Logger;
-	protected readonly IFrameRateHandler FrameRateHandler;
-	protected readonly DispatcherQueue DispatcherQueue;
+	protected readonly ILogger Logger = logger;
+	protected readonly IFrameRateHandler FrameRateHandler = frameRateHandler;
 
 	MediaCapture _MediaCapture;
 	MediaFrameReader _FrameReader;
@@ -32,17 +36,7 @@ public class WebcamProcessor : IAsyncDisposable {
 	bool _AcquiringFrame = false;
 
 	//TEMP
-	EdgeFilter _EdgeFilter = new EdgeFilter();
-
-	public WebcamProcessor(
-		ILogger logger,
-		IFrameRateHandler frameRateHandler,
-		DispatcherQueue dispatcherQueue
-	) {
-		Logger = logger;
-		FrameRateHandler = frameRateHandler;
-		DispatcherQueue = dispatcherQueue;
-	}
+	EdgeFilter _EdgeFilter = new();
 
 	public async Task InitializeAsync(MediaCapture mediaCapture) {
 		_MediaCapture = mediaCapture;
@@ -81,12 +75,12 @@ public class WebcamProcessor : IAsyncDisposable {
 
 
 
-		DispatcherQueue.TryEnqueue(async () => {
+		DispatcherQueue?.TryEnqueue(async () => {
 			await ImageSource.SetBitmapAsync(_FilteredFrame);
 		});
 	}
 
-	public SoftwareBitmap ConvertFrame(VideoMediaFrame frame) {
+	public SoftwareBitmap? ConvertFrame(VideoMediaFrame frame) {
 		try {
 			// XAML requires Bgra8 with premultiplied alpha. The frame was sending BitmapAlphaMode.Straight
 			return SoftwareBitmap.Convert(frame.SoftwareBitmap, BitmapPixelFormat.Bgra8, BitmapAlphaMode.Premultiplied);

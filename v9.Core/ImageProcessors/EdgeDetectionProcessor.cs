@@ -1,6 +1,5 @@
 ﻿using System.Runtime.InteropServices.WindowsRuntime;
 using Microsoft.Extensions.Logging;
-using Microsoft.UI.Dispatching;
 using Nrrdio.Utilities.WinUI.FrameRate;
 using v9.Core.Helpers;
 using Windows.Graphics.Imaging;
@@ -9,7 +8,14 @@ using Windows.Media.Capture.Frames;
 
 namespace v9.Core.ImageProcessors;
 
-public class EdgeDetectionProcessor : ColorCameraProcessor {
+public class EdgeDetectionProcessor(
+		ILogger<EdgeDetectionProcessor> logger,
+		IFrameRateHandler frameRateHandler
+	) : ColorCameraProcessor(
+		logger,
+		frameRateHandler
+	) {
+
 	FilterOffsets FilterLayer;
 	int Threshold = 0;
 	int ThresholdModifier = 1;
@@ -17,18 +23,8 @@ public class EdgeDetectionProcessor : ColorCameraProcessor {
 	int _i;
 	int _totalEffectiveValue;
 
-	byte[] inputData = new byte[PIXELS];
-	byte[] outputData = new byte[PIXELS];
-
-	public EdgeDetectionProcessor(
-		ILogger logger,
-		IFrameRateHandler frameRateHandler,
-		DispatcherQueue dispatcherQueue
-	) : base(
-		logger,
-		frameRateHandler,
-		dispatcherQueue
-	) { }
+	byte[] _InputData = new byte[PIXELS];
+	byte[] _OutputData = new byte[PIXELS];
 
 	public async override Task InitializeAsync(MediaCapture mediaCapture) {
 		await base.InitializeAsync(mediaCapture);
@@ -47,8 +43,8 @@ public class EdgeDetectionProcessor : ColorCameraProcessor {
 	}
 
 	public unsafe SoftwareBitmap ApplyFilter(SoftwareBitmap bitmap) {
-		bitmap.CopyToBuffer(inputData.AsBuffer());
-		bitmap.CopyToBuffer(outputData.AsBuffer());
+		bitmap.CopyToBuffer(_InputData.AsBuffer());
+		bitmap.CopyToBuffer(_OutputData.AsBuffer());
 
 		Threshold += ThresholdModifier;
 
@@ -56,8 +52,8 @@ public class EdgeDetectionProcessor : ColorCameraProcessor {
 			ThresholdModifier *= -1;
 		}
 
-		fixed (byte* _inputBytePtr = inputData)
-		fixed (byte* _outputBytePtr = outputData) {
+		fixed (byte* _inputBytePtr = _InputData)
+		fixed (byte* _outputBytePtr = _OutputData) {
 			byte* currentInput = _inputBytePtr;
 			byte* currentOutput = _outputBytePtr;
 
@@ -95,7 +91,7 @@ public class EdgeDetectionProcessor : ColorCameraProcessor {
 			}
 		}
 
-		bitmap.CopyFromBuffer(outputData.AsBuffer());
+		bitmap.CopyFromBuffer(_OutputData.AsBuffer());
 
 		return bitmap;
 	}

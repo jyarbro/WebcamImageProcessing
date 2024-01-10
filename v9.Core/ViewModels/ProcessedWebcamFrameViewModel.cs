@@ -14,7 +14,7 @@ public class ProcessedWebcamFrameViewModel {
 	MediaCapture? MediaCapture;
 
 	public ProcessedWebcamFrameViewModel(
-		ILogger logger,
+		ILogger<ProcessedWebcamFrameViewModel> logger,
 		IFrameRateHandler frameRateHandler
 	) {
 		Logger = logger;

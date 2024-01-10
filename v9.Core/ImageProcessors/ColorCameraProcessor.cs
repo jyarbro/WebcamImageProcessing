@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using Microsoft.Extensions.Logging;
-using Microsoft.UI.Dispatching;
 using Nrrdio.Utilities.WinUI.FrameRate;
 using v9.Core.Helpers;
 using Windows.Graphics.Imaging;
@@ -9,20 +8,17 @@ using Windows.Media.Capture.Frames;
 
 namespace v9.Core.ImageProcessors;
 
-public class ColorCameraProcessor : ImageProcessor {
-	bool AcquiringFrame;
-	MediaCapture MediaCapture;
-	MediaFrameReader FrameReader;
-
-	public ColorCameraProcessor(
-		ILogger logger,
-		IFrameRateHandler frameRateHandler,
-		DispatcherQueue dispatcherQueue
-	) : base(
+public class ColorCameraProcessor(
+		ILogger<ColorCameraProcessor> logger,
+		IFrameRateHandler frameRateHandler
+	) : ImageProcessor(
 		logger,
-		frameRateHandler,
-		dispatcherQueue
-	) { }
+		frameRateHandler
+	) {
+
+	bool AcquiringFrame;
+	MediaCapture? MediaCapture;
+	MediaFrameReader? FrameReader;
 
 	public async override Task InitializeAsync(MediaCapture mediaCapture) {
 		MediaCapture = mediaCapture;
@@ -39,7 +35,7 @@ public class ColorCameraProcessor : ImageProcessor {
 		}
 	}
 
-	public override SoftwareBitmap ConvertFrame(VideoMediaFrame frame) {
+	public override SoftwareBitmap? ConvertFrame(VideoMediaFrame frame) {
 		try {
 			// XAML requires Bgra8 with premultiplied alpha. The frame was sending BitmapAlphaMode.Straight
 			return SoftwareBitmap.Convert(frame.SoftwareBitmap, BitmapPixelFormat.Bgra8, BitmapAlphaMode.Premultiplied);
