@@ -12,10 +12,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Files", "Solution 
 		UNLICENSE = UNLICENSE
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "v8", "v8\v8.csproj", "{6442A193-28E5-489E-B933-8501288BB8D4}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "v8.Core", "v8.Core\v8.Core.csproj", "{121F99AF-4AFA-4D01-A6A8-484D6C30C573}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nrrdio.Utilities", "Nrrdio.Utilities\Nrrdio.Utilities\Nrrdio.Utilities.csproj", "{A93AE6C1-2B80-4A0E-8CB5-2C866048D886}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nrrdio.Utilities.WinUI", "Nrrdio.Utilities\Nrrdio.Utilities.WinUI\Nrrdio.Utilities.WinUI.csproj", "{F8B7F677-1C98-45A2-943D-89647B14A807}"
@@ -32,26 +28,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{6442A193-28E5-489E-B933-8501288BB8D4}.Debug|x64.ActiveCfg = Debug|x64
-		{6442A193-28E5-489E-B933-8501288BB8D4}.Debug|x64.Build.0 = Debug|x64
-		{6442A193-28E5-489E-B933-8501288BB8D4}.Debug|x64.Deploy.0 = Debug|x64
-		{6442A193-28E5-489E-B933-8501288BB8D4}.Debug|x86.ActiveCfg = Debug|x86
-		{6442A193-28E5-489E-B933-8501288BB8D4}.Debug|x86.Build.0 = Debug|x86
-		{6442A193-28E5-489E-B933-8501288BB8D4}.Debug|x86.Deploy.0 = Debug|x86
-		{6442A193-28E5-489E-B933-8501288BB8D4}.Release|x64.ActiveCfg = Release|x64
-		{6442A193-28E5-489E-B933-8501288BB8D4}.Release|x64.Build.0 = Release|x64
-		{6442A193-28E5-489E-B933-8501288BB8D4}.Release|x64.Deploy.0 = Release|x64
-		{6442A193-28E5-489E-B933-8501288BB8D4}.Release|x86.ActiveCfg = Release|x86
-		{6442A193-28E5-489E-B933-8501288BB8D4}.Release|x86.Build.0 = Release|x86
-		{6442A193-28E5-489E-B933-8501288BB8D4}.Release|x86.Deploy.0 = Release|x86
-		{121F99AF-4AFA-4D01-A6A8-484D6C30C573}.Debug|x64.ActiveCfg = Debug|x64
-		{121F99AF-4AFA-4D01-A6A8-484D6C30C573}.Debug|x64.Build.0 = Debug|x64
-		{121F99AF-4AFA-4D01-A6A8-484D6C30C573}.Debug|x86.ActiveCfg = Debug|x86
-		{121F99AF-4AFA-4D01-A6A8-484D6C30C573}.Debug|x86.Build.0 = Debug|x86
-		{121F99AF-4AFA-4D01-A6A8-484D6C30C573}.Release|x64.ActiveCfg = Release|x64
-		{121F99AF-4AFA-4D01-A6A8-484D6C30C573}.Release|x64.Build.0 = Release|x64
-		{121F99AF-4AFA-4D01-A6A8-484D6C30C573}.Release|x86.ActiveCfg = Release|x86
-		{121F99AF-4AFA-4D01-A6A8-484D6C30C573}.Release|x86.Build.0 = Release|x86
 		{A93AE6C1-2B80-4A0E-8CB5-2C866048D886}.Debug|x64.ActiveCfg = Debug|x64
 		{A93AE6C1-2B80-4A0E-8CB5-2C866048D886}.Debug|x64.Build.0 = Debug|x64
 		{A93AE6C1-2B80-4A0E-8CB5-2C866048D886}.Debug|x86.ActiveCfg = Debug|x86
