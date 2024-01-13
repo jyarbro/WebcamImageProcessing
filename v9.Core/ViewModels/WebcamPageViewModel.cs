@@ -15,6 +15,10 @@ public class WebcamPageViewModel : ObservableRecipient {
 
 	public List<Selection> Filters { get; set; } = [
 		new() {
+			Title = "None",
+			Processor = null
+		},
+		new() {
 			Title = "Boost Green",
 			Processor = typeof(GreenBoosterFilter)
 		},
@@ -53,6 +57,15 @@ public class WebcamPageViewModel : ObservableRecipient {
 	public void Uninitialize(EventHandler<FrameRateEventArgs> updateFrameRateHandler) {
 		DispatcherQueue = null;
 		FrameRateHandler.FrameRateUpdated -= updateFrameRateHandler;
+	}
+
+	public void SetFilter(Type? filterType) {
+		if (filterType is null) {
+			WebcamProcessor.ImageFilter = null;
+		}
+		else {
+			WebcamProcessor.ImageFilter = Activator.CreateInstance(filterType) as ImageFilterBase;
+		}
 	}
 
 	async Task InitializeMediaCapture() {

@@ -17,6 +17,8 @@ public sealed class WebcamProcessor(
 		IFrameRateHandler frameRateHandler
 	) : IAsyncDisposable {
 
+	public ImageFilterBase? ImageFilter { get; set; }
+
 	const int CHUNK = 4;
 	const int WIDTH = 640;
 	const int HEIGHT = 480;
@@ -33,8 +35,6 @@ public sealed class WebcamProcessor(
 	SoftwareBitmap? _FilteredFrame;
 	SoftwareBitmap? _IncomingFrame;
 	bool _AcquiringFrame = false;
-
-	ImageFilterBase? _ImageFilter = null;
 
 	public async Task InitializeAsync(SoftwareBitmapSource imageSource, MediaCapture mediaCapture, DispatcherQueue dispatcherQueue) {
 		_ImageSource = imageSource;
@@ -72,7 +72,7 @@ public sealed class WebcamProcessor(
 		// XAML requires Bgra8 with premultiplied alpha. The frame was sending BitmapAlphaMode.Straight
 		_IncomingFrame = _FilteredFrame = SoftwareBitmap.Convert(frame.VideoMediaFrame.SoftwareBitmap, BitmapPixelFormat.Bgra8, BitmapAlphaMode.Premultiplied);
 
-		_ImageFilter?.Apply(ref _IncomingFrame, ref _FilteredFrame);
+		ImageFilter?.Apply(ref _IncomingFrame, ref _FilteredFrame);
 
 		_DispatcherQueue?.TryEnqueue(async () => {
 			try {

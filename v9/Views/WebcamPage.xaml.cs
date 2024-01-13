@@ -1,4 +1,5 @@
-﻿using Microsoft.UI.Xaml.Navigation;
+﻿using System.Runtime.InteropServices;
+using Microsoft.UI.Xaml.Navigation;
 using Nrrdio.Utilities.Loggers;
 using Nrrdio.Utilities.WinUI.FrameRate;
 using v9.Core.ViewModels;
@@ -37,7 +38,7 @@ public sealed partial class WebcamPage : Page {
 
 	void ProcessorSelectorControl_SelectionChanged(object sender, SelectionChangedEventArgs e) {
 		if (sender is ListBox listBox && listBox.SelectedItem is WebcamPageViewModel.Selection selection) {
-			//ProcessorFrame.Navigate(typeof(ProcessedWebcamFrame), selection);
+			ViewModel.SetFilter(selection.Processor);
 		}
 	}
 
@@ -49,8 +50,11 @@ public sealed partial class WebcamPage : Page {
 
 	void UpdateFrameRate(object? sender, FrameRateEventArgs e) {
 		DispatcherQueue?.TryEnqueue(() => {
-			FramesPerSecond.Text = e.FramesPerSecond.ToString();
-			FrameLag.Text = e.FrameLag.ToString();
+			try {
+				FramesPerSecond.Text = e.FramesPerSecond.ToString();
+				FrameLag.Text = e.FrameLag.ToString();
+			}
+			catch (COMException) { }
 		});
 	}
 }
