@@ -34,8 +34,7 @@ public sealed class WebcamProcessor(
 	SoftwareBitmap? _IncomingFrame;
 	bool _AcquiringFrame = false;
 
-	//TEMP
-	EdgeFilter _EdgeFilter = new();
+	ImageFilterBase? _ImageFilter = null;
 
 	public async Task InitializeAsync(SoftwareBitmapSource imageSource, MediaCapture mediaCapture, DispatcherQueue dispatcherQueue) {
 		_ImageSource = imageSource;
@@ -73,20 +72,7 @@ public sealed class WebcamProcessor(
 		// XAML requires Bgra8 with premultiplied alpha. The frame was sending BitmapAlphaMode.Straight
 		_IncomingFrame = _FilteredFrame = SoftwareBitmap.Convert(frame.VideoMediaFrame.SoftwareBitmap, BitmapPixelFormat.Bgra8, BitmapAlphaMode.Premultiplied);
 
-
-
-
-
-
-		// TODO JY *** Apply filters here ***
-		//TEMP
-		_EdgeFilter.Apply(ref _IncomingFrame, ref _FilteredFrame);
-
-
-
-
-
-
+		_ImageFilter?.Apply(ref _IncomingFrame, ref _FilteredFrame);
 
 		_DispatcherQueue?.TryEnqueue(async () => {
 			try {
