@@ -4,6 +4,11 @@ using Windows.Graphics.Imaging;
 namespace v9.Core.ImageFilters;
 
 public class EdgeFilter : ImageFilterBase {
+	public int Threshold {
+		set => _Threshold = value;
+	}
+	int _Threshold = 80;
+
 	public override unsafe void Apply(ref SoftwareBitmap input, ref SoftwareBitmap output) {
 		input.CopyToBuffer(_InputData.AsBuffer());
 		input.CopyToBuffer(_OutputData.AsBuffer());
@@ -47,6 +52,9 @@ public class EdgeFilter : ImageFilterBase {
 			}
 		}
 
-		output.CopyFromBuffer(_OutputData.AsBuffer());
+		try {
+			output.CopyFromBuffer(_OutputData.AsBuffer());
+		}
+		catch (UnauthorizedAccessException) { }
 	}
 }

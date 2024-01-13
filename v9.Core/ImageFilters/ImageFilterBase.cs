@@ -9,11 +9,6 @@ public abstract class ImageFilterBase {
 	protected const int STRIDE = WIDTH * CHUNK;
 	protected const int PIXELS = WIDTH * HEIGHT * CHUNK;
 
-	public int Threshold {
-		set => _Threshold = value;
-	}
-	protected int _Threshold = 128;
-
 	protected FilterOffsets _FilterOffsets;
 	protected readonly byte[] _InputData = new byte[PIXELS];
 	protected readonly byte[] _OutputData = new byte[PIXELS];
