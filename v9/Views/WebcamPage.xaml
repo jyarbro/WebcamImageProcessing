@@ -12,32 +12,124 @@
     </Page.Resources>
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="25" />
+            <RowDefinition Height="25" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="200" />
             <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        
-        <StackPanel Grid.Column="0">
+
+        <StackPanel
+            Grid.Column="0"
+            Grid.Row="0"
+            Grid.RowSpan="3">
+            
             <TextBlock>Processors:</TextBlock>
+            
             <ListBox x:Name="ProcessorSelectorControl"
-                    SelectionChanged="ProcessorSelectorControl_SelectionChanged"
-					SelectionMode="Single"
-					HorizontalAlignment="Left"
-					Background="Transparent"
-					BorderThickness="0"
-					VerticalAlignment="Top"
-					Margin="10,10,0,0">
+                SelectionChanged="ProcessorSelectorControl_SelectionChanged"
+				SelectionMode="Single"
+				HorizontalAlignment="Left"
+				Background="Transparent"
+				BorderThickness="0"
+				VerticalAlignment="Top"
+				Margin="10,10,0,0">
+                
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding Converter={StaticResource WebcamSelectionConverter}}" />
                     </DataTemplate>
                 </ListBox.ItemTemplate>
+                
             </ListBox>
         </StackPanel>
 
-        <Frame 
-            x:Name="ProcessorFrame"
+        <TextBlock 
+            VerticalAlignment="Center"
+			HorizontalAlignment="Left"
+			Grid.Row="0"
+			Grid.Column="1"
+			Margin="10,0"
+			Text="Frames per Second:" />
+
+        <StackPanel 
+            Orientation="Horizontal"
+			VerticalAlignment="Center"
+			HorizontalAlignment="Left"
+			Grid.Row="1"
+			Grid.Column="1"
+			Margin="10,0">
+
+            <TextBlock 
+                x:Name="FramesPerSecond"
+				Text="000" />
+
+            <TextBlock 
+                Margin="5,0,0,0"
+				Text="fps" />
+            
+        </StackPanel>
+
+        <TextBlock 
+            VerticalAlignment="Center"
+			HorizontalAlignment="Right"
+			Grid.Row="0"
+			Grid.Column="2"
+			Margin="10,0"
+			Text="Frame Lag:" />
+
+        <StackPanel 
+            Orientation="Horizontal"
+			VerticalAlignment="Center"
+			HorizontalAlignment="Right"
+			Grid.Row="1"
+			Grid.Column="2"
+			Margin="10,0">
+
+            <TextBlock 
+                x:Name="FrameLag"
+				Text="000" />
+
+            <TextBlock 
+                Margin="5,0,0,0"
+				Text="ms" />
+            
+        </StackPanel>
+
+        <StackPanel
+            x:Name="ContentPanel"
+			Grid.Row="2"
             Grid.Column="1"
-			Margin="0,5,0,0" />
+			Grid.ColumnSpan="2"
+			Margin="10,10,10,20">
+
+            <Image 
+                x:Name="OutputImage"
+				MaxWidth="{Binding ElementName=SceneGrid, Path=ActualWidth}" />
+
+            <Border 
+                x:Name="StatusPanel"
+				Margin="0,20,0,0">
+
+                <ScrollViewer
+                    VerticalScrollMode="Auto"
+					VerticalScrollBarVisibility="Auto"
+					MaxHeight="200">
+
+                    <TextBlock 
+                        x:Name="Log"
+						FontWeight="Bold"
+						TextWrapping="Wrap"
+						MaxWidth="{Binding ElementName=Splitter, Path=ActualWidth}" />
+
+                </ScrollViewer>
+            </Border>
+            
+        </StackPanel>
     </Grid>
 </Page>

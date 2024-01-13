@@ -13,12 +13,6 @@
         <EnableMsixTooling>true</EnableMsixTooling>
     </PropertyGroup>
     <ItemGroup>
-      <None Remove="Views\FilePage.xaml" />
-      <None Remove="Views\ProcessedWebcamFrame.xaml" />
-      <None Remove="Views\SettingsPage.xaml" />
-      <None Remove="Views\WebcamPage.xaml" />
-    </ItemGroup>
-    <ItemGroup>
         <Manifest Include="$(ApplicationManifest)" />
         <Using Include="Microsoft.UI.Xaml" />
         <Using Include="Microsoft.UI.Xaml.Controls" />
@@ -49,10 +43,6 @@
             <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
         </Page>
         <Page Update="Views\FilePage.xaml">
-          <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
-          <SubType>Designer</SubType>
-        </Page>
-        <Page Update="Views\ProcessedWebcamFrame.xaml">
           <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
           <SubType>Designer</SubType>
         </Page>

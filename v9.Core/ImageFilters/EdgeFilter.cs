@@ -4,7 +4,7 @@ using Windows.Graphics.Imaging;
 namespace v9.Core.ImageFilters;
 
 public class EdgeFilter : ImageFilterBase {
-	public unsafe void Apply(ref SoftwareBitmap input, ref SoftwareBitmap output) {
+	public override unsafe void Apply(ref SoftwareBitmap input, ref SoftwareBitmap output) {
 		input.CopyToBuffer(_InputData.AsBuffer());
 		input.CopyToBuffer(_OutputData.AsBuffer());
 

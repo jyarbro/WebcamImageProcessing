@@ -6,7 +6,7 @@ using Nrrdio.Utilities.Loggers;
 using Nrrdio.Utilities.WinUI.FrameRate;
 using v9.Core.Contracts.Services;
 using v9.Core.ImageFilters;
-using v9.Core.ImageProcessors;
+using v9.Core.Processors;
 using v9.Core.Services;
 using v9.Core.ViewModels;
 using v9.Helpers;
@@ -92,7 +92,7 @@ public partial class App : Application {
 			return service;
 		});
 
-		services.AddTransient<IFrameRateHandler, FrameRateHandler>();
+		services.AddScoped<IFrameRateHandler, FrameRateHandler>();
 
 		services.AddScoped<IThemeSelectorService, ThemeSelectorService>();
 		services.AddScoped<INavigationViewService, NavigationViewService>();
@@ -111,17 +111,10 @@ public partial class App : Application {
 		services.AddTransient<WebcamPage>();
 		services.AddTransient<WebcamPageViewModel>();
 
-		services.AddTransient<ProcessedWebcamFrame>();
-		services.AddTransient<ProcessedWebcamFrameViewModel>();
-
-		// Filters
-		services.AddTransient<ColorCameraProcessor>();
-		services.AddTransient<EdgeDetectionProcessor>();
-		services.AddTransient<BoostGreenProcessor>();
-
 		// v9 stuff
 		services.AddTransient<WebcamProcessor>();
-		services.AddTransient<GreenBooster>();
+		services.AddTransient<EdgeFilter>();
+		services.AddTransient<GreenBoosterFilter>();
 	}
 
 	void UnhandledExceptionEventHandler(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e) {

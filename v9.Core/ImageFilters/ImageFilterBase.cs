@@ -1,4 +1,5 @@
 ﻿using v9.Core.Helpers;
+using Windows.Graphics.Imaging;
 
 namespace v9.Core.ImageFilters;
 public abstract class ImageFilterBase {
@@ -43,4 +44,6 @@ public abstract class ImageFilterBase {
 
 		_FilterOffsets = result;
 	}
+
+	public abstract void Apply(ref SoftwareBitmap input, ref SoftwareBitmap output);
 }
