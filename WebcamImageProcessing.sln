@@ -58,12 +58,12 @@ Global
 		{C86CF705-0BAE-4D18-B76D-276E26D4E38E}.Release|x86.Deploy.0 = Release|x86
 		{583C669A-8445-41F4-922C-960CED2C8722}.Debug|x64.ActiveCfg = Debug|x64
 		{583C669A-8445-41F4-922C-960CED2C8722}.Debug|x64.Build.0 = Debug|x64
-		{583C669A-8445-41F4-922C-960CED2C8722}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{583C669A-8445-41F4-922C-960CED2C8722}.Debug|x86.Build.0 = Debug|Any CPU
+		{583C669A-8445-41F4-922C-960CED2C8722}.Debug|x86.ActiveCfg = Debug|x86
+		{583C669A-8445-41F4-922C-960CED2C8722}.Debug|x86.Build.0 = Debug|x86
 		{583C669A-8445-41F4-922C-960CED2C8722}.Release|x64.ActiveCfg = Release|x64
 		{583C669A-8445-41F4-922C-960CED2C8722}.Release|x64.Build.0 = Release|x64
-		{583C669A-8445-41F4-922C-960CED2C8722}.Release|x86.ActiveCfg = Release|Any CPU
-		{583C669A-8445-41F4-922C-960CED2C8722}.Release|x86.Build.0 = Release|Any CPU
+		{583C669A-8445-41F4-922C-960CED2C8722}.Release|x86.ActiveCfg = Release|x86
+		{583C669A-8445-41F4-922C-960CED2C8722}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
