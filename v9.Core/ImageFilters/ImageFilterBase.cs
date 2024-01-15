@@ -1,5 +1,4 @@
 ﻿using v9.Core.Helpers;
-using Windows.Graphics.Imaging;
 
 namespace v9.Core.ImageFilters;
 public abstract class ImageFilterBase {
@@ -7,12 +6,14 @@ public abstract class ImageFilterBase {
 	protected const int WIDTH = 640;
 	protected const int HEIGHT = 480;
 	protected const int STRIDE = WIDTH * CHUNK;
-	protected const int PIXELS = WIDTH * HEIGHT * CHUNK;
+	protected const int PIXELS = WIDTH * HEIGHT;
+	protected const int SUBPIXELS = PIXELS * CHUNK;
 
 	protected FilterOffsets _FilterOffsets;
-	protected readonly byte[] _InputData = new byte[PIXELS];
-	protected readonly byte[] _OutputData = new byte[PIXELS];
-	protected int _i;
+	protected byte[] _InputData = new byte[SUBPIXELS];
+	protected byte[] _OutputData = new byte[SUBPIXELS];
+
+	protected int _i, _j, _k;
 	protected int _TotalEffectiveValue;
 
 	public ImageFilterBase() {
@@ -20,7 +21,7 @@ public abstract class ImageFilterBase {
 	}
 
 	public void SetFilterOffsets(int distance) {
-		int offset(int row, int col) => (WIDTH * row + col) * CHUNK;
+		int offset(int row, int col) => (row * STRIDE) + (col * CHUNK);
 
 		var result = new FilterOffsets {
 			TL = offset(-distance, -distance),
@@ -35,10 +36,8 @@ public abstract class ImageFilterBase {
 		};
 
 		result.Min = result.TL * -1;
-		result.Max = WIDTH * HEIGHT * CHUNK - result.BR - CHUNK;
+		result.Max = STRIDE * HEIGHT - result.BR - CHUNK;
 
 		_FilterOffsets = result;
 	}
-
-	public abstract void Apply(ref SoftwareBitmap input, ref SoftwareBitmap output);
 }

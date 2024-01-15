@@ -1,10 +1,13 @@
 ﻿using System.Runtime.InteropServices.WindowsRuntime;
+using v9.Core.Contracts;
 using Windows.Graphics.Imaging;
 
 namespace v9.Core.ImageFilters;
 
-public class GreenBoosterFilter : ImageFilterBase {
-	public override unsafe void Apply(ref SoftwareBitmap input, ref SoftwareBitmap output) {
+public class GreenBoosterFilter : ImageFilterBase, IImageFilter {
+	public void Initialize() { }
+
+	public unsafe void Apply(ref SoftwareBitmap input, ref SoftwareBitmap output) {
 		input.CopyToBuffer(_InputData.AsBuffer());
 		output.CopyToBuffer(_OutputData.AsBuffer());
 
@@ -15,13 +18,13 @@ public class GreenBoosterFilter : ImageFilterBase {
 
 			_i = 0;
 
-			while (_i < _OutputData.Length) {
+			while (_i < PIXELS) {
 				// Boost the green channel, leave the others untouched
 				*(currentOutput + 1) = (byte) Math.Min(*(currentInput + 1) + 80, 255);
 
 				currentInput += CHUNK;
 				currentOutput += CHUNK;
-				_i += CHUNK;
+				_i++;
 			}
 		}
 

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Nrrdio.Utilities.WinUI.FrameRate;
+using v9.Core.Contracts;
 using v9.Core.ImageFilters;
 using v9.Core.Processors;
 using Windows.Media.Capture;
@@ -25,6 +26,10 @@ public class WebcamPageViewModel : ObservableRecipient {
 		new() {
 			Title = "Edge Detection",
 			Processor = typeof(EdgeFilter)
+		},
+		new() {
+			Title = "3x Compressed",
+			Processor = typeof(CompressionFilter)
 		},
 	];
 
@@ -63,8 +68,11 @@ public class WebcamPageViewModel : ObservableRecipient {
 		if (filterType is null) {
 			WebcamProcessor.ImageFilter = null;
 		}
+		else if (filterType.GetInterface(nameof(IImageFilter)) is not null) {
+			WebcamProcessor.ImageFilter = Activator.CreateInstance(filterType) as IImageFilter;
+		}
 		else {
-			WebcamProcessor.ImageFilter = Activator.CreateInstance(filterType) as ImageFilterBase;
+			throw new ArgumentException($"{nameof(filterType)} must be of type {nameof(IImageFilter)}", nameof(filterType));
 		}
 	}
 

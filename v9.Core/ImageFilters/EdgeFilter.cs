@@ -1,15 +1,18 @@
 ﻿using System.Runtime.InteropServices.WindowsRuntime;
+using v9.Core.Contracts;
 using Windows.Graphics.Imaging;
 
 namespace v9.Core.ImageFilters;
 
-public class EdgeFilter : ImageFilterBase {
+public class EdgeFilter : ImageFilterBase, IImageFilter {
 	public int Threshold {
 		set => _Threshold = value;
 	}
 	int _Threshold = 80;
 
-	public override unsafe void Apply(ref SoftwareBitmap input, ref SoftwareBitmap output) {
+	public void Initialize() { }
+
+	public unsafe void Apply(ref SoftwareBitmap input, ref SoftwareBitmap output) {
 		input.CopyToBuffer(_InputData.AsBuffer());
 		input.CopyToBuffer(_OutputData.AsBuffer());
 

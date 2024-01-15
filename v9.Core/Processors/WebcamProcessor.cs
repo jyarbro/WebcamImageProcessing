@@ -4,8 +4,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Nrrdio.Utilities.WinUI.FrameRate;
+using v9.Core.Contracts;
 using v9.Core.Helpers;
-using v9.Core.ImageFilters;
 using Windows.Graphics.Imaging;
 using Windows.Media.Capture;
 using Windows.Media.Capture.Frames;
@@ -17,13 +17,7 @@ public sealed class WebcamProcessor(
 		IFrameRateHandler frameRateHandler
 	) : IAsyncDisposable {
 
-	public ImageFilterBase? ImageFilter { get; set; }
-
-	const int CHUNK = 4;
-	const int WIDTH = 640;
-	const int HEIGHT = 480;
-	const int STRIDE = WIDTH * CHUNK;
-	const int PIXELS = WIDTH * HEIGHT * CHUNK;
+	public IImageFilter? ImageFilter { get; set; }
 
 	readonly ILogger Logger = logger;
 	readonly IFrameRateHandler FrameRateHandler = frameRateHandler;
@@ -72,6 +66,7 @@ public sealed class WebcamProcessor(
 		// XAML requires Bgra8 with premultiplied alpha. The frame was sending BitmapAlphaMode.Straight
 		_IncomingFrame = _FilteredFrame = SoftwareBitmap.Convert(frame.VideoMediaFrame.SoftwareBitmap, BitmapPixelFormat.Bgra8, BitmapAlphaMode.Premultiplied);
 
+		ImageFilter?.Initialize();
 		ImageFilter?.Apply(ref _IncomingFrame, ref _FilteredFrame);
 
 		_DispatcherQueue?.TryEnqueue(async () => {
