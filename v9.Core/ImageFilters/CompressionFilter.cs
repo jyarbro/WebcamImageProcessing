@@ -48,15 +48,23 @@ public class CompressionFilter : ImageFilterBase, IImageFilter {
 		for (var scaledY = 0; scaledY < _ScaledHeight; scaledY++) {
 			var scaledSourcePixelHorizontalCount = RATIO;
 			var scaledSourcePixelVerticalCount = RATIO;
-			
+
 			for (var scaledX = 0; scaledX < _ScaledWidth; scaledX++) {
-				// The final pixel is likely to have a smaller number of source pixels
+				// The compressed edges could have a smaller number of source pixels
 				if (scaledX == _ScaledWidth - 1) {
-					scaledSourcePixelHorizontalCount = RATIO - (WIDTH % RATIO);
+					scaledSourcePixelHorizontalCount = WIDTH % RATIO;
 				}
 
 				if (scaledY == _ScaledHeight - 1) {
-					scaledSourcePixelVerticalCount = RATIO - (HEIGHT % RATIO);
+					scaledSourcePixelVerticalCount = HEIGHT % RATIO;
+				}
+
+				if (scaledSourcePixelHorizontalCount == 0) {
+					scaledSourcePixelHorizontalCount = RATIO;
+				}
+
+				if (scaledSourcePixelVerticalCount == 0) {
+					scaledSourcePixelVerticalCount = RATIO;
 				}
 
 				var scaledSourcePixelsTotal = scaledSourcePixelHorizontalCount * scaledSourcePixelVerticalCount;
@@ -69,28 +77,39 @@ public class CompressionFilter : ImageFilterBase, IImageFilter {
 						_BufferData[1] += _InputData[inputSubpixel + 1];
 						_BufferData[2] += _InputData[inputSubpixel + 2];
 
+						//Console.WriteLine($"({scaledX}, {scaledY})\t({sourceX}, {sourceY})\t{inputSubpixel}");
+
+						// goto next pixel
 						inputSubpixel += CHUNK;
 					}
 
-					// return to beginning of the group
+					// return to first pixel
 					inputSubpixel -= scaledSourcePixelHorizontalCount * CHUNK;
 
-					// jump to next row
+					// goto next row
 					inputSubpixel += STRIDE;
 				}
-
-				inputSubpixel -= scaledSourcePixelVerticalCount * STRIDE;
 
 				_OutputData[outputSubpixel] = Convert.ToByte(_BufferData[0] / scaledSourcePixelsTotal);
 				_OutputData[outputSubpixel + 1] = Convert.ToByte(_BufferData[1] / scaledSourcePixelsTotal);
 				_OutputData[outputSubpixel + 2] = Convert.ToByte(_BufferData[2] / scaledSourcePixelsTotal);
 
 				outputSubpixel += CHUNK;
+
+				// return to first row
+				inputSubpixel -= scaledSourcePixelVerticalCount * STRIDE;
+
+				// goto next horizontal set
+				inputSubpixel += scaledSourcePixelHorizontalCount * CHUNK;
 			}
 
+			// return to first horizontal set
+			inputSubpixel -= STRIDE;
+
+			// goto next vertical set
 			inputSubpixel += scaledSourcePixelVerticalCount * STRIDE;
 
-			// at the end of the compressed image, jump to the beginning of the next row
+			// add buffer to right of compressed image
 			outputSubpixel += newRowBuffer;
 		}
 
