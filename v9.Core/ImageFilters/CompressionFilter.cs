@@ -8,8 +8,8 @@ public class CompressionFilter : ImageFilterBase, IImageFilter {
 	const int RATIO = 3;
 
 	int[] _CompressedTargetLocations = new int[PIXELS];
-	byte[]? _ScaledSourcePixelsPerRow;
-	byte[]? _ScaledSourcePixelsPerColumn;
+	byte[]? _ScaledSourcePixelHorizontalCount;
+	byte[]? _ScaledSourcePixelVerticalCount;
 	byte[]? _ScaledSourceSubpixelsPerRow;
 	byte[]? _ScaledSourcePixelsTotal;
 	int _ScaledWidth = WIDTH;
@@ -17,113 +17,101 @@ public class CompressionFilter : ImageFilterBase, IImageFilter {
 	int _ScaledHeight = HEIGHT;
 	int _ScaledPixels = PIXELS;
 	int[] _BufferData = new int[3];
+	int _NewRowBuffer = 0;
+
+	int _InputSubpixel = 0;
+	int _OutputSubpixel = 0;
+	int _ScaledX = 0;
+	int _ScaledY = 0;
+	int _SourceX = 0;
+	int _SourceY = 0;
 
 	public void Initialize() {
-		CalculateCompression();
+		InitializeCompressionValues();
 	}
 
 	public unsafe void Apply(ref SoftwareBitmap input, ref SoftwareBitmap output) {
 		input.CopyToBuffer(_InputData.AsBuffer());
 		Array.Clear(_OutputData);
 
-		//fixed (byte* _ScaledSourcePixelsPerRowPtr = _ScaledSourcePixelsPerRow)
-		//fixed (byte* _ScaledSourcePixelsPerColumnPtr = _ScaledSourcePixelsPerColumn)
-		//fixed (byte* _ScaledSourceSubpixelsPerRowPtr = _ScaledSourceSubpixelsPerRow)
-		//fixed (byte* _ScaledSourcePixelsTotalPtr = _ScaledSourcePixelsTotal)
-		//fixed (byte* _InputDataPtr = _InputData)
-		//fixed (byte* _OutputDataPtr = _OutputData) {
-		//	byte* scaledSourcePixelsPerRow = _ScaledSourcePixelsPerRowPtr;
-		//	byte* scaledSourcePixelsPerColumn = _ScaledSourcePixelsPerColumnPtr;
-		//	byte* scaledSourceSubpixelsPerRow = _ScaledSourceSubpixelsPerRowPtr;
-		//	byte* scaledSourcePixelsTotal = _ScaledSourcePixelsTotalPtr;
-		//	byte* inputData = _InputDataPtr;
-		//	byte* outputData = _OutputDataPtr;
-		//}
+		_InputSubpixel = 0;
+		_OutputSubpixel = 0;
 
-		var newRowBuffer = (WIDTH - _ScaledWidth) * CHUNK;
+		fixed (byte* _ScaledSourcePixelHorizontalCountPtr = _ScaledSourcePixelHorizontalCount)
+		fixed (byte* _ScaledSourcePixelVerticalCountPtr = _ScaledSourcePixelVerticalCount)
+		fixed (byte* _ScaledSourceSubpixelsPerRowPtr = _ScaledSourceSubpixelsPerRow)
+		fixed (byte* _ScaledSourcePixelsTotalPtr = _ScaledSourcePixelsTotal)
+		fixed (byte* _InputDataPtr = _InputData)
+		fixed (byte* _OutputDataPtr = _OutputData) {
+			byte* scaledSourcePixelHorizontalCount = _ScaledSourcePixelHorizontalCountPtr;
+			byte* scaledSourcePixelVerticalCount = _ScaledSourcePixelVerticalCountPtr;
+			byte* scaledSourceSubpixelsPerRow = _ScaledSourceSubpixelsPerRowPtr;
+			byte* scaledSourcePixelsTotal = _ScaledSourcePixelsTotalPtr;
+			byte* inputData = _InputDataPtr;
+			byte* outputData = _OutputDataPtr;
 
-		var inputSubpixel = 0;
-		var outputSubpixel = 0;
+			for (_ScaledY = 0; _ScaledY < _ScaledHeight; _ScaledY++) {
+				for (_ScaledX = 0; _ScaledX < _ScaledWidth; _ScaledX++) {
+					Array.Clear(_BufferData);
 
-		for (var scaledY = 0; scaledY < _ScaledHeight; scaledY++) {
-			var scaledSourcePixelHorizontalCount = RATIO;
-			var scaledSourcePixelVerticalCount = RATIO;
+					for (_SourceY = 0; _SourceY < *(scaledSourcePixelVerticalCount); _SourceY++) {
+						for (_SourceX = 0; _SourceX < *(scaledSourcePixelHorizontalCount); _SourceX++) {
+							_BufferData[0] += _InputData[_InputSubpixel];
+							_BufferData[1] += _InputData[_InputSubpixel + 1];
+							_BufferData[2] += _InputData[_InputSubpixel + 2];
 
-			for (var scaledX = 0; scaledX < _ScaledWidth; scaledX++) {
-				// The compressed edges could have a smaller number of source pixels
-				if (scaledX == _ScaledWidth - 1) {
-					scaledSourcePixelHorizontalCount = WIDTH % RATIO;
-				}
+							// goto next pixel
+							_InputSubpixel += CHUNK;
+						}
 
-				if (scaledY == _ScaledHeight - 1) {
-					scaledSourcePixelVerticalCount = HEIGHT % RATIO;
-				}
+						// return to first pixel
+						_InputSubpixel -= *(scaledSourcePixelHorizontalCount) * CHUNK;
 
-				if (scaledSourcePixelHorizontalCount == 0) {
-					scaledSourcePixelHorizontalCount = RATIO;
-				}
-
-				if (scaledSourcePixelVerticalCount == 0) {
-					scaledSourcePixelVerticalCount = RATIO;
-				}
-
-				var scaledSourcePixelsTotal = scaledSourcePixelHorizontalCount * scaledSourcePixelVerticalCount;
-
-				Array.Clear(_BufferData);
-
-				for (var sourceY = 0; sourceY < scaledSourcePixelVerticalCount; sourceY++) {
-					for (var sourceX = 0; sourceX < scaledSourcePixelHorizontalCount; sourceX++) {
-						_BufferData[0] += _InputData[inputSubpixel];
-						_BufferData[1] += _InputData[inputSubpixel + 1];
-						_BufferData[2] += _InputData[inputSubpixel + 2];
-
-						//Console.WriteLine($"({scaledX}, {scaledY})\t({sourceX}, {sourceY})\t{inputSubpixel}");
-
-						// goto next pixel
-						inputSubpixel += CHUNK;
+						// goto next row
+						_InputSubpixel += STRIDE;
 					}
 
-					// return to first pixel
-					inputSubpixel -= scaledSourcePixelHorizontalCount * CHUNK;
+					_OutputData[_OutputSubpixel] = Convert.ToByte(_BufferData[0] / *(scaledSourcePixelsTotal));
+					_OutputData[_OutputSubpixel + 1] = Convert.ToByte(_BufferData[1] / *(scaledSourcePixelsTotal));
+					_OutputData[_OutputSubpixel + 2] = Convert.ToByte(_BufferData[2] / *(scaledSourcePixelsTotal));
 
-					// goto next row
-					inputSubpixel += STRIDE;
+					_OutputSubpixel += CHUNK;
+					scaledSourcePixelsTotal++;
+
+					// return to first row
+					_InputSubpixel -= *(scaledSourcePixelVerticalCount) * STRIDE;
+
+					// goto next horizontal set
+					_InputSubpixel += *(scaledSourcePixelHorizontalCount) * CHUNK;
+
+					scaledSourcePixelHorizontalCount++;
 				}
 
-				_OutputData[outputSubpixel] = Convert.ToByte(_BufferData[0] / scaledSourcePixelsTotal);
-				_OutputData[outputSubpixel + 1] = Convert.ToByte(_BufferData[1] / scaledSourcePixelsTotal);
-				_OutputData[outputSubpixel + 2] = Convert.ToByte(_BufferData[2] / scaledSourcePixelsTotal);
+				// return to first horizontal set
+				_InputSubpixel -= STRIDE;
 
-				outputSubpixel += CHUNK;
+				// goto next vertical set
+				_InputSubpixel += *(scaledSourcePixelVerticalCount) * STRIDE;
 
-				// return to first row
-				inputSubpixel -= scaledSourcePixelVerticalCount * STRIDE;
+				// add buffer to right of compressed image
+				_OutputSubpixel += _NewRowBuffer;
 
-				// goto next horizontal set
-				inputSubpixel += scaledSourcePixelHorizontalCount * CHUNK;
+				scaledSourcePixelVerticalCount++;
 			}
-
-			// return to first horizontal set
-			inputSubpixel -= STRIDE;
-
-			// goto next vertical set
-			inputSubpixel += scaledSourcePixelVerticalCount * STRIDE;
-
-			// add buffer to right of compressed image
-			outputSubpixel += newRowBuffer;
 		}
 
 		output.CopyFromBuffer(_OutputData.AsBuffer());
 	}
 
-	void CalculateCompression() {
+	void InitializeCompressionValues() {
 		_ScaledWidth = Convert.ToInt32(Math.Ceiling(1f * WIDTH / RATIO));
 		_ScaledHeight = Convert.ToInt32(Math.Ceiling(1f * HEIGHT / RATIO));
 		_ScaledPixels = _ScaledWidth * _ScaledHeight;
-		_ScaledSourcePixelsPerRow = new byte[_ScaledPixels];
-		_ScaledSourcePixelsPerColumn = new byte[_ScaledPixels];
+		_ScaledSourcePixelHorizontalCount = new byte[_ScaledPixels];
+		_ScaledSourcePixelVerticalCount = new byte[_ScaledPixels];
 		_ScaledSourceSubpixelsPerRow = new byte[_ScaledPixels];
 		_ScaledSourcePixelsTotal = new byte[_ScaledPixels];
+		_NewRowBuffer = (WIDTH - _ScaledWidth) * CHUNK;
 
 		// Determine the destination pixel for each source pixel
 		for (var y = 0; y < HEIGHT; y++) {
@@ -148,17 +136,17 @@ public class CompressionFilter : ImageFilterBase, IImageFilter {
 				var scaledSourcePixelHorizontalCount = RATIO;
 				var scaledSourcePixelVerticalCount = RATIO;
 
-				// The final pixel is likely to have a smaller number of source pixels
-				if (x == _ScaledWidth - 1) {
+				// The compressed edges could have a smaller number of source pixels
+				if (x == _ScaledWidth - 1 && WIDTH % RATIO != 0) {
 					scaledSourcePixelHorizontalCount = WIDTH % RATIO;
 				}
 
-				if (y == _ScaledHeight - 1) {
+				if (y == _ScaledHeight - 1 && HEIGHT % RATIO != 0) {
 					scaledSourcePixelVerticalCount = HEIGHT % RATIO;
 				}
 
-				_ScaledSourcePixelsPerRow[scaledTargetPixel] = Convert.ToByte(scaledSourcePixelHorizontalCount);
-				_ScaledSourcePixelsPerColumn[scaledTargetPixel] = Convert.ToByte(scaledSourcePixelVerticalCount);
+				_ScaledSourcePixelHorizontalCount[scaledTargetPixel] = Convert.ToByte(scaledSourcePixelHorizontalCount);
+				_ScaledSourcePixelVerticalCount[scaledTargetPixel] = Convert.ToByte(scaledSourcePixelVerticalCount);
 				_ScaledSourceSubpixelsPerRow[scaledTargetPixel] = Convert.ToByte(scaledSourcePixelHorizontalCount * CHUNK);
 				_ScaledSourcePixelsTotal[scaledTargetPixel] = Convert.ToByte(scaledSourcePixelHorizontalCount * scaledSourcePixelVerticalCount);
 			}
