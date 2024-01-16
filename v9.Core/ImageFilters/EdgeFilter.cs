@@ -1,9 +1,11 @@
-﻿using System.Runtime.InteropServices.WindowsRuntime;
+﻿using System.ComponentModel;
+using System.Runtime.InteropServices.WindowsRuntime;
 using v9.Core.Contracts;
 using Windows.Graphics.Imaging;
 
 namespace v9.Core.ImageFilters;
 
+[DisplayName("Edge Detection")]
 public class EdgeFilter : ImageFilterBase, IImageFilter {
 	public int Threshold {
 		set => _Threshold = value;

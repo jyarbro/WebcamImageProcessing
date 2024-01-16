@@ -1,9 +1,11 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Nrrdio.Utilities.WinUI.FrameRate;
 using v9.Core.Contracts;
+using v9.Core.Helpers;
 using v9.Core.ImageFilters;
 using v9.Core.Processors;
 using Windows.Media.Capture;
@@ -19,18 +21,18 @@ public class WebcamPageViewModel : ObservableRecipient {
 			Title = "None",
 			Processor = null
 		},
-		new() {
-			Title = "Boost Green",
-			Processor = typeof(GreenBoosterFilter)
-		},
-		new() {
-			Title = "Edge Detection",
-			Processor = typeof(EdgeFilter)
-		},
-		new() {
-			Title = "3x Compressed",
-			Processor = typeof(CompressionFilter)
-		},
+		//new() {
+		//	Title = "Boost Green",
+		//	Processor = typeof(GreenBoosterFilter)
+		//},
+		//new() {
+		//	Title = "Edge Detection",
+		//	Processor = typeof(EdgeFilter)
+		//},
+		//new() {
+		//	Title = "3x Compressed",
+		//	Processor = typeof(CompressionFilter)
+		//},
 	];
 
 	ILogger Logger { get; }
@@ -49,6 +51,15 @@ public class WebcamPageViewModel : ObservableRecipient {
 		Logger = logger;
 		FrameRateHandler = frameRateHandler;
 		WebcamProcessor = webcamProcessor;
+
+		foreach (var filter in ImageFilterLoader.GetList()) {
+			var filterName = filter.GetCustomAttributes(typeof(DisplayNameAttribute), false).Cast<DisplayNameAttribute>().SingleOrDefault()?.DisplayName ?? "No name";
+			
+			Filters.Add(new Selection {
+				Title = filterName,
+				Processor = filter
+			});
+		}
 	}
 
 	public async Task Initialize(DispatcherQueue dispatcherQueue, EventHandler<FrameRateEventArgs> updateFrameRateHandler) {

@@ -1,9 +1,11 @@
-﻿using System.Runtime.InteropServices.WindowsRuntime;
+﻿using System.ComponentModel;
+using System.Runtime.InteropServices.WindowsRuntime;
 using v9.Core.Contracts;
 using Windows.Graphics.Imaging;
 
 namespace v9.Core.ImageFilters;
 
+[DisplayName("3x Compressed")]
 public class CompressionFilter : ImageFilterBase, IImageFilter {
 	const int RATIO = 3;
 

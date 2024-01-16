@@ -1,9 +1,11 @@
-﻿using System.Runtime.InteropServices.WindowsRuntime;
+﻿using System.ComponentModel;
+using System.Runtime.InteropServices.WindowsRuntime;
 using v9.Core.Contracts;
 using Windows.Graphics.Imaging;
 
 namespace v9.Core.ImageFilters;
 
+[DisplayName("Boost Green")]
 public class GreenBoosterFilter : ImageFilterBase, IImageFilter {
 	public void Initialize() { }
 
