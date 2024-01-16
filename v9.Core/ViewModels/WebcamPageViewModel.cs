@@ -20,24 +20,13 @@ public class WebcamPageViewModel : ObservableRecipient {
 		new() {
 			Title = "None",
 			Processor = null
-		},
-		//new() {
-		//	Title = "Boost Green",
-		//	Processor = typeof(GreenBoosterFilter)
-		//},
-		//new() {
-		//	Title = "Edge Detection",
-		//	Processor = typeof(EdgeFilter)
-		//},
-		//new() {
-		//	Title = "3x Compressed",
-		//	Processor = typeof(CompressionFilter)
-		//},
+		}
 	];
 
 	ILogger Logger { get; }
 	IFrameRateHandler FrameRateHandler { get; }
 	WebcamProcessor WebcamProcessor { get; }
+	IServiceProvider ServiceProvider { get; }
 
 	// Start with this nullable so we can initialize it only once later.
 	MediaCapture? MediaCapture { get; set; }
@@ -46,11 +35,13 @@ public class WebcamPageViewModel : ObservableRecipient {
 	public WebcamPageViewModel(
 		ILogger<WebcamPageViewModel> logger,
 		IFrameRateHandler frameRateHandler,
-		WebcamProcessor webcamProcessor
+		WebcamProcessor webcamProcessor,
+		IServiceProvider serviceProvider
 	) {
 		Logger = logger;
 		FrameRateHandler = frameRateHandler;
 		WebcamProcessor = webcamProcessor;
+		ServiceProvider = serviceProvider;
 
 		foreach (var filter in ImageFilterLoader.GetList()) {
 			var filterName = filter.GetCustomAttributes(typeof(DisplayNameAttribute), false).Cast<DisplayNameAttribute>().SingleOrDefault()?.DisplayName ?? "No name";
@@ -80,7 +71,8 @@ public class WebcamPageViewModel : ObservableRecipient {
 			WebcamProcessor.ImageFilter = null;
 		}
 		else if (filterType.GetInterface(nameof(IImageFilter)) is not null) {
-			WebcamProcessor.ImageFilter = Activator.CreateInstance(filterType) as IImageFilter;
+			// Service locator is a necessary evil to dynamically load the filters.
+			WebcamProcessor.ImageFilter = ServiceProvider.GetService(filterType) as IImageFilter;
 		}
 		else {
 			throw new ArgumentException($"{nameof(filterType)} must be of type {nameof(IImageFilter)}", nameof(filterType));

@@ -9,9 +9,9 @@ namespace v9.Core.ImageFilters;
 public class CompressionFilter : ImageFilterBase, IImageFilter {
 	const int RATIO = 3;
 
-	byte[]? _ScaledSourcePixelHorizontalCount;
-	byte[]? _ScaledSourcePixelVerticalCount;
-	byte[]? _ScaledSourcePixelsTotal;
+	byte[] _ScaledSourcePixelHorizontalCount;
+	byte[] _ScaledSourcePixelVerticalCount;
+	byte[] _ScaledSourcePixelsTotal;
 	int _ScaledWidth = WIDTH;
 	int _ScaledHeight = HEIGHT;
 	int[] _BufferData = new int[3];
@@ -22,8 +22,38 @@ public class CompressionFilter : ImageFilterBase, IImageFilter {
 	int _SourceX = 0;
 	int _SourceY = 0;
 
-	public void Initialize() {
-		InitializeCompressionValues();
+	public CompressionFilter() {
+		_ScaledWidth = Convert.ToInt32(Math.Ceiling(1f * WIDTH / RATIO));
+		_ScaledHeight = Convert.ToInt32(Math.Ceiling(1f * HEIGHT / RATIO));
+
+		var scaledPixels = _ScaledWidth * _ScaledHeight;
+		_ScaledSourcePixelHorizontalCount = new byte[scaledPixels];
+		_ScaledSourcePixelVerticalCount = new byte[scaledPixels];
+		_ScaledSourcePixelsTotal = new byte[scaledPixels];
+
+		_NewRowBuffer = (WIDTH - _ScaledWidth) * CHUNK;
+
+		// Precalculate how many source pixels will be compressed into each destination pixel
+		for (var y = 0; y < _ScaledHeight; y++) {
+			for (var x = 0; x < _ScaledWidth; x++) {
+				var scaledTargetPixel = y * _ScaledWidth + x;
+				var scaledSourcePixelHorizontalCount = RATIO;
+				var scaledSourcePixelVerticalCount = RATIO;
+
+				// The compressed edges could have a smaller number of source pixels
+				if (x == _ScaledWidth - 1 && WIDTH % RATIO != 0) {
+					scaledSourcePixelHorizontalCount = WIDTH % RATIO;
+				}
+
+				if (y == _ScaledHeight - 1 && HEIGHT % RATIO != 0) {
+					scaledSourcePixelVerticalCount = HEIGHT % RATIO;
+				}
+
+				_ScaledSourcePixelHorizontalCount[scaledTargetPixel] = Convert.ToByte(scaledSourcePixelHorizontalCount);
+				_ScaledSourcePixelVerticalCount[scaledTargetPixel] = Convert.ToByte(scaledSourcePixelVerticalCount);
+				_ScaledSourcePixelsTotal[scaledTargetPixel] = Convert.ToByte(scaledSourcePixelHorizontalCount * scaledSourcePixelVerticalCount);
+			}
+		}
 	}
 
 	public unsafe void Apply(ref SoftwareBitmap input, ref SoftwareBitmap output) {
@@ -92,39 +122,5 @@ public class CompressionFilter : ImageFilterBase, IImageFilter {
 		}
 
 		output.CopyFromBuffer(_OutputData.AsBuffer());
-	}
-
-	void InitializeCompressionValues() {
-		_ScaledWidth = Convert.ToInt32(Math.Ceiling(1f * WIDTH / RATIO));
-		_ScaledHeight = Convert.ToInt32(Math.Ceiling(1f * HEIGHT / RATIO));
-		
-		var scaledPixels = _ScaledWidth * _ScaledHeight;
-		_ScaledSourcePixelHorizontalCount = new byte[scaledPixels];
-		_ScaledSourcePixelVerticalCount = new byte[scaledPixels];
-		_ScaledSourcePixelsTotal = new byte[scaledPixels];
-
-		_NewRowBuffer = (WIDTH - _ScaledWidth) * CHUNK;
-
-		// Determine how many source pixels will be compressed into each destination pixel
-		for (var y = 0; y < _ScaledHeight; y++) {
-			for (var x = 0; x < _ScaledWidth; x++) {
-				var scaledTargetPixel = y * _ScaledWidth + x;
-				var scaledSourcePixelHorizontalCount = RATIO;
-				var scaledSourcePixelVerticalCount = RATIO;
-
-				// The compressed edges could have a smaller number of source pixels
-				if (x == _ScaledWidth - 1 && WIDTH % RATIO != 0) {
-					scaledSourcePixelHorizontalCount = WIDTH % RATIO;
-				}
-
-				if (y == _ScaledHeight - 1 && HEIGHT % RATIO != 0) {
-					scaledSourcePixelVerticalCount = HEIGHT % RATIO;
-				}
-
-				_ScaledSourcePixelHorizontalCount[scaledTargetPixel] = Convert.ToByte(scaledSourcePixelHorizontalCount);
-				_ScaledSourcePixelVerticalCount[scaledTargetPixel] = Convert.ToByte(scaledSourcePixelVerticalCount);
-				_ScaledSourcePixelsTotal[scaledTargetPixel] = Convert.ToByte(scaledSourcePixelHorizontalCount * scaledSourcePixelVerticalCount);
-			}
-		}
 	}
 }

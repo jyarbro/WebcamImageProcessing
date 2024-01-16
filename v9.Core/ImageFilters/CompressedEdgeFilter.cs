@@ -6,11 +6,19 @@ namespace v9.Core.ImageFilters;
 
 [DisplayName("Compressed Edge Filter")]
 public class CompressedEdgeFilter : ImageFilterBase, IImageFilter {
-	public void Apply(ref SoftwareBitmap input, ref SoftwareBitmap output) {
-		throw new NotImplementedException();
+	public CompressionFilter CompressionFilter { get; set; }
+	public EdgeFilter EdgeFilter { get; set; }
+
+	public CompressedEdgeFilter(
+		CompressionFilter compressionFilter,
+		EdgeFilter edgeFilter
+	) {
+		CompressionFilter = compressionFilter;
+		EdgeFilter = edgeFilter;
 	}
 
-	public void Initialize() {
-		throw new NotImplementedException();
+	public void Apply(ref SoftwareBitmap input, ref SoftwareBitmap output) {
+		EdgeFilter.Apply(ref input, ref output);
+		CompressionFilter.Apply(ref input, ref output);
 	}
 }

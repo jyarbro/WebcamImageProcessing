@@ -12,8 +12,6 @@ public class EdgeFilter : ImageFilterBase, IImageFilter {
 	}
 	int _Threshold = 80;
 
-	public void Initialize() { }
-
 	public unsafe void Apply(ref SoftwareBitmap input, ref SoftwareBitmap output) {
 		input.CopyToBuffer(_InputData.AsBuffer());
 		input.CopyToBuffer(_OutputData.AsBuffer());

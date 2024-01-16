@@ -30,7 +30,11 @@ public sealed class WebcamProcessor(
 	SoftwareBitmap? _IncomingFrame;
 	bool _AcquiringFrame = false;
 
-	public async Task InitializeAsync(SoftwareBitmapSource imageSource, MediaCapture mediaCapture, DispatcherQueue dispatcherQueue) {
+	public async Task InitializeAsync(
+		SoftwareBitmapSource imageSource,
+		MediaCapture mediaCapture,
+		DispatcherQueue dispatcherQueue
+	) {
 		_ImageSource = imageSource;
 		_DispatcherQueue = dispatcherQueue;
 		_MediaCapture = mediaCapture;
@@ -66,7 +70,6 @@ public sealed class WebcamProcessor(
 		// XAML requires Bgra8 with premultiplied alpha. The frame was sending BitmapAlphaMode.Straight
 		_IncomingFrame = _FilteredFrame = SoftwareBitmap.Convert(frame.VideoMediaFrame.SoftwareBitmap, BitmapPixelFormat.Bgra8, BitmapAlphaMode.Premultiplied);
 
-		ImageFilter?.Initialize();
 		ImageFilter?.Apply(ref _IncomingFrame, ref _FilteredFrame);
 
 		_DispatcherQueue?.TryEnqueue(async () => {

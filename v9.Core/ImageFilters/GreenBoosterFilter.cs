@@ -7,8 +7,6 @@ namespace v9.Core.ImageFilters;
 
 [DisplayName("Boost Green")]
 public class GreenBoosterFilter : ImageFilterBase, IImageFilter {
-	public void Initialize() { }
-
 	public unsafe void Apply(ref SoftwareBitmap input, ref SoftwareBitmap output) {
 		input.CopyToBuffer(_InputData.AsBuffer());
 		output.CopyToBuffer(_OutputData.AsBuffer());
