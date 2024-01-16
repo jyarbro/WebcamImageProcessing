@@ -42,11 +42,13 @@ public class EdgeFilter : ImageFilterBase, IImageFilter {
 					*currentOutput = 0;
 					*(currentOutput + 1) = 0;
 					*(currentOutput + 2) = 0;
+					*(currentOutput + 3) = 255;
 				}
 				else {
 					*currentOutput = 255;
 					*(currentOutput + 1) = 255;
 					*(currentOutput + 2) = 255;
+					*(currentOutput + 3) = 255;
 				}
 
 				currentInput += CHUNK;

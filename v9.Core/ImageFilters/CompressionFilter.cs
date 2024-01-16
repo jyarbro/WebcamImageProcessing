@@ -14,7 +14,7 @@ public class CompressionFilter : ImageFilterBase, IImageFilter {
 	byte[] _ScaledSourcePixelsTotal;
 	int _ScaledWidth = WIDTH;
 	int _ScaledHeight = HEIGHT;
-	int[] _BufferData = new int[3];
+	int[] _BufferData = new int[4];
 	int _NewRowBuffer = 0;
 
 	int _ScaledX = 0;
@@ -80,6 +80,7 @@ public class CompressionFilter : ImageFilterBase, IImageFilter {
 							_BufferData[0] += *(inputData);
 							_BufferData[1] += *(inputData + 1);
 							_BufferData[2] += *(inputData + 2);
+							_BufferData[3] += *(inputData + 3);
 
 							// goto next pixel
 							inputData += CHUNK;
@@ -95,6 +96,7 @@ public class CompressionFilter : ImageFilterBase, IImageFilter {
 					*(outputData) = Convert.ToByte(_BufferData[0] / *(scaledSourcePixelsTotal));
 					*(outputData + 1) = Convert.ToByte(_BufferData[1] / *(scaledSourcePixelsTotal));
 					*(outputData + 2) = Convert.ToByte(_BufferData[2] / *(scaledSourcePixelsTotal));
+					*(outputData + 3) = Convert.ToByte(_BufferData[3] / *(scaledSourcePixelsTotal));
 
 					outputData += CHUNK;
 					scaledSourcePixelsTotal++;
