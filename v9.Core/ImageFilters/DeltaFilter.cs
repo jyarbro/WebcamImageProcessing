@@ -22,8 +22,9 @@ public class DeltaFilter(ILogger<DeltaFilter> logger)
 	byte[] _TemporalDataLayer6 = new byte[SUBPIXELS];
 	byte[] _TemporalDataLayer7 = new byte[SUBPIXELS];
 
-	int temporalPixel;
-	int delta;
+	int _TemporalPixel;
+	int _Delta;
+	int _i;
 
 	public unsafe void Apply(ref SoftwareBitmap input, ref SoftwareBitmap output) {
 		Array.Clear(_OutputData);
@@ -52,15 +53,15 @@ public class DeltaFilter(ILogger<DeltaFilter> logger)
 
 			for (_i = 0; _i < SUBPIXELS; _i++) {
 				// find the average subpixel value of the temporal layers
-				temporalPixel = 0;
-				temporalPixel += *(temporalDataLayer1);
-				temporalPixel += *(temporalDataLayer2);
-				temporalPixel += *(temporalDataLayer3);
-				temporalPixel += *(temporalDataLayer4);
-				temporalPixel += *(temporalDataLayer5);
-				temporalPixel += *(temporalDataLayer6);
-				temporalPixel += *(temporalDataLayer7);
-				temporalPixel /= 7;
+				_TemporalPixel = 0;
+				_TemporalPixel += *(temporalDataLayer1);
+				_TemporalPixel += *(temporalDataLayer2);
+				_TemporalPixel += *(temporalDataLayer3);
+				_TemporalPixel += *(temporalDataLayer4);
+				_TemporalPixel += *(temporalDataLayer5);
+				_TemporalPixel += *(temporalDataLayer6);
+				_TemporalPixel += *(temporalDataLayer7);
+				_TemporalPixel /= 7;
 
 				// Update the temporal stack
 				*(temporalDataLayer1) = *(temporalDataLayer2);
@@ -72,11 +73,11 @@ public class DeltaFilter(ILogger<DeltaFilter> logger)
 				*(temporalDataLayer7) = *(inputData);
 
 				// calculate the temporal delta
-				delta = Math.Abs(*(inputData) - temporalPixel);
+				_Delta = Math.Abs(*(inputData) - _TemporalPixel);
 
 				//if delta over threshold, copy to output
-				if (delta > THRESHOLD) {
-					*(outputData) = Convert.ToByte(temporalPixel);
+				if (_Delta > THRESHOLD) {
+					*(outputData) = Convert.ToByte(_TemporalPixel);
 				}
 
 				temporalDataLayer1++;
