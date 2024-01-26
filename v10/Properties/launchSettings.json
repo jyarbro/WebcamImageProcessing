@@ -1,9 +1,9 @@
 {
   "profiles": {
-    "v9 (Package)": {
+    "v10 (Package)": {
       "commandName": "MsixPackage"
     },
-    "v9 (Unpackaged)": {
+    "v10 (Unpackaged)": {
       "commandName": "Project"
     }
   }

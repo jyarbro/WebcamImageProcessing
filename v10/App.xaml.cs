@@ -4,15 +4,15 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Nrrdio.Utilities.Loggers;
 using Nrrdio.Utilities.WinUI.FrameRate;
+using v10.Helpers;
+using v10.Views;
 using v9.Core.Contracts.Services;
 using v9.Core.Helpers;
 using v9.Core.Processors;
 using v9.Core.Services;
 using v9.Core.ViewModels;
-using v9.Helpers;
-using v9.Views;
 
-namespace v9;
+namespace v10;
 
 public partial class App : Application {
 	public static Window MainWindow { get; } = new MainWindow();

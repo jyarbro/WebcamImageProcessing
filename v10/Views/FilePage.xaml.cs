@@ -1,6 +1,6 @@
 using v9.Core.ViewModels;
 
-namespace v9.Views;
+namespace v10.Views;
 
 public sealed partial class FilePage : Page {
 	public FilePageViewModel ViewModel { get; private init; }

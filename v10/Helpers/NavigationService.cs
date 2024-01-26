@@ -4,7 +4,7 @@ using v9.Core.Contracts.Services;
 using v9.Core.Contracts.ViewModels;
 using v9.Core.Helpers;
 
-namespace v9.Helpers;
+namespace v10.Helpers;
 
 public class NavigationService : INavigationService {
 	IPageService PageService { get; init; }

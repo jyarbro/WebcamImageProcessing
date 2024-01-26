@@ -5,7 +5,7 @@ using WinRT;
 using v9.Core.Contracts.Services;
 using v9.Core.Models;
 
-namespace v9.Helpers;
+namespace v10.Helpers;
 
 public class ThemeSelectorService : IThemeSelectorService {
 	Settings Settings { get; init; }

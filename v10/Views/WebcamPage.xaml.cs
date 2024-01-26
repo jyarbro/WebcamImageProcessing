@@ -4,7 +4,7 @@ using Nrrdio.Utilities.Loggers;
 using Nrrdio.Utilities.WinUI.FrameRate;
 using v9.Core.ViewModels;
 
-namespace v9.Views;
+namespace v10.Views;
 
 public sealed partial class WebcamPage : Page {
 	/// <summary>

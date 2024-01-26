@@ -1,8 +1,8 @@
 ﻿using Microsoft.UI.Xaml.Data;
 using v9.Core.ViewModels;
-using v9.Views;
+using v10.Views;
 
-namespace v9.Helpers;
+namespace v10.Helpers;
 public class WebcamSelectionConverter : IValueConverter {
 	public object Convert(object value, Type targetType, object parameter, string language) {
 		if (value is not WebcamPageViewModel.Selection selection) {

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Window
-    x:Class="v9.MainWindow"
+    x:Class="v10.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -8,7 +8,7 @@
     mc:Ignorable="d"
     xmlns:coreHelpers="using:v9.Core.Helpers"
     Title="{x:Bind ViewModel.Title}">
-    
+
     <Grid>
         <Grid x:Name="AppTitleBar"
               Canvas.ZIndex="1"

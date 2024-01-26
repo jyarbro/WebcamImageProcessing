@@ -1,7 +1,7 @@
 using Microsoft.UI.Windowing;
 using v9.Core.ViewModels;
 
-namespace v9;
+namespace v10;
 
 public sealed partial class MainWindow : Window {
 	const int DEFAULT_WIDTH = 1000;

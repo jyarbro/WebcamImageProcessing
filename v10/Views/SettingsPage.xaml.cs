@@ -1,6 +1,6 @@
 ﻿using v9.Core.ViewModels;
 
-namespace v9.Views;
+namespace v10.Views;
 
 public sealed partial class SettingsPage : Page {
 	public SettingsViewModel ViewModel { get; }
@@ -10,7 +10,7 @@ public sealed partial class SettingsPage : Page {
 		InitializeComponent();
 	}
 
-	async void CopySettingsPathToClipboard_ButtonClick(object sender, Microsoft.UI.Xaml.RoutedEventArgs e) {
+	async void CopySettingsPathToClipboard_ButtonClick(object sender, RoutedEventArgs e) {
 		ViewModel.CopySettingsPathToClipboard();
 
 		await Task.Delay(900);
