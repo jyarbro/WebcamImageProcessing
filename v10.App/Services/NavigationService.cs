@@ -1,9 +1,10 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Microsoft.UI.Xaml.Navigation;
+using v10.Helpers;
 using v10.Services.Contracts;
 using v10.ViewModels.Contracts;
 
-namespace v10.Helpers;
+namespace v10.Services;
 
 public class NavigationService : INavigationService {
 	IPageService PageService { get; init; }
@@ -68,7 +69,7 @@ public class NavigationService : INavigationService {
 	public bool NavigateTo(string pageKey, object? parameter = null, bool clearNavigation = false) {
 		var pageType = PageService.GetPageType(pageKey);
 
-		if (_frame != null && (_frame.Content?.GetType() != pageType || (parameter != null && !parameter.Equals(_lastParameterUsed)))) {
+		if (_frame != null && (_frame.Content?.GetType() != pageType || parameter != null && !parameter.Equals(_lastParameterUsed))) {
 			_frame.Tag = clearNavigation;
 			var vmBeforeNavigation = _frame.GetPageViewModel();
 			var navigated = _frame.Navigate(pageType, parameter);

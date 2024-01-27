@@ -27,8 +27,7 @@
             IsBackButtonVisible="Collapsed"
             IsBackEnabled="False"
             SelectedItem="{x:Bind ViewModel.Selected, Mode=OneWay}"
-            IsSettingsVisible="True"
-            
+            IsSettingsVisible="False"
             ExpandedModeThresholdWidth="1280"
             DisplayModeChanged="NavigationViewControl_DisplayModeChanged">
 

@@ -86,7 +86,6 @@ public partial class App : Application {
 
 			service.Configure<WebcamPageViewModel, WebcamPage>();
 			service.Configure<FilePageViewModel, FilePage>();
-			service.Configure<SettingsViewModel, SettingsPage>();
 
 			return service;
 		});
@@ -109,9 +108,6 @@ public partial class App : Application {
 
 		services.AddTransient<FilePage>();
 		services.AddTransient<FilePageViewModel>();
-
-		services.AddTransient<SettingsPage>();
-		services.AddTransient<SettingsViewModel>();
 
 		services.AddTransient<WebcamPage>();
 		services.AddTransient<WebcamPageViewModel>();

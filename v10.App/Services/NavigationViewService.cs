@@ -43,22 +43,17 @@ public class NavigationViewService : INavigationViewService {
 		return null;
 	}
 
-	private void OnBackRequested(NavigationView sender, NavigationViewBackRequestedEventArgs args) => _navigationService.GoBack();
+	void OnBackRequested(NavigationView sender, NavigationViewBackRequestedEventArgs args) => _navigationService.GoBack();
 
-	private void OnItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args) {
-		if (args.IsSettingsInvoked) {
-			_navigationService.NavigateTo(typeof(SettingsViewModel).FullName!);
-		}
-		else {
-			var selectedItem = args.InvokedItemContainer as NavigationViewItem;
+	void OnItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args) {
+		var selectedItem = args.InvokedItemContainer as NavigationViewItem;
 
-			if (selectedItem?.GetValue(NavigationHelper.NavigateToProperty) is string pageKey) {
-				_navigationService.NavigateTo(pageKey);
-			}
+		if (selectedItem?.GetValue(NavigationHelper.NavigateToProperty) is string pageKey) {
+			_navigationService.NavigateTo(pageKey);
 		}
 	}
 
-	private NavigationViewItem? GetSelectedItem(IEnumerable<object> menuItems, Type pageType) {
+	NavigationViewItem? GetSelectedItem(IEnumerable<object> menuItems, Type pageType) {
 		foreach (var item in menuItems.OfType<NavigationViewItem>()) {
 			if (IsMenuItemForPageType(item, pageType)) {
 				return item;
@@ -73,7 +68,7 @@ public class NavigationViewService : INavigationViewService {
 		return null;
 	}
 
-	private bool IsMenuItemForPageType(NavigationViewItem menuItem, Type sourcePageType) {
+	bool IsMenuItemForPageType(NavigationViewItem menuItem, Type sourcePageType) {
 		if (menuItem.GetValue(NavigationHelper.NavigateToProperty) is string pageKey) {
 			return _pageService.GetPageType(pageKey) == sourcePageType;
 		}
