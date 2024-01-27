@@ -12,5 +12,4 @@
     <ItemGroup>
       <ProjectReference Include="..\Nrrdio.Utilities\Nrrdio.Utilities\Nrrdio.Utilities.csproj" />
     </ItemGroup>
-
 </Project>
