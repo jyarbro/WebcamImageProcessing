@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel;
-using v10.ImageFilters.Contracts;
+using v10.Contracts;
 using Windows.Graphics.Imaging;
 
 namespace v10.ImageFilters.ImageFilters;

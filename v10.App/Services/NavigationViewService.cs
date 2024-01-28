@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using v10.Contracts.Services;
 using v10.Helpers;
-using v10.Services.Contracts;
 
 namespace v10.Services;
 
@@ -12,8 +12,6 @@ public class NavigationViewService : INavigationViewService {
 	private NavigationView? _navigationView;
 
 	public IList<object>? MenuItems => _navigationView?.MenuItems;
-
-	public object SettingsItem => _navigationView?.SettingsItem;
 
 	public NavigationViewService(INavigationService navigationService, IPageService pageService) {
 		_navigationService = navigationService;

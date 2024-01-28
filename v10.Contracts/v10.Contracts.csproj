@@ -1,16 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
-        <RootNamespace>v10.ImageFilters</RootNamespace>
+        <RootNamespace>v10.Contracts</RootNamespace>
         <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
         <Platforms>x86;x64</Platforms>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Nrrdio.Utilities\Nrrdio.Utilities\Nrrdio.Utilities.csproj" />
-      <ProjectReference Include="..\v10.Contracts\v10.Contracts.csproj" />
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+        <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.4.231219000" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Using Include="Microsoft.UI.Xaml.Controls" />
     </ItemGroup>
 </Project>

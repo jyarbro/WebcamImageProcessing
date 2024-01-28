@@ -8,7 +8,7 @@ using Windows.Media.Capture;
 using Windows.Media.Capture.Frames;
 using v10.Services;
 using v10.ImageFilters.Helpers;
-using v10.ImageFilters.Contracts;
+using v10.Contracts;
 
 namespace v10.ViewModels;
 

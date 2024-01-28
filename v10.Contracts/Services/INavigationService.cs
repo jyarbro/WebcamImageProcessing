@@ -1,6 +1,6 @@
 ﻿using Microsoft.UI.Xaml.Navigation;
 
-namespace v10.Services.Contracts;
+namespace v10.Contracts.Services;
 
 public interface INavigationService {
 	event NavigatedEventHandler Navigated;

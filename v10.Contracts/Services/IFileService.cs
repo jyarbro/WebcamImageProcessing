@@ -1,4 +1,4 @@
-﻿namespace v10.Services.Contracts;
+﻿namespace v10.Contracts.Services;
 
 public interface IFileService {
 	T? Read<T>(string folderPath, string fileName);

@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 using Nrrdio.Utilities.Extensions;
-using v10.ImageFilters.Contracts;
+using v10.Contracts;
 
 namespace v10.ImageFilters.Helpers;
 public class ImageFilterLoader {

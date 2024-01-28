@@ -42,6 +42,7 @@
     <ItemGroup>
         <ProjectReference Include="..\Nrrdio.Utilities\Nrrdio.Utilities.WinUI\Nrrdio.Utilities.WinUI.csproj" />
         <ProjectReference Include="..\Nrrdio.Utilities\Nrrdio.Utilities\Nrrdio.Utilities.csproj" />
+        <ProjectReference Include="..\v10.Contracts\v10.Contracts.csproj" />
         <ProjectReference Include="..\v10.ImageFilters\v10.ImageFilters.csproj" />
     </ItemGroup>
 

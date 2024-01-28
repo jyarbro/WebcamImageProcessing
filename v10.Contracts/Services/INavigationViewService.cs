@@ -1,11 +1,7 @@
-﻿namespace v10.Services.Contracts;
+﻿namespace v10.Contracts.Services;
 
 public interface INavigationViewService {
 	IList<object>? MenuItems {
-		get;
-	}
-
-	object? SettingsItem {
 		get;
 	}
 

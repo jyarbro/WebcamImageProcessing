@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Microsoft.UI.Xaml.Navigation;
+using v10.Contracts.Services;
 using v10.Helpers;
-using v10.Services.Contracts;
 using v10.ViewModels.Contracts;
 
 namespace v10.Services;

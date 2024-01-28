@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Runtime.InteropServices.WindowsRuntime;
-using v10.ImageFilters.Contracts;
+using v10.Contracts;
 using v10.ImageFilters.Helpers;
 using Windows.Graphics.Imaging;
 

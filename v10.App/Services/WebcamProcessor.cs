@@ -4,10 +4,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Nrrdio.Utilities.WinUI.FrameRate;
+using v10.Contracts;
 using Windows.Graphics.Imaging;
 using Windows.Media.Capture;
 using Windows.Media.Capture.Frames;
-using v10.ImageFilters.Contracts;
 
 namespace v10.Services;
 

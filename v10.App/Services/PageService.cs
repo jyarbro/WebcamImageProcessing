@@ -1,5 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using v10.Services.Contracts;
+using v10.Contracts.Services;
 
 namespace v10.Services;
 

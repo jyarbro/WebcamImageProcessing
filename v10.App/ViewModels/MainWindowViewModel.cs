@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.UI.Xaml.Navigation;
 using Nrrdio.Utilities.WinUI;
-using v10.Services.Contracts;
+using v10.Contracts.Services;
 
 namespace v10.ViewModels;
 
@@ -28,11 +28,6 @@ public class MainWindowViewModel : ObservableRecipient {
 	}
 
 	void OnNavigated(object sender, NavigationEventArgs e) {
-		if (e.SourcePageType.Name == "SettingsPage") {
-			Selected = NavigationViewService.SettingsItem;
-			return;
-		}
-
 		var selectedItem = NavigationViewService.GetSelectedItem(e.SourcePageType);
 
 		if (selectedItem != null) {

@@ -6,8 +6,8 @@ using Nrrdio.Utilities.WinUI.FrameRate;
 using v10.Views;
 using v10.Services;
 using v10.ViewModels;
-using v10.Services.Contracts;
 using v10.ImageFilters.Helpers;
+using v10.Contracts.Services;
 
 namespace v10;
 
