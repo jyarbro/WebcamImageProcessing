@@ -2,11 +2,14 @@
 using Microsoft.UI.Xaml.Navigation;
 using Nrrdio.Utilities.Loggers;
 using Nrrdio.Utilities.WinUI.FrameRate;
+using v10.Contracts.Services;
 using v10.ViewModels;
 
 namespace v10.Views;
 
 public sealed partial class WebcamPage : Page {
+	readonly IDispatcherQueueManager DispatcherQueueManager;
+	
 	/// <summary>
 	/// Used by converters to get a handle to the current instance.
 	/// </summary>
@@ -17,17 +20,20 @@ public sealed partial class WebcamPage : Page {
 	public WebcamPage() {
 		Current = this;
 		ViewModel = App.GetService<WebcamPageViewModel>();
+		DispatcherQueueManager = App.GetService<IDispatcherQueueManager>();
 
 		InitializeComponent();
 	}
 
 	protected override async void OnNavigatedTo(NavigationEventArgs e) {
+		DispatcherQueueManager.Current = DispatcherQueue;
+
 		ProcessorSelectorControl.ItemsSource = ViewModel.Filters;
 		ProcessorSelectorControl.SelectedIndex = 0;
 
 		OutputImage.Source = ViewModel.ImageSource;
 
-		await ViewModel.Initialize(DispatcherQueue, UpdateFrameRate);
+		await ViewModel.Initialize(UpdateFrameRate);
 		HandlerLoggerProvider.Current!.RegisterEventHandler(UpdateLog);
 	}
 

@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.Logging;
-using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Nrrdio.Utilities.WinUI.FrameRate;
 using Windows.Media.Capture;
@@ -13,6 +12,11 @@ using v10.Contracts;
 namespace v10.ViewModels;
 
 public class WebcamPageViewModel : ObservableRecipient {
+	readonly ILogger Logger;
+	readonly IFrameRateHandler FrameRateHandler;
+	readonly WebcamProcessor WebcamProcessor;
+	readonly IServiceProvider ServiceProvider;
+
 	public SoftwareBitmapSource ImageSource { get; } = new();
 
 	public List<Selection> Filters { get; set; } = [
@@ -22,14 +26,8 @@ public class WebcamPageViewModel : ObservableRecipient {
 		}
 	];
 
-	ILogger Logger { get; }
-	IFrameRateHandler FrameRateHandler { get; }
-	WebcamProcessor WebcamProcessor { get; }
-	IServiceProvider ServiceProvider { get; }
-
 	// Start with this nullable so we can initialize it only once later.
 	MediaCapture? MediaCapture { get; set; }
-	DispatcherQueue? DispatcherQueue { get; set; }
 
 	public WebcamPageViewModel(
 		ILogger<WebcamPageViewModel> logger,
@@ -52,16 +50,14 @@ public class WebcamPageViewModel : ObservableRecipient {
 		}
 	}
 
-	public async Task Initialize(DispatcherQueue dispatcherQueue, EventHandler<FrameRateEventArgs> updateFrameRateHandler) {
-		DispatcherQueue = dispatcherQueue;
+	public async Task Initialize(EventHandler<FrameRateEventArgs> updateFrameRateHandler) {
 		FrameRateHandler.FrameRateUpdated += updateFrameRateHandler;
 
 		await InitializeMediaCapture();
-		await WebcamProcessor.InitializeAsync(ImageSource, MediaCapture!, DispatcherQueue);
+		await WebcamProcessor.InitializeAsync(ImageSource, MediaCapture!);
 	}
 
 	public void Uninitialize(EventHandler<FrameRateEventArgs> updateFrameRateHandler) {
-		DispatcherQueue = null;
 		FrameRateHandler.FrameRateUpdated -= updateFrameRateHandler;
 	}
 

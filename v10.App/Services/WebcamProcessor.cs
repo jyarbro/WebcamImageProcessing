@@ -15,14 +15,12 @@ public sealed class WebcamProcessor(
 		ILogger<WebcamProcessor> logger,
 		IFrameRateHandler frameRateHandler
 	) : IAsyncDisposable {
-
-	public IImageFilter? ImageFilter { get; set; }
-
 	readonly ILogger Logger = logger;
 	readonly IFrameRateHandler FrameRateHandler = frameRateHandler;
 
+	public IImageFilter? ImageFilter { get; set; }
+
 	SoftwareBitmapSource _ImageSource;
-	DispatcherQueue _DispatcherQueue;
 	MediaCapture _MediaCapture;
 	MediaFrameReader? _FrameReader;
 	SoftwareBitmap _FilteredFrame;
@@ -31,11 +29,9 @@ public sealed class WebcamProcessor(
 
 	public async Task InitializeAsync(
 		SoftwareBitmapSource imageSource,
-		MediaCapture mediaCapture,
-		DispatcherQueue dispatcherQueue
+		MediaCapture mediaCapture
 	) {
 		_ImageSource = imageSource;
-		_DispatcherQueue = dispatcherQueue;
 		_MediaCapture = mediaCapture;
 
 		_FrameReader = await FrameReaderLoader.GetFrameReaderAsync(mediaCapture, MediaFrameSourceKind.Color);
@@ -71,7 +67,7 @@ public sealed class WebcamProcessor(
 
 		ImageFilter?.Apply(ref _IncomingFrame, ref _FilteredFrame);
 
-		_DispatcherQueue?.TryEnqueue(async () => {
+		DispatcherQueue.GetForCurrentThread().TryEnqueue(async () => {
 			try {
 				await _ImageSource?.SetBitmapAsync(_FilteredFrame);
 			}

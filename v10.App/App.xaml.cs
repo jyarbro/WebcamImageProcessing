@@ -81,6 +81,7 @@ public partial class App : Application {
 		});
 
 		services.AddScoped<IFrameRateHandler, FrameRateHandler>();
+		services.AddScoped<IDispatcherQueueManager, DispatcherQueueManager>();
 
 		services.AddScoped<INavigationViewService, NavigationViewService>();
 		services.AddScoped<INavigationService, NavigationService>();
