@@ -5,6 +5,7 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Nrrdio.Utilities.WinUI.FrameRate;
 using v10.Contracts;
+using v10.Contracts.Services;
 using Windows.Graphics.Imaging;
 using Windows.Media.Capture;
 using Windows.Media.Capture.Frames;
@@ -13,10 +14,12 @@ namespace v10.Services;
 
 public sealed class WebcamProcessor(
 		ILogger<WebcamProcessor> logger,
-		IFrameRateHandler frameRateHandler
+		IFrameRateHandler frameRateHandler,
+		IDispatcherQueueManager dispatcherQueueManager
 	) : IAsyncDisposable {
 	readonly ILogger Logger = logger;
 	readonly IFrameRateHandler FrameRateHandler = frameRateHandler;
+	readonly IDispatcherQueueManager DispatcherQueueManager = dispatcherQueueManager;
 
 	public IImageFilter? ImageFilter { get; set; }
 
@@ -67,7 +70,7 @@ public sealed class WebcamProcessor(
 
 		ImageFilter?.Apply(ref _IncomingFrame, ref _FilteredFrame);
 
-		DispatcherQueue.GetForCurrentThread().TryEnqueue(async () => {
+		DispatcherQueueManager.Current.TryEnqueue(async () => {
 			try {
 				await _ImageSource?.SetBitmapAsync(_FilteredFrame);
 			}
