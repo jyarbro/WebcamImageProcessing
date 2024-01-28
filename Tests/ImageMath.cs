@@ -1,9 +1,8 @@
-using System.Diagnostics;
-
 namespace Tests;
 
 [TestClass]
 public class ImageMath {
+
 	[TestMethod]
 	public unsafe void TestCompression() {
 		const int CHUNK = 4;

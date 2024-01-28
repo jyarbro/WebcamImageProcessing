@@ -1,25 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <Platforms>AnyCPU</Platforms>
+        <IsTestProject>true</IsTestProject>
+        <IsPackable>false</IsPackable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    </PropertyGroup>
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.0" />
+        <PackageReference Include="MSTest.TestAdapter" Version="3.0.4" />
+        <PackageReference Include="MSTest.TestFramework" Version="3.0.4" />
+        <PackageReference Include="coverlet.collector" Version="6.0.0" />
+    </ItemGroup>
 
-    <IsPackable>false</IsPackable>
-    <IsTestProject>true</IsTestProject>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-    <Platforms>AnyCPU</Platforms>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.0" />
-    <PackageReference Include="MSTest.TestAdapter" Version="3.0.4" />
-    <PackageReference Include="MSTest.TestFramework" Version="3.0.4" />
-    <PackageReference Include="coverlet.collector" Version="6.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
-  </ItemGroup>
-
+    <ItemGroup>
+        <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+        <Using Include="System.Diagnostics" />
+    </ItemGroup>
 </Project>
