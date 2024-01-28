@@ -24,12 +24,6 @@ public partial class App : Application {
 		Host = Microsoft.Extensions.Hosting.Host.
 			CreateDefaultBuilder().
 			UseContentRoot(AppContext.BaseDirectory).
-			ConfigureAppConfiguration((context, builder) => {
-				builder.Sources.Clear();
-				StateManager.EnsureSettings();
-				builder.AddJsonFile(StateManager.SettingsPath, false, true);
-				builder.AddEnvironmentVariables();
-			}).
 			ConfigureServices(ConfigureServices).
 			ConfigureLogging(builder =>
 				builder.
@@ -70,8 +64,6 @@ public partial class App : Application {
 	protected override void OnLaunched(LaunchActivatedEventArgs args) {
 		base.OnLaunched(args);
 
-		GetService<IThemeSelectorService>().LoadTheme();
-
 		MainWindow.Activate();
 
 		GetService<INavigationService>().NavigateTo(typeof(WebcamPageViewModel).FullName!, args.Arguments);
@@ -92,7 +84,6 @@ public partial class App : Application {
 
 		services.AddScoped<IFrameRateHandler, FrameRateHandler>();
 
-		services.AddScoped<IThemeSelectorService, ThemeSelectorService>();
 		services.AddScoped<INavigationViewService, NavigationViewService>();
 		services.AddScoped<INavigationService, NavigationService>();
 		services.AddScoped<IFileService, FileService>();
