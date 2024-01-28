@@ -3,5 +3,5 @@
 namespace v10.Contracts.Services;
 
 public interface IDispatcherQueueManager {
-	DispatcherQueue? Current { get; set; }
+	DispatcherQueue Current { get; set; }
 }
