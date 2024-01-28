@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using System.Runtime.InteropServices.WindowsRuntime;
-using Microsoft.Extensions.Logging;
 using v10.ImageFilters.Contracts;
 using Windows.Graphics.Imaging;
 
