@@ -7,12 +7,10 @@ using Windows.Graphics.Imaging;
 namespace v10.ImageFilters.ImageFilters;
 
 [DisplayName("Delta Filter")]
-public class DeltaFilter(ILogger<DeltaFilter> logger)
+public class DeltaFilter()
 	: ImageFilterBase, IImageFilter {
 
 	const byte THRESHOLD = 10;
-
-	readonly ILogger Logger = logger;
 
 	byte[] _TemporalDataLayer1 = new byte[SUBPIXELS];
 	byte[] _TemporalDataLayer2 = new byte[SUBPIXELS];
